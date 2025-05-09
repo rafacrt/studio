@@ -1,7 +1,7 @@
 {
-  "name": "Alugo",
-  "short_name": "Alugo",
-  "description": "Descubra e reserve quartos únicos para universitários com o Alugo.",
+  "name": "WeStudy",
+  "short_name": "WeStudy",
+  "description": "Descubra e reserve quartos únicos para universitários com o WeStudy.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F2F2F7",

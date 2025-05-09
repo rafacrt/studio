@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('alugoUser');
+    const storedUser = localStorage.getItem('weStudyUser');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       await simulateApiCall(foundUser, 500); 
       setUser(foundUser);
-      localStorage.setItem('alugoUser', JSON.stringify(foundUser));
+      localStorage.setItem('weStudyUser', JSON.stringify(foundUser));
       router.push('/explore');
     } catch (error) {
       console.error("Login failed:", error);
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('alugoUser');
+    localStorage.removeItem('weStudyUser');
     router.push('/login');
   };
 

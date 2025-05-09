@@ -48,7 +48,7 @@ export default function LoginPage() {
         <div className="text-center">
           <AppLogo className="mx-auto h-12 w-auto" />
           <h2 className="mt-6 text-2xl font-bold tracking-tight text-foreground">
-            Acesse sua conta Alugo
+            Acesse sua conta WeStudy
           </h2>
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 rounded-lg bg-card p-6 shadow-lg sm:p-8">

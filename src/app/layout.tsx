@@ -10,12 +10,12 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: 'Alugo - Seu Próximo Quarto',
-  description: 'Descubra e reserve quartos universitários com o Alugo. Inspirado no QuintoAndar, projetado para praticidade.',
-  applicationName: 'Alugo',
+  title: 'WeStudy - Seu Próximo Quarto',
+  description: 'Descubra e reserve quartos universitários com o WeStudy. Inspirado no QuintoAndar, projetado para praticidade.',
+  applicationName: 'WeStudy',
   appleWebApp: {
     capable: true,
-    title: 'Alugo',
+    title: 'WeStudy',
     statusBarStyle: 'default',
   },
 };
@@ -43,7 +43,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png"></link>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Alugo" />
+        <meta name="apple-mobile-web-app-title" content="WeStudy" />
       </head>
       <body className={`${geistSans.variable} font-sans antialiased`}>
         <AuthProvider>

@@ -7,7 +7,7 @@ export function AppLogo(props: SVGProps<SVGSVGElement>) {
       viewBox="0 0 200 50"
       width="150"
       height="37.5"
-      aria-label="Logo da Alugo"
+      aria-label="Logo da WeStudy"
       {...props}
     >
       <defs>
@@ -26,7 +26,7 @@ export function AppLogo(props: SVGProps<SVGSVGElement>) {
         fill="url(#logoGradient)"
         fontFamily="var(--font-geist-sans), system-ui, sans-serif"
       >
-        Alugo
+        WeStudy
       </text>
     </svg>
   );
