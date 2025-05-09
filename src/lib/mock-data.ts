@@ -1,5 +1,6 @@
 import type { Listing, Booking, User, Amenity, Review } from '@/types';
 import { Wifi, Tv, ParkingSquare, Utensils, Wind, Thermometer, Bath, Users, BedDouble, BookOpen, Briefcase } from 'lucide-react'; // Using BookOpen for Desk, Briefcase for Wardrobe
+import { simulateApiCall } from '@/lib/utils';
 
 export const mockUser: User = {
   id: 'user1',
