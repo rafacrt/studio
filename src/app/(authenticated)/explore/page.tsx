@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -23,7 +24,19 @@ export default function ExplorePage() {
     try {
       const newFetchedListings = await fetchListings(currentPage, LISTINGS_PER_PAGE);
       if (newFetchedListings.length > 0) {
-        setListings(prev => [...prev, ...newFetchedListings]);
+        setListings(prevListings => {
+          if (currentPage === 1) {
+            // For the first page, or if we intend to reset (e.g. after a search term change)
+            // We should replace the existing listings.
+            return newFetchedListings;
+          } else {
+            // For subsequent pages (infinite scroll), append new listings.
+            // Ensure no duplicates are added.
+            const currentListingIds = new Set(prevListings.map(l => l.id));
+            const uniqueNewListings = newFetchedListings.filter(l => !currentListingIds.has(l.id));
+            return [...prevListings, ...uniqueNewListings];
+          }
+        });
         setHasMore(newFetchedListings.length === LISTINGS_PER_PAGE);
       } else {
         setHasMore(false);
@@ -34,10 +47,12 @@ export default function ExplorePage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, []); // LISTINGS_PER_PAGE is a constant, so no need to include in dependencies
 
   useEffect(() => {
-    // Initial load
+    // Initial load: reset page to 1 and load.
+    // This ensures that if the component re-mounts or for strict mode, page 1 is correctly (re)loaded.
+    setPage(1); 
     loadListings(1);
   }, [loadListings]);
 
@@ -53,6 +68,8 @@ export default function ExplorePage() {
   }, [isLoading, hasMore]);
 
   useEffect(() => {
+    // Load more listings when page changes, but only if it's not the initial load (page 1).
+    // Initial load (page 1) is handled by the first useEffect.
     if (page > 1) { 
       loadListings(page);
     }
