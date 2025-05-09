@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { CalendarDays, ArrowRight } from 'lucide-react';
 import { triggerHapticFeedback } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale/pt-BR';
 
 interface BookingCardProps {
   booking: Booking;
@@ -20,9 +21,15 @@ const statusColors: Record<Booking['status'], string> = {
   cancelled: 'bg-red-500 text-red-50',
 };
 
+const statusDisplay: Record<Booking['status'], string> = {
+  active: 'Ativa',
+  past: 'Anterior',
+  cancelled: 'Cancelada',
+};
+
 export function BookingCard({ booking }: BookingCardProps) {
-  const formattedStartDate = format(parseISO(booking.startDate), "MMM d, yyyy");
-  const formattedEndDate = format(parseISO(booking.endDate), "MMM d, yyyy");
+  const formattedStartDate = format(parseISO(booking.startDate), "dd/MM/yyyy", { locale: ptBR });
+  const formattedEndDate = format(parseISO(booking.endDate), "dd/MM/yyyy", { locale: ptBR });
 
   return (
     <Card className="overflow-hidden rounded-xl shadow-md transition-all duration-300 hover:shadow-lg">
@@ -34,7 +41,7 @@ export function BookingCard({ booking }: BookingCardProps) {
             layout="fill"
             objectFit="cover"
             className="transition-transform duration-300 group-hover:scale-105"
-            data-ai-hint="vacation rental"
+            data-ai-hint="student room exterior"
           />
         </div>
         <CardContent className="p-4 space-y-2 flex-1 flex flex-col justify-between">
@@ -46,7 +53,7 @@ export function BookingCard({ booking }: BookingCardProps) {
                 </Link>
               </h3>
               <Badge variant="outline" className={`capitalize text-xs ${statusColors[booking.status]}`}>
-                {booking.status}
+                {statusDisplay[booking.status]}
               </Badge>
             </div>
             
@@ -54,7 +61,7 @@ export function BookingCard({ booking }: BookingCardProps) {
               <CalendarDays size={14} className="mr-1.5" />
               <span>{formattedStartDate} - {formattedEndDate}</span>
             </div>
-            <p className="text-sm text-foreground mt-1">Total: ${booking.totalPrice.toFixed(2)}</p>
+            <p className="text-sm text-foreground mt-1">Total: R$ {booking.totalPrice.toFixed(2)}</p>
           </div>
 
           <div className="mt-3 flex justify-end">
@@ -66,7 +73,7 @@ export function BookingCard({ booking }: BookingCardProps) {
                   className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   onClick={() => triggerHapticFeedback()}
                 >
-                  Access Local
+                  Acessar Quarto
                   <ArrowRight size={16} className="ml-1.5" />
                 </Button>
               </Link>
@@ -78,7 +85,7 @@ export function BookingCard({ booking }: BookingCardProps) {
                   size="sm"
                   onClick={() => triggerHapticFeedback()}
                 >
-                  View Listing
+                  Ver Quarto
                 </Button>
               </Link>
             )}
@@ -88,3 +95,4 @@ export function BookingCard({ booking }: BookingCardProps) {
     </Card>
   );
 }
+

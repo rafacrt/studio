@@ -1,99 +1,119 @@
 import type { Listing, Booking, User, Amenity, Review } from '@/types';
-import { Wifi, Tv, ParkingSquare, Utensils, Wind, Thermometer, Bath, Users, BedDouble, Sofa, MapPin, Star } from 'lucide-react';
+import { Wifi, Tv, ParkingSquare, Utensils, Wind, Thermometer, Bath, Users, BedDouble, BookOpen, Briefcase } from 'lucide-react'; // Using BookOpen for Desk, Briefcase for Wardrobe
 
 export const mockUser: User = {
   id: 'user1',
-  email: 'test@example.com',
-  name: 'Alex Doe',
+  email: 'teste@exemplo.com',
+  name: 'Alex Silva',
   avatarUrl: 'https://picsum.photos/seed/user1/100/100',
 };
 
 const commonAmenities: Amenity[] = [
   { id: 'wifi', name: 'Wi-Fi', icon: Wifi },
-  { id: 'tv', name: 'TV', icon: Tv },
-  { id: 'parking', name: 'Free Parking', icon: ParkingSquare },
-  { id: 'kitchen', name: 'Kitchen', icon: Utensils },
-  { id: 'ac', name: 'Air Conditioning', icon: Wind },
-  { id: 'heating', name: 'Heating', icon: Thermometer },
+  { id: 'desk', name: 'Escrivaninha', icon: BookOpen }, // Changed to Desk
+  { id: 'wardrobe', name: 'Guarda-roupa', icon: Briefcase }, // Added Wardrobe
+  { id: 'kitchen', name: 'Cozinha Compartilhada', icon: Utensils },
+  { id: 'laundry', name: 'Lavanderia Compartilhada', icon: Wind }, // Changed AC to Laundry
+  { id: 'bathroom', name: 'Banheiro Privativo', icon: Bath },
 ];
 
 const generateReviews = (listingId: string, count: number): Review[] => {
   const reviews: Review[] = [];
+  const reviewComments = [
+    "Excelente quarto para estudantes! Localização perfeita, perto da faculdade e com tudo que preciso. Recomendo!",
+    "Muito bom! O quarto é confortável, a internet é rápida e o ambiente é tranquilo para estudar. Anfitrião atencioso.",
+    "Adorei minha estadia. O quarto é exatamente como nas fotos, limpo e organizado. Ótimo custo-benefício para universitários.",
+    "Localização privilegiada, fácil acesso ao transporte e restaurantes. O quarto tem uma boa escrivaninha para estudos.",
+    "Recomendo fortemente! Ambiente seguro e ideal para quem precisa focar nos estudos. Voltarei com certeza."
+  ];
   for (let i = 1; i <= count; i++) {
     reviews.push({
       id: `review-${listingId}-${i}`,
-      userName: `User ${i}`,
+      userName: `Estudante ${i}`,
       userAvatarUrl: `https://picsum.photos/seed/reviewer${i}/50/50`,
       rating: Math.floor(Math.random() * 2) + 4, // 4 or 5 stars
-      comment: `This place was amazing! Highly recommend. The host was very responsive and the location was perfect. Amenities were great too. Enjoyed my stay very much. Will come back!`,
-      date: `2023-10-${String(10 + i).padStart(2, '0')}`,
+      comment: reviewComments[i % reviewComments.length],
+      date: `2023-11-${String(10 + i).padStart(2, '0')}`,
     });
   }
   return reviews;
 };
 
-export const mockListings: Listing[] = Array.from({ length: 36 }, (_, i) => ({
-  id: `listing${i + 1}`,
-  title: `Cozy Apartment in Downtown ${i + 1}`,
-  description: `A beautiful and spacious apartment located in the heart of the city. Perfect for couples or solo travelers. Enjoy the vibrant city life with easy access to attractions, restaurants, and public transport. This is a longer description to test multi-line capabilities and text truncation. It should ideally wrap up to three lines.`,
-  images: [
-    `https://picsum.photos/seed/img${i + 1}_1/800/450`,
-    `https://picsum.photos/seed/img${i + 1}_2/800/450`,
-    `https://picsum.photos/seed/img${i + 1}_3/800/450`,
-    `https://picsum.photos/seed/img${i + 1}_4/800/450`,
-  ],
-  pricePerNight: 75 + i * 5,
-  rating: parseFloat((4.5 + Math.random() * 0.5).toFixed(1)), // Between 4.5 and 5.0
-  location: {
-    address: `${123 + i} Main St, Anytown, USA`,
-    lat: 34.0522 + (i * 0.01),
-    lng: -118.2437 + (i * 0.01),
-  },
-  amenities: commonAmenities.slice(0, 4 + (i % 3)), // Vary number of amenities
-  host: {
-    name: `Host ${String.fromCharCode(65 + (i % 26))}`, // A, B, C...
-    avatarUrl: `https://picsum.photos/seed/host${i + 1}/80/80`,
-  },
-  reviews: generateReviews(`listing${i + 1}`, 3 + (i % 5)),
-  type: i % 2 === 0 ? "Entire apartment" : "Private room",
-  guests: 2 + (i % 3), // 2, 3 or 4 guests
-  bedrooms: 1 + (i % 2), // 1 or 2 bedrooms
-  beds: 1 + (i % 2), // 1 or 2 beds
-  baths: 1,
-}));
+const universityAreas = [
+  { city: "São Paulo", area: "Butantã (USP)", neighborhood: "Butantã" },
+  { city: "Rio de Janeiro", area: "Urca (UFRJ)", neighborhood: "Urca" },
+  { city: "Belo Horizonte", area: "Pampulha (UFMG)", neighborhood: "Pampulha" },
+  { city: "Porto Alegre", area: "Centro (UFRGS)", neighborhood: "Centro Histórico" },
+  { city: "Recife", area: "Cidade Universitária (UFPE)", neighborhood: "Cidade Universitária" },
+  { city: "Curitiba", area: "Jardim Botânico (UFPR)", neighborhood: "Jardim Botânico" },
+  { city: "Campinas", area: "Barão Geraldo (Unicamp)", neighborhood: "Barão Geraldo" },
+];
+
+export const mockListings: Listing[] = Array.from({ length: 36 }, (_, i) => {
+  const areaInfo = universityAreas[i % universityAreas.length];
+  return {
+    id: `quarto${i + 1}`,
+    title: `Quarto para Universitário em ${areaInfo.neighborhood}`,
+    description: `Quarto individual mobiliado, ideal para estudantes. Localizado em ${areaInfo.neighborhood}, ${areaInfo.city}, próximo à ${areaInfo.area}. Ambiente tranquilo e seguro, com escrivaninha, cadeira confortável e internet de alta velocidade. Perfeito para focar nos estudos e aproveitar a vida universitária.`,
+    images: [
+      `https://picsum.photos/seed/quarto${i + 1}_1/800/450`,
+      `https://picsum.photos/seed/quarto${i + 1}_2/800/450`,
+      `https://picsum.photos/seed/quarto${i + 1}_3/800/450`,
+      `https://picsum.photos/seed/quarto${i + 1}_4/800/450`,
+    ],
+    pricePerNight: 35 + i * 2, // Adjusted price for student rooms (per night, can be interpreted as daily rate for monthly calc)
+    rating: parseFloat((4.3 + Math.random() * 0.7).toFixed(1)), // Between 4.3 and 5.0
+    location: {
+      address: `Rua dos Estudantes, ${100 + i}, ${areaInfo.neighborhood}, ${areaInfo.city}`,
+      lat: -23.5505 + (i * 0.001), // Example Lat/Lng for São Paulo area
+      lng: -46.6333 + (i * 0.001),
+    },
+    amenities: commonAmenities.sort(() => 0.5 - Math.random()).slice(0, 3 + (i % 4)), // Vary amenities
+    host: {
+      name: `Anfitrião ${String.fromCharCode(65 + (i % 26))}`, 
+      avatarUrl: `https://picsum.photos/seed/host${i + 1}/80/80`,
+    },
+    reviews: generateReviews(`quarto${i + 1}`, 2 + (i % 4)),
+    type: "Quarto para universitário",
+    guests: 1,
+    bedrooms: 1,
+    beds: 1,
+    baths: 1,
+  };
+});
 
 export const mockBookings: Booking[] = [
   {
-    id: 'booking1',
-    listingId: 'listing1',
+    id: 'reserva1',
+    listingId: 'quarto1',
     listingTitle: mockListings[0].title,
     listingImage: mockListings[0].images[0],
     userId: 'user1',
-    startDate: '2024-08-15',
-    endDate: '2024-08-20',
-    totalPrice: mockListings[0].pricePerNight * 5,
+    startDate: '2024-08-01',
+    endDate: '2024-12-20', // Longer term for students
+    totalPrice: mockListings[0].pricePerNight * 30 * 4.5, // Approximate monthly * duration
     status: 'active',
   },
   {
-    id: 'booking2',
-    listingId: 'listing3',
+    id: 'reserva2',
+    listingId: 'quarto3',
     listingTitle: mockListings[2].title,
     listingImage: mockListings[2].images[0],
     userId: 'user1',
-    startDate: '2024-07-01',
-    endDate: '2024-07-05',
-    totalPrice: mockListings[2].pricePerNight * 4,
+    startDate: '2024-02-10',
+    endDate: '2024-06-30',
+    totalPrice: mockListings[2].pricePerNight * 30 * 4.5,
     status: 'past',
   },
   {
-    id: 'booking3',
-    listingId: 'listing5',
+    id: 'reserva3',
+    listingId: 'quarto5',
     listingTitle: mockListings[4].title,
     listingImage: mockListings[4].images[0],
     userId: 'user1',
-    startDate: '2024-09-01',
-    endDate: '2024-09-03',
-    totalPrice: mockListings[4].pricePerNight * 2,
+    startDate: '2025-01-15',
+    endDate: '2025-05-15',
+    totalPrice: mockListings[4].pricePerNight * 30 * 4,
     status: 'active',
   },
 ];

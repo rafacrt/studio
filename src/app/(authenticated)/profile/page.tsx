@@ -1,5 +1,6 @@
 "use client";
 
+import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -10,20 +11,19 @@ import { triggerHapticFeedback } from '@/lib/utils';
 import Link from 'next/link';
 
 const menuOptions = [
-  { label: 'Personal Info', icon: Edit3, href: '/profile/edit' },
-  { label: 'Account Settings', icon: Settings, href: '/profile/settings' },
-  { label: 'Login & Security', icon: Shield, href: '/profile/security' },
-  { label: 'Payments & Payouts', icon: CreditCard, href: '/profile/payments' },
-  { label: 'Notifications', icon: Bell, href: '/profile/notifications' },
-  { label: 'Get Help', icon: HelpCircle, href: '/support' },
+  { label: 'Informações Pessoais', icon: Edit3, href: '/profile/edit' },
+  { label: 'Configurações da Conta', icon: Settings, href: '/profile/settings' },
+  { label: 'Login e Segurança', icon: Shield, href: '/profile/security' },
+  { label: 'Pagamentos', icon: CreditCard, href: '/profile/payments' },
+  { label: 'Notificações', icon: Bell, href: '/profile/notifications' },
+  { label: 'Ajuda', icon: HelpCircle, href: '/support' },
 ];
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
 
   if (!user) {
-    // This should ideally be handled by the AuthenticatedLayout, but as a fallback:
-    return <div className="p-4 text-center">Loading user profile...</div>;
+    return <div className="p-4 text-center">Carregando perfil do usuário...</div>;
   }
 
   const handleLogout = () => {
@@ -34,10 +34,9 @@ export default function ProfilePage() {
   return (
     <div className="container mx-auto px-0 py-6 sm:px-4">
       <div className="px-4 sm:px-0">
-        <h1 className="text-3xl font-bold text-foreground mb-8">Profile</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-8">Perfil</h1>
       </div>
       
-      {/* User Info Card */}
       <Card className="mb-8 shadow-lg rounded-xl overflow-hidden mx-4 sm:mx-0">
         <CardContent className="p-6 flex items-center space-x-4">
           <Avatar className="h-20 w-20 border-2 border-primary">
@@ -48,13 +47,12 @@ export default function ProfilePage() {
             <h2 className="text-xl font-semibold text-foreground">{user.name}</h2>
             <p className="text-sm text-muted-foreground">{user.email}</p>
             <Button variant="link" className="p-0 h-auto text-primary text-sm mt-1" asChild>
-              <Link href="/profile/edit" onClick={() => triggerHapticFeedback(5)}>Edit profile</Link>
+              <Link href="/profile/edit" onClick={() => triggerHapticFeedback(5)}>Editar perfil</Link>
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Menu Options */}
       <div className="space-y-1 mx-0 sm:mx-0">
         {menuOptions.map((item, index) => (
           <React.Fragment key={item.label}>
@@ -72,7 +70,6 @@ export default function ProfilePage() {
         ))}
       </div>
       
-      {/* Logout Button */}
       <div className="mt-10 px-4 sm:px-0">
         <Button
           variant="outline"
@@ -80,18 +77,18 @@ export default function ProfilePage() {
           onClick={handleLogout}
         >
           <LogOut className="mr-2 h-5 w-5" />
-          Log Out
+          Sair
         </Button>
       </div>
 
       <p className="mt-10 text-center text-xs text-muted-foreground px-4 sm:px-0">
-        Version 1.0.0 (Build 202407)
+        Versão 1.0.0 (Build 202407)
       </p>
     </div>
   );
 }
 
 // Placeholder pages for menu items to avoid 404s
-export function EditProfilePage() { return <div className="p-4">Edit Profile Page Content</div>; }
-export function SettingsPage() { return <div className="p-4">Account Settings Page Content</div>; }
+export function EditProfilePage() { return <div className="p-4">Conteúdo da Página Editar Perfil</div>; }
+export function SettingsPage() { return <div className="p-4">Conteúdo da Página Configurações da Conta</div>; }
 // ... etc.

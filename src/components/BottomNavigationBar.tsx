@@ -6,17 +6,17 @@ import { Compass, CalendarCheck, UserCircle2, KeyRound } from 'lucide-react';
 import { cn, triggerHapticFeedback } from '@/lib/utils';
 
 const navItems = [
-  { href: '/explore', label: 'Explore', icon: Compass },
-  { href: '/bookings', label: 'Bookings', icon: CalendarCheck },
-  { href: '/profile', label: 'Profile', icon: UserCircle2 },
-  { href: '/access', label: 'Access', icon: KeyRound },
+  { href: '/explore', label: 'Explorar', icon: Compass },
+  { href: '/bookings', label: 'Reservas', icon: CalendarCheck },
+  { href: '/profile', label: 'Perfil', icon: UserCircle2 },
+  { href: '/access', label: 'Acesso', icon: KeyRound },
 ];
 
 export function BottomNavigationBar() {
   const pathname = usePathname();
 
   const handleNavClick = () => {
-    triggerHapticFeedback(5); // Light vibration for tab switch
+    triggerHapticFeedback(5); 
   };
 
   return (
@@ -44,3 +44,4 @@ export function BottomNavigationBar() {
     </nav>
   );
 }
+

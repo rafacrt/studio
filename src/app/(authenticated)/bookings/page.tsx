@@ -8,6 +8,7 @@ import { BookingCard } from '@/components/BookingCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 
 export default function BookingsPage() {
   const { user } = useAuth();
@@ -22,7 +23,7 @@ export default function BookingsPage() {
           const userBookings = await fetchUserBookings(user.id);
           setBookings(userBookings);
         } catch (error) {
-          console.error("Failed to fetch bookings:", error);
+          console.error("Falha ao buscar reservas:", error);
           // Handle error, e.g. show toast
         } finally {
           setIsLoading(false);
@@ -58,7 +59,7 @@ export default function BookingsPage() {
       );
     }
     if (list.length === 0) {
-      return <p className="text-center text-muted-foreground py-8">No {type} bookings found.</p>;
+      return <p className="text-center text-muted-foreground py-8">Nenhuma reserva {type === 'active' ? 'ativa' : 'anterior'} encontrada.</p>;
     }
     return (
       <div className="space-y-4">
@@ -69,11 +70,11 @@ export default function BookingsPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-foreground mb-6">My Bookings</h1>
+      <h1 className="text-3xl font-bold text-foreground mb-6">Minhas Reservas</h1>
       <Tabs defaultValue="active" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-6 h-12 rounded-lg p-1">
-          <TabsTrigger value="active" className="text-base data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-md h-full">Active</TabsTrigger>
-          <TabsTrigger value="past" className="text-base data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-md h-full">Past</TabsTrigger>
+          <TabsTrigger value="active" className="text-base data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-md h-full">Ativas</TabsTrigger>
+          <TabsTrigger value="past" className="text-base data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md rounded-md h-full">Anteriores</TabsTrigger>
         </TabsList>
         <TabsContent value="active">
           {renderBookingList(activeBookings, 'active')}
@@ -85,3 +86,4 @@ export default function BookingsPage() {
     </div>
   );
 }
+

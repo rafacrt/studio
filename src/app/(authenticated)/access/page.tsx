@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, KeyRound, ScanLine, CheckCircle, XCircle, LockOpen } from 'lucide-react';
+import { Loader2, KeyRound, ScanLine, XCircle, LockOpen } from 'lucide-react'; // Removed CheckCircle as LockOpen is used for success
 import { triggerHapticFeedback } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
@@ -20,7 +20,7 @@ function AccessPageContent() {
 
   useEffect(() => {
     if (!listingId) {
-      toast({ title: "Access Denied", description: "No listing specified for access.", variant: "destructive"});
+      toast({ title: "Acesso Negado", description: "Nenhum quarto especificado para acesso.", variant: "destructive"});
       setStatus('failed');
     }
   }, [listingId, toast]);
@@ -32,22 +32,22 @@ function AccessPageContent() {
       timer = setTimeout(() => setCountdown(prev => prev - 1), 1000);
     } else if (status === 'unlocking' && countdown === 0) {
       setStatus('unlocked');
-      triggerHapticFeedback([100, 50, 100]); // Success vibration
+      triggerHapticFeedback([100, 50, 100]); 
     }
     return () => clearTimeout(timer);
   }, [status, countdown]);
 
   const handleAccessAttempt = () => {
     if (!listingId) {
-      toast({ title: "Error", description: "Cannot initiate access without a listing ID.", variant: "destructive"});
+      toast({ title: "Erro", description: "Não é possível iniciar o acesso sem um ID de quarto.", variant: "destructive"});
       return;
     }
-    triggerHapticFeedback(50); // Strong vibration for action
+    triggerHapticFeedback(50); 
     setStatus('scanning');
     setTimeout(() => {
       setStatus('unlocking');
       setCountdown(3);
-    }, 2000); // Simulate scanning for 2 seconds
+    }, 2000); 
   };
 
   const getStatusContent = () => {
@@ -55,43 +55,43 @@ function AccessPageContent() {
       case 'idle':
         return {
           icon: <KeyRound size={64} className="text-primary" />,
-          text: 'Ready to Unlock',
-          buttonText: 'Press to Unlock',
+          text: 'Pronto para Desbloquear',
+          buttonText: 'Pressione para Desbloquear',
           buttonDisabled: !listingId,
         };
       case 'scanning':
         return {
           icon: <ScanLine size={64} className="text-primary animate-pulse" />,
-          text: 'Scanning...',
-          buttonText: 'Scanning...',
+          text: 'Escaneando...',
+          buttonText: 'Escaneando...',
           buttonDisabled: true,
         };
       case 'unlocking':
         return {
           icon: <Loader2 size={64} className="text-primary animate-spin" />,
-          text: `Unlocking... ${countdown}`,
-          buttonText: `Unlocking... ${countdown}`,
+          text: `Desbloqueando... ${countdown}`,
+          buttonText: `Desbloqueando... ${countdown}`,
           buttonDisabled: true,
         };
       case 'unlocked':
         return {
           icon: <LockOpen size={64} className="text-accent" />,
-          text: 'Door Unlocked!',
-          buttonText: 'Unlocked',
+          text: 'Porta Desbloqueada!',
+          buttonText: 'Desbloqueada',
           buttonDisabled: true,
         };
       case 'failed':
         return {
           icon: <XCircle size={64} className="text-destructive" />,
-          text: 'Access Failed',
-          buttonText: 'Try Again',
+          text: 'Falha no Acesso',
+          buttonText: 'Tentar Novamente',
           buttonDisabled: !listingId,
         };
       default:
         return {
           icon: <KeyRound size={64} className="text-primary" />,
-          text: 'Ready',
-          buttonText: 'Unlock',
+          text: 'Pronto',
+          buttonText: 'Desbloquear',
           buttonDisabled: !listingId,
         };
     }
@@ -107,11 +107,11 @@ function AccessPageContent() {
       <h1 className="text-3xl font-bold text-foreground mb-6">{text}</h1>
       
       <p className="text-muted-foreground mb-10 max-w-md">
-        {status === 'idle' && `Press the button below to simulate unlocking the door for your booking${listingId ? ` at listing ${listingId}`: ''}.`}
-        {status === 'scanning' && 'Hold your device near the door. We are attempting to securely connect.'}
-        {status === 'unlocking' && 'Connection established. Verifying access and unlocking the door.'}
-        {status === 'unlocked' && `Welcome! The door is now unlocked. Please enter.`}
-        {status === 'failed' && 'Could not complete the access request. Please check your connection or booking details and try again.'}
+        {status === 'idle' && `Pressione o botão abaixo para simular o desbloqueio da porta para sua reserva${listingId ? ` no quarto ${listingId}`: ''}.`}
+        {status === 'scanning' && 'Mantenha seu dispositivo próximo à porta. Estamos tentando conectar com segurança.'}
+        {status === 'unlocking' && 'Conexão estabelecida. Verificando acesso e desbloqueando a porta.'}
+        {status === 'unlocked' && `Bem-vindo(a)! A porta está agora desbloqueada. Por favor, entre.`}
+        {status === 'failed' && 'Não foi possível completar a solicitação de acesso. Verifique sua conexão ou detalhes da reserva e tente novamente.'}
       </p>
 
       <Button
@@ -119,8 +119,8 @@ function AccessPageContent() {
         className={cn(
           "rounded-full h-24 w-24 sm:h-32 sm:w-32 text-lg font-semibold p-0 shadow-xl transition-all duration-300",
           status === 'idle' && 'bg-primary hover:bg-primary/90 text-primary-foreground',
-          status === 'scanning' && 'bg-blue-500 text-white cursor-not-allowed',
-          status === 'unlocking' && 'bg-yellow-500 text-white cursor-not-allowed',
+          status === 'scanning' && 'bg-blue-500 text-white cursor-not-allowed', // Keeping specific colors for states as per original
+          status === 'unlocking' && 'bg-yellow-500 text-white cursor-not-allowed', // Keeping specific colors for states as per original
           status === 'unlocked' && 'bg-accent hover:bg-accent/90 text-accent-foreground cursor-not-allowed',
           status === 'failed' && 'bg-destructive hover:bg-destructive/90 text-destructive-foreground'
         )}
@@ -134,10 +134,10 @@ function AccessPageContent() {
          {status === 'unlocked' && <LockOpen size={36} />}
          {status === 'failed' && <XCircle size={36} />}
       </Button>
-      <p className="sr-only">{buttonText}</p> {/* For screen readers, actual button text is icon */}
+      <p className="sr-only">{buttonText}</p>
 
       {listingId && status !== 'failed' &&
-        <p className="text-xs text-muted-foreground mt-8">Accessing Listing ID: {listingId}</p>
+        <p className="text-xs text-muted-foreground mt-8">Acessando Quarto ID: {listingId}</p>
       }
     </div>
   );

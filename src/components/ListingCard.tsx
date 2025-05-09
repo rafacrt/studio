@@ -22,7 +22,7 @@ export function ListingCard({ listing }: ListingCardProps) {
             width={400}
             height={225}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            data-ai-hint="apartment interior"
+            data-ai-hint="student room interior"
           />
         </div>
         <CardContent className="p-4 space-y-1">
@@ -30,16 +30,17 @@ export function ListingCard({ listing }: ListingCardProps) {
             {listing.title}
           </h3>
           <p className="text-sm text-muted-foreground line-clamp-2">
-            {listing.description}
+            {listing.location.address.split(',').slice(1, 3).join(', ').trim()}
           </p>
           <div className="flex items-center justify-between pt-1">
             <p className="text-sm font-medium text-foreground">
-              ${listing.pricePerNight} <span className="text-xs text-muted-foreground">/ night</span>
+              R${listing.pricePerNight.toFixed(0)} <span className="text-xs text-muted-foreground">/ mês (aprox.)</span>
             </p>
-            <StarRating rating={listing.rating} size={14} showText={false} />
+            <StarRating rating={listing.rating} size={14} showText={true} />
           </div>
         </CardContent>
       </Card>
     </Link>
   );
 }
+

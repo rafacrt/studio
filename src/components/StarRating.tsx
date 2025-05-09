@@ -20,6 +20,8 @@ export function StarRating({
   const halfStar = rating % 1 >= 0.5;
   const emptyStars = totalStars - fullStars - (halfStar ? 1 : 0);
 
+  const formattedRating = rating.toFixed(1).replace('.', ',');
+
   return (
     <div className={cn("flex items-center gap-1", className)}>
       {[...Array(fullStars)].map((_, i) => (
@@ -31,7 +33,8 @@ export function StarRating({
       {[...Array(emptyStars)].map((_, i) => (
         <Star key={`empty-${i}`} fill="currentColor" strokeWidth={0} className="text-gray-300 dark:text-gray-600" style={{ width: size, height: size }} />
       ))}
-      {showText && <span className="ml-1 text-xs font-medium text-muted-foreground">{rating.toFixed(1)}</span>}
+      {showText && <span className="ml-1 text-xs font-medium text-muted-foreground">{formattedRating}</span>}
     </div>
   );
 }
+

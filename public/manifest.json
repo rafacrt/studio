@@ -1,7 +1,7 @@
 {
   "name": "Alugo",
   "short_name": "Alugo",
-  "description": "Discover and book unique accommodations with Alugo.",
+  "description": "Descubra e reserve quartos únicos para universitários com o Alugo.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F2F2F7",
@@ -50,3 +50,4 @@
     }
   ]
 }
+

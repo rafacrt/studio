@@ -29,7 +29,7 @@ export default function ExplorePage() {
         setHasMore(false);
       }
     } catch (error) {
-      console.error("Failed to fetch listings:", error);
+      console.error("Falha ao buscar quartos:", error);
       // Potentially show a toast message
     } finally {
       setIsLoading(false);
@@ -53,15 +53,15 @@ export default function ExplorePage() {
   }, [isLoading, hasMore]);
 
   useEffect(() => {
-    if (page > 1) { // Don't load on page 1 again if already loaded initially
+    if (page > 1) { 
       loadListings(page);
     }
   }, [page, loadListings]);
   
-  // Filter listings based on search term (client-side filtering for demo)
   const filteredListings = listings.filter(listing =>
     listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    listing.description.toLowerCase().includes(searchTerm.toLowerCase())
+    listing.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    listing.location.address.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -71,7 +71,7 @@ export default function ExplorePage() {
           <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search destinations..."
+            placeholder="Buscar por bairro, cidade, universidade..."
             className="w-full rounded-full bg-secondary pl-10 pr-4 py-2 h-11 text-base focus:ring-primary"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -108,8 +108,12 @@ export default function ExplorePage() {
       )}
 
       {!hasMore && listings.length > 0 && (
-        <p className="mt-8 text-center text-muted-foreground">No more listings to show.</p>
+        <p className="mt-8 text-center text-muted-foreground">Não há mais quartos para mostrar.</p>
+      )}
+       {listings.length > 0 && filteredListings.length === 0 && !isLoading && (
+        <p className="mt-8 text-center text-muted-foreground">Nenhum quarto encontrado para "{searchTerm}".</p>
       )}
     </div>
   );
 }
+

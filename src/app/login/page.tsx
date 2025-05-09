@@ -14,8 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { triggerHapticFeedback } from '@/lib/utils';
 
 const loginSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  email: z.string().email({ message: "Endereço de e-mail inválido" }),
+  password: z.string().min(1, { message: "A senha é obrigatória" }), // Allow any password for mock
 });
 
 type LoginFormInputs = z.infer<typeof loginSchema>;
@@ -35,8 +35,8 @@ export default function LoginPage() {
       await login(data.email, data.password);
     } catch (error) {
       toast({
-        title: "Login Failed",
-        description: (error as Error).message || "Please check your credentials and try again.",
+        title: "Falha no Login",
+        description: (error as Error).message || "Verifique suas credenciais e tente novamente.",
         variant: "destructive",
       });
     }
@@ -48,26 +48,26 @@ export default function LoginPage() {
         <div className="text-center">
           <AppLogo className="mx-auto h-12 w-auto" />
           <h2 className="mt-6 text-2xl font-bold tracking-tight text-foreground">
-            Sign in to Alugo
+            Acesse sua conta Alugo
           </h2>
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 rounded-lg bg-card p-6 shadow-lg sm:p-8">
           <div>
-            <Label htmlFor="email" className="text-sm font-medium text-foreground">Email address</Label>
+            <Label htmlFor="email" className="text-sm font-medium text-foreground">Endereço de e-mail</Label>
             <Input
               id="email"
               type="email"
               autoComplete="email"
               {...register("email")}
               className={`mt-1 ${errors.email ? 'border-destructive focus:ring-destructive' : ''}`}
-              placeholder="you@example.com"
+              placeholder="seuemail@exemplo.com"
               aria-invalid={errors.email ? "true" : "false"}
             />
             {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
           </div>
 
           <div>
-            <Label htmlFor="password" className="text-sm font-medium text-foreground">Password</Label>
+            <Label htmlFor="password" className="text-sm font-medium text-foreground">Senha</Label>
             <div className="relative mt-1">
               <Input
                 id="password"
@@ -82,7 +82,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
@@ -98,9 +98,10 @@ export default function LoginPage() {
           </div>
         </form>
         <p className="text-center text-sm text-muted-foreground">
-          Inspired by Airbnb, designed for iOS.
+          Encontre o quarto ideal para sua vida universitária.
         </p>
       </div>
     </div>
   );
 }
+

@@ -4,13 +4,13 @@ import type { User } from '@/types';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { simulateApiCall } from '@/lib/utils';
-import { mockUser } from '@/lib/mock-data'; // Will be created
+import { mockUser } from '@/lib/mock-data'; 
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoadingAuth: boolean;
-  login: (email: string, password?: string) => Promise<void>; // Password optional for demo
+  login: (email: string, password?: string) => Promise<void>; 
   logout: () => void;
 }
 
@@ -31,24 +31,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password?: string) => {
     setIsLoadingAuth(true);
-    // Simulate API call for login
     try {
-      // In a real app, you'd validate credentials against a backend
-      // For this demo, we'll use a mock user if email matches
-      const foundUser = email === mockUser.email ? mockUser : null;
+      // Simulate accepting any email/password by always using the mockUser
+      const foundUser = { ...mockUser, email: email }; // Use provided email for display, but always "log in"
       
-      if (foundUser) {
-        await simulateApiCall(foundUser, 500); // Simulate network delay
-        setUser(foundUser);
-        localStorage.setItem('alugoUser', JSON.stringify(foundUser));
-        router.push('/explore');
-      } else {
-        throw new Error("Invalid credentials");
-      }
+      await simulateApiCall(foundUser, 500); 
+      setUser(foundUser);
+      localStorage.setItem('alugoUser', JSON.stringify(foundUser));
+      router.push('/explore');
     } catch (error) {
       console.error("Login failed:", error);
-      // Handle login error (e.g., show a toast message)
-      throw error; // Re-throw for the login page to handle
+      throw new Error("Credenciais inválidas"); 
     } finally {
       setIsLoadingAuth(false);
     }
@@ -70,7 +63,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 };
+
