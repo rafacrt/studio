@@ -1,10 +1,10 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-// import { useRouter } from 'next/navigation'; // Not strictly needed
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { login } from '@/lib/auth-actions'; 
+import type { User } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogIn } from 'lucide-react';
 
@@ -31,13 +32,6 @@ type LoginFormValues = z.infer<typeof formSchema>;
 export function AuthForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  // const [redirectPath, setRedirectPath] = useState<string | null>(null); // Temporarily removed for debugging
-
-  // useEffect(() => {
-  //   const params = new URLSearchParams(window.location.search);
-  //   setRedirectPath(params.get('redirectedFrom'));
-  // }, []);
-
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
@@ -51,20 +45,18 @@ export function AuthForm() {
     setIsLoading(true);
     console.log('[AuthForm] Submitting login form with values:', {username: values.username, password: values.password ? '******' : 'undefined'});
     try {
-      const user = await login(values.username, values.password);
+      const user: User | null = await login(values.username, values.password);
       if (user) {
         toast({
           title: 'Login Bem-Sucedido',
           description: `Bem-vindo de volta, ${user.username}! Redirecionando...`,
         });
-        // Forcing redirect to /dashboard to simplify debugging
-        // The component will unmount, so no need to setIsLoading(false) here
         console.log('[AuthForm] Login successful, redirecting to /dashboard...');
-        // Using a small timeout to allow toast to be visible, though window.location.href is abrupt
         setTimeout(() => {
            window.location.href = '/dashboard'; 
         }, 100);
       } else {
+        // This case is hit if auth.login returns null (bad credentials or handled internal error in auth.ts)
         toast({
           title: 'Falha no Login',
           description: 'Nome de usuário ou senha inválidos.',
@@ -72,11 +64,30 @@ export function AuthForm() {
         });
         setIsLoading(false);
       }
-    } catch (error) {
-      console.error("[AuthForm] Login error:", error);
+    } catch (error: any) { // Catch as 'any' to inspect it
+      console.error("[AuthForm] Login error object:", error); // Log the actual error object to browser console
+
+      let toastTitle = 'Ocorreu um Erro';
+      let toastDescription = 'Não foi possível conectar ao servidor. Por favor, tente novamente mais tarde.';
+
+      if (error instanceof Error) {
+        toastTitle = 'Erro no Login';
+        // Use error.message if available, otherwise a generic message
+        toastDescription = error.message || 'Falha ao processar o login. Verifique os logs do servidor.';
+      } else if (typeof error === 'string') {
+        // If the server action throws a plain string (not recommended)
+        toastTitle = 'Erro Recebido do Servidor';
+        toastDescription = error;
+      } else if (error && typeof error.message === 'string') {
+        // Handle cases where error is an object with a message property (e.g. from some fetch wrappers)
+        toastTitle = 'Erro Detalhado';
+        toastDescription = error.message;
+      }
+      // Fallback to generic if no specific message could be extracted
+
       toast({
-        title: 'Ocorreu um erro',
-        description: 'Por favor, tente novamente mais tarde.',
+        title: toastTitle,
+        description: toastDescription,
         variant: 'destructive',
       });
       setIsLoading(false);
@@ -131,3 +142,4 @@ export function AuthForm() {
     </Card>
   );
 }
+
