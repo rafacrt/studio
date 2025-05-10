@@ -1,4 +1,3 @@
-
 'use client';
 
 import { GoogleMap, LoadScript, Marker, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
@@ -15,8 +14,6 @@ interface ListingMapProps {
   universityName: string;
 }
 
-// Removed hardcoded API_KEY constant
-
 const mapContainerStyle = {
   width: '100%',
   height: '300px', 
@@ -31,10 +28,9 @@ interface TravelInfo {
 }
 
 export function ListingMap({ listingLocation, universityLocation, universityName }: ListingMapProps) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY; // Use environment variable
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY; 
 
   const [directionsDriving, setDirectionsDriving] = useState<google.maps.DirectionsResult | null>(null);
-  // const [directionsWalking, setDirectionsWalking] = useState<google.maps.DirectionsResult | null>(null); // Walking directions not rendered
   
   const [travelInfoDriving, setTravelInfoDriving] = useState<TravelInfo | null>(null);
   const [travelInfoWalking, setTravelInfoWalking] = useState<TravelInfo | null>(null);
@@ -56,8 +52,6 @@ export function ListingMap({ listingLocation, universityLocation, universityName
             setDirectionsDriving(response);
             setTravelInfoDriving(info);
           } else {
-            // Don't set directions for walking to avoid clutter, just info
-            // setDirectionsWalking(response); // Not rendering walking path
             setTravelInfoWalking(info);
           }
         } else {
@@ -65,7 +59,13 @@ export function ListingMap({ listingLocation, universityLocation, universityName
         }
       } else {
         console.warn(`Directions request failed for ${mode} due to ${status}`);
-        setError(`Falha ao calcular rota (${mode}): ${status}`);
+        let errorMessage = `Falha ao calcular rota (${mode}): ${status}`;
+        if (status === 'REQUEST_DENIED') {
+          errorMessage += '. Verifique se a API Key é válida, se o faturamento está ativado e se a Directions API está habilitada no Google Cloud Console.';
+        } else if (status === 'ZERO_RESULTS') {
+          errorMessage = `Não foram encontradas rotas (${mode}) entre os locais especificados.`;
+        }
+        setError(errorMessage);
       }
     },
     []
@@ -111,25 +111,24 @@ export function ListingMap({ listingLocation, universityLocation, universityName
             {universityLocation && <Marker position={universityLocation} title={universityName} icon={{ url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" }} />}
             
             {listingLocation && universityLocation && (
-              <DirectionsService
-                options={{
-                  destination: universityLocation,
-                  origin: listingLocation,
-                  travelMode: google.maps.TravelMode.DRIVING,
-                }}
-                callback={(res, status) => directionsCallback(res, status, 'DRIVING')}
-              />
-            )}
-
-            {listingLocation && universityLocation && !travelInfoWalking && (
-               <DirectionsService
-                options={{
-                  destination: universityLocation,
-                  origin: listingLocation,
-                  travelMode: google.maps.TravelMode.WALKING,
-                }}
-                callback={(res, status) => directionsCallback(res, status, 'WALKING')}
-              />
+              <>
+                <DirectionsService
+                  options={{
+                    destination: universityLocation,
+                    origin: listingLocation,
+                    travelMode: google.maps.TravelMode.DRIVING,
+                  }}
+                  callback={(res, status) => directionsCallback(res, status, 'DRIVING')}
+                />
+                <DirectionsService
+                  options={{
+                    destination: universityLocation,
+                    origin: listingLocation,
+                    travelMode: google.maps.TravelMode.WALKING,
+                  }}
+                  callback={(res, status) => directionsCallback(res, status, 'WALKING')}
+                />
+              </>
             )}
 
             {directionsDriving && (
@@ -148,12 +147,12 @@ export function ListingMap({ listingLocation, universityLocation, universityName
       </LoadScript>
 
       {error && (
-        <Badge variant="destructive" className="w-full justify-center p-2 text-center">
-          <AlertTriangle className="mr-2 h-4 w-4" /> {error}
+        <Badge variant="destructive" className="w-full justify-center p-2 text-center text-wrap">
+          <AlertTriangle className="mr-2 h-4 w-4 flex-shrink-0" /> {error}
         </Badge>
       )}
 
-      {(travelInfoDriving || travelInfoWalking) && (
+      {(travelInfoDriving || travelInfoWalking) && !error && (
         <Card className="shadow-sm">
             <CardHeader className="pb-2 pt-4">
                 <CardTitle className="text-base font-medium flex items-center">
@@ -183,7 +182,7 @@ export function ListingMap({ listingLocation, universityLocation, universityName
           </CardContent>
         </Card>
       )}
-       {!mapReady && !error && (!travelInfoDriving || !travelInfoWalking) && (
+       {!mapReady && !error && (!travelInfoDriving && !travelInfoWalking) && (
          <Card className="shadow-sm">
             <CardHeader className="pb-2 pt-4">
                 <CardTitle className="text-base font-medium flex items-center">
@@ -199,4 +198,3 @@ export function ListingMap({ listingLocation, universityLocation, universityName
     </div>
   );
 }
-
