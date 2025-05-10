@@ -3,8 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-// useRouter is not strictly needed if we use window.location.href, but can be kept for other potential uses or future refactor
-// import { useRouter } from 'next/navigation'; 
+// import { useRouter } from 'next/navigation'; // Not strictly needed
 import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -24,22 +23,20 @@ import { LogIn } from 'lucide-react';
 
 const formSchema = z.object({
   username: z.string().min(1, { message: 'Nome de usuário é obrigatório.' }),
-  password: z.string().optional(), 
+  password: z.string().min(1, { message: 'Senha é obrigatória.' }), 
 });
 
 type LoginFormValues = z.infer<typeof formSchema>;
 
 export function AuthForm() {
-  // const router = useRouter(); // Keep for now, may not be used for post-login redirect
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [redirectPath, setRedirectPath] = useState<string | null>(null);
+  // const [redirectPath, setRedirectPath] = useState<string | null>(null); // Temporarily removed for debugging
 
-  useEffect(() => {
-    // Extract redirect path from query params
-    const params = new URLSearchParams(window.location.search);
-    setRedirectPath(params.get('redirectedFrom'));
-  }, []);
+  // useEffect(() => {
+  //   const params = new URLSearchParams(window.location.search);
+  //   setRedirectPath(params.get('redirectedFrom'));
+  // }, []);
 
 
   const form = useForm<LoginFormValues>({
@@ -52,6 +49,7 @@ export function AuthForm() {
 
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
+    console.log('[AuthForm] Submitting login form with values:', {username: values.username, password: values.password ? '******' : 'undefined'});
     try {
       const user = await login(values.username, values.password);
       if (user) {
@@ -59,29 +57,28 @@ export function AuthForm() {
           title: 'Login Bem-Sucedido',
           description: `Bem-vindo de volta, ${user.username}! Redirecionando...`,
         });
-        // Use window.location.href for a full page redirect
-        // This ensures the cookie set by the server action is sent with the new request
-        window.location.href = redirectPath || '/dashboard'; 
-        // router.push('/dashboard'); // Previous method
-        // router.refresh(); // Previous method
+        // Forcing redirect to /dashboard to simplify debugging
+        // The component will unmount, so no need to setIsLoading(false) here
+        console.log('[AuthForm] Login successful, redirecting to /dashboard...');
+        // Using a small timeout to allow toast to be visible, though window.location.href is abrupt
+        setTimeout(() => {
+           window.location.href = '/dashboard'; 
+        }, 100);
       } else {
         toast({
           title: 'Falha no Login',
           description: 'Nome de usuário ou senha inválidos.',
           variant: 'destructive',
         });
+        setIsLoading(false);
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("[AuthForm] Login error:", error);
       toast({
         title: 'Ocorreu um erro',
         description: 'Por favor, tente novamente mais tarde.',
         variant: 'destructive',
       });
-    } finally {
-      // Only set isLoading to false if not redirecting, to avoid UI flash
-      // However, with window.location.href, this component will unmount anyway.
-      // So, it's generally safe to always set it.
       setIsLoading(false);
     }
   }
@@ -118,7 +115,7 @@ export function AuthForm() {
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Digite qualquer senha para mock" {...field} />
+                    <Input type="password" placeholder="Digite 'admin' para mock" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
