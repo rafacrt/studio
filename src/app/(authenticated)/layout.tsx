@@ -1,6 +1,8 @@
+
 "use client";
 
 import { BottomNavigationBar } from '@/components/BottomNavigationBar';
+import { Header } from '@/components/Header'; // Import Header
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -30,7 +32,9 @@ export default function AuthenticatedLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <main className="flex-grow pb-20 pt-safe-top"> {/* pb-20 for bottom nav, pt-safe-top for status bar */}
+      <Header />
+      {/* The main content needs padding-top to account for the sticky header's height (h-16 = 4rem) */}
+      <main className="flex-grow pb-20 pt-16"> {/* Adjusted pt-16, pb-20 for bottom nav */}
         {children}
       </main>
       <BottomNavigationBar />
