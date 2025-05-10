@@ -6,27 +6,52 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit3, Trash2, Search } from "lucide-react";
+import { Edit3, Trash2, Search, Mail } from "lucide-react"; // Added Mail icon
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast"; // Added useToast
+import { useState } from "react"; // Added useState for search
+import { mockUser, mockAdminUser } from '@/lib/mock-data'; // Ensure mockUsers are correctly sourced or managed
 
-// Mock data - substitua por dados reais
-const mockUsers = [
-  { id: "user001", name: "Ana Beatriz Costa", email: "ana.costa@email.com", avatarUrl: "https://picsum.photos/seed/user001/40/40", role: "Usuário", status: "Ativo", dateJoined: "2023-05-15" },
-  { id: "user002", name: "Bruno Lima Silva", email: "bruno.lima@email.com", avatarUrl: "https://picsum.photos/seed/user002/40/40", role: "Anfitrião", status: "Ativo", dateJoined: "2023-03-20" },
-  { id: "user003", name: "Carlos Eduardo Reis", email: "carlos.reis@email.com", avatarUrl: "https://picsum.photos/seed/user003/40/40", role: "Usuário", status: "Inativo", dateJoined: "2024-01-10" },
-  { id: "admin1", name: "Admin WeStudy", email: "admin@westudy.com", avatarUrl: "https://picsum.photos/seed/admin1/40/40", role: "Admin", status: "Ativo", dateJoined: "2022-01-01" },
+// Combine mock users for the list
+const allMockUsers = [mockUser, mockAdminUser,
+  { id: "user001", name: "Ana Beatriz Costa", email: "ana.costa@exemplo.com", avatarUrl: "https://picsum.photos/seed/user001/40/40", role: "Usuário", status: "Ativo", dateJoined: "2023-05-15", isAdmin: false },
+  { id: "user002", name: "Bruno Lima Silva", email: "bruno.lima@exemplo.com", avatarUrl: "https://picsum.photos/seed/user002/40/40", role: "Usuário", status: "Ativo", dateJoined: "2023-03-20", isAdmin: false },
+  { id: "user003", name: "Carlos Eduardo Reis", email: "carlos.reis@exemplo.com", avatarUrl: "https://picsum.photos/seed/user003/40/40", role: "Usuário", status: "Inativo", dateJoined: "2024-01-10", isAdmin: false },
 ];
 
 
 export default function UserManagementPage() {
-  // TODO: Lógica para editar, excluir, buscar usuários
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
+
   const handleEditUser = (userId: string) => {
     console.log(`Editar usuário: ${userId}`);
+    toast({ title: "Ação de Edição", description: `Editar usuário ${userId} (funcionalidade pendente).` });
   };
 
   const handleDeleteUser = (userId: string) => {
     console.log(`Excluir usuário: ${userId}`);
+    // Mock deletion: filter out user (in a real app, this would be an API call)
+    // setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+    toast({ title: "Usuário Excluído", description: `Usuário ${userId} foi excluído (simulação).`, variant: "destructive" });
   };
+
+  const handleResetPassword = async (userId: string, userEmail: string) => {
+    console.log(`Redefinir senha para usuário: ${userId} (${userEmail})`);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 700));
+    toast({
+      title: "Redefinição de Senha",
+      description: `Um link para redefinição de senha foi enviado para ${userEmail}. (Simulação)`,
+      variant: "default",
+      className: "bg-accent text-accent-foreground"
+    });
+  };
+  
+  const filteredUsers = allMockUsers.filter(user =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -43,14 +68,14 @@ export default function UserManagementPage() {
                 type="search"
                 placeholder="Buscar usuários por nome ou e-mail..."
                 className="w-full max-w-sm rounded-md bg-background pl-10 pr-4 py-2 h-10 text-sm"
-                // value={searchTerm}
-                // onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          {mockUsers.length > 0 ? (
+          {filteredUsers.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -63,7 +88,7 @@ export default function UserManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockUsers.map((user) => (
+                {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -76,23 +101,26 @@ export default function UserManagementPage() {
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={user.role === "Admin" ? "default" : "outline"}>
-                        {user.role}
+                      <Badge variant={user.isAdmin ? "default" : "outline"}>
+                        {user.isAdmin ? "Admin" : "Usuário"}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={user.status === "Ativo" ? "secondary" : "destructive"} 
                              className={user.status === "Ativo" ? "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700" 
                                                                  : "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700"}>
-                        {user.status}
+                        {user.status || "Ativo"} {/* Default to Ativo if status is missing */}
                       </Badge>
                     </TableCell>
-                    <TableCell>{new Date(user.dateJoined).toLocaleDateString('pt-BR')}</TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button variant="outline" size="icon" onClick={() => handleEditUser(user.id)} title="Editar">
+                    <TableCell>{user.dateJoined ? new Date(user.dateJoined).toLocaleDateString('pt-BR') : 'N/A'}</TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button variant="outline" size="icon" onClick={() => handleEditUser(user.id)} title="Editar Usuário">
                         <Edit3 className="h-4 w-4" />
                       </Button>
-                      <Button variant="destructive" size="icon" onClick={() => handleDeleteUser(user.id)} title="Excluir">
+                       <Button variant="outline" size="icon" onClick={() => handleResetPassword(user.id, user.email)} title="Redefinir Senha">
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                      <Button variant="destructive" size="icon" onClick={() => handleDeleteUser(user.id)} title="Excluir Usuário" disabled={user.isAdmin}> {/* Disable delete for admin for safety */}
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
@@ -108,3 +136,4 @@ export default function UserManagementPage() {
     </div>
   );
 }
+

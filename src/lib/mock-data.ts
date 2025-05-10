@@ -1,4 +1,5 @@
-import type { Listing, Booking, User, Amenity, Review, LatLngLiteral } from '@/types';
+
+import type { Listing, Booking, User, Amenity, Review, LatLngLiteral, UniversityArea } from '@/types'; // Added UniversityArea
 import { Wifi, Tv, ParkingSquare, Utensils, Wind, Thermometer, Bath, Users, BedDouble, BookOpen, Briefcase, School } from 'lucide-react'; // Using BookOpen for Desk, Briefcase for Wardrobe, School for University
 import { simulateApiCall } from '@/lib/utils';
 
@@ -19,13 +20,16 @@ export const mockAdminUser: User = {
 };
 
 
-const commonAmenities: Amenity[] = [
+export const commonAmenities: Amenity[] = [ // Exported
   { id: 'wifi', name: 'Wi-Fi', icon: Wifi },
   { id: 'desk', name: 'Escrivaninha', icon: BookOpen },
   { id: 'wardrobe', name: 'Guarda-roupa', icon: Briefcase },
   { id: 'kitchen', name: 'Cozinha Compartilhada', icon: Utensils },
   { id: 'laundry', name: 'Lavanderia Compartilhada', icon: Wind },
   { id: 'bathroom', name: 'Banheiro Privativo', icon: Bath },
+  { id: 'air-conditioner', name: 'Ar Condicionado', icon: Thermometer },
+  { id: 'parking', name: 'Estacionamento', icon: ParkingSquare },
+  { id: 'tv', name: 'Televisão', icon: Tv },
 ];
 
 const generateReviews = (listingId: string, count: number): Review[] => {
@@ -50,16 +54,7 @@ const generateReviews = (listingId: string, count: number): Review[] => {
   return reviews;
 };
 
-export interface UniversityArea {
-  city: string;
-  name: string;
-  acronym: string;
-  neighborhood: string;
-  lat: number;
-  lng: number;
-}
-
-export const universityAreas: UniversityArea[] = [
+export const universityAreas: UniversityArea[] = [ // Exported
   { city: "São Paulo", name: "Universidade de São Paulo", acronym: "USP", neighborhood: "Butantã", lat: -23.5595, lng: -46.7313 },
   { city: "Rio de Janeiro", name: "Universidade Federal do Rio de Janeiro", acronym: "UFRJ", neighborhood: "Urca", lat: -22.9523, lng: -43.1691 },
   { city: "Belo Horizonte", name: "Universidade Federal de Minas Gerais", acronym: "UFMG", neighborhood: "Pampulha", lat: -19.8593, lng: -43.9682 },
@@ -73,9 +68,8 @@ export const universityAreas: UniversityArea[] = [
 
 export const mockListings: Listing[] = Array.from({ length: 9 }, (_, i) => {
   const areaInfo = universityAreas[i % universityAreas.length];
-  // Slightly randomize listing location around the university for more realistic spread
-  const latOffset = (Math.random() - 0.5) * 0.01; // approx +/- 550m
-  const lngOffset = (Math.random() - 0.5) * 0.01; // approx +/- 550m
+  const latOffset = (Math.random() - 0.5) * 0.01; 
+  const lngOffset = (Math.random() - 0.5) * 0.01;
 
   return {
     id: `quarto${i + 1}`,
@@ -94,7 +88,7 @@ export const mockListings: Listing[] = Array.from({ length: 9 }, (_, i) => {
       lat: areaInfo.lat + latOffset, 
       lng: areaInfo.lng + lngOffset,
     },
-    amenities: commonAmenities.sort(() => 0.5 - Math.random()).slice(0, 3 + (i % 4)),
+    amenities: commonAmenities.sort(() => 0.5 - Math.random()).slice(0, 3 + (i % (commonAmenities.length - 2))),
     host: {
       name: `Anfitrião ${String.fromCharCode(65 + (i % 26))}`, 
       avatarUrl: `https://picsum.photos/seed/host${i + 1}/80/80`,
@@ -150,7 +144,6 @@ export const mockBookings: Booking[] = [
 export const fetchListings = async (page: number, limit: number = 9): Promise<Listing[]> => {
   const start = (page - 1) * limit;
   const end = start + limit;
-  // Ensure we don't go past the available mock listings if total is less than requested
   const listingsToShow = mockListings.slice(start, Math.min(end, mockListings.length));
   return simulateApiCall(listingsToShow);
 };
@@ -195,3 +188,41 @@ export const getBookingStatusData = async () => {
 export const getUniversityByAcronym = (acronym: string): UniversityArea | undefined => {
   return universityAreas.find(ua => ua.acronym === acronym);
 };
+
+// Function to add a new listing (mock)
+export const addMockListing = async (
+  listingData: Omit<Listing, 'id' | 'rating' | 'reviews' | 'host' | 'images' | 'amenities'> & { imageUrls: string[], selectedAmenityIds: string[] }
+): Promise<Listing> => {
+  const newId = `quarto${mockListings.length + 1}-${Date.now()}`; // Ensures more unique ID
+  const universityDetails = universityAreas.find(ua => ua.acronym === listingData.universityAcronym);
+
+  const newListing: Listing = {
+    id: newId,
+    title: listingData.title,
+    description: listingData.description,
+    images: listingData.imageUrls.length > 0 ? listingData.imageUrls : [`https://picsum.photos/seed/${newId}/800/450`],
+    pricePerNight: listingData.pricePerNight,
+    rating: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)), // Mock rating for new listings (3.5 to 5.0)
+    location: {
+      address: listingData.address,
+      lat: listingData.lat,
+      lng: listingData.lng,
+    },
+    amenities: commonAmenities.filter(amenity => listingData.selectedAmenityIds.includes(amenity.id)),
+    host: { // Default WeStudy host
+      name: "WeStudy Plataforma",
+      avatarUrl: `https://picsum.photos/seed/westudyhost/80/80`, // Consistent avatar for WeStudy
+    },
+    reviews: [], // New listings start with no reviews
+    type: "Quarto para universitário", // Default type
+    guests: listingData.guests,
+    bedrooms: listingData.bedrooms,
+    beds: listingData.beds,
+    baths: listingData.baths,
+    universityName: universityDetails?.name || listingData.universityAcronym,
+    universityAcronym: listingData.universityAcronym,
+  };
+  mockListings.unshift(newListing); // Add to the beginning of the array so it appears first
+  return simulateApiCall(newListing);
+};
+

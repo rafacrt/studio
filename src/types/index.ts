@@ -1,9 +1,13 @@
+
 export interface User {
   id: string;
   email: string;
   name: string;
   avatarUrl: string;
   isAdmin?: boolean;
+  status?: "Ativo" | "Inativo"; // Added for user management page
+  dateJoined?: string; // Added for user management page
+  role?: "Usuário" | "Admin" | "Anfitrião"; // Added for user management page
 }
 
 export interface Amenity {
@@ -25,6 +29,15 @@ export type LatLngLiteral = {
   lat: number;
   lng: number;
 };
+
+export interface UniversityArea { // Added UniversityArea type
+  city: string;
+  name: string;
+  acronym: string;
+  neighborhood: string;
+  lat: number;
+  lng: number;
+}
 
 export interface Listing {
   id: string;
@@ -66,3 +79,4 @@ export interface Booking {
   totalPrice: number;
   status: BookingStatus;
 }
+
