@@ -7,7 +7,7 @@ import { PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -261,28 +261,37 @@ Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
-  React.ComponentProps<typeof Button>
->(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar()
+  React.ComponentProps<typeof Button> // This includes asChild and children
+>(({ className, onClick, children, ...props }, ref) => { // `props` here will contain `asChild` if passed by the user
+  const { toggleSidebar } = useSidebar();
 
-  return (
-    <Button
-      ref={ref}
-      data-sidebar="trigger"
-      variant="ghost"
-      size="icon"
-      className={cn("h-7 w-7", className)}
-      onClick={(event) => {
-        onClick?.(event)
-        toggleSidebar()
-      }}
-      {...props}
-    >
+  // Determine the actual children for the Button component based on whether SidebarTrigger is used with `asChild`
+  const actualButtonChildren = props.asChild ? children : (
+    <>
       <PanelLeft />
       <span className="sr-only">Toggle Sidebar</span>
+    </>
+  );
+
+  return (
+    <Button // This is the Button from "@/components/ui/button"
+      ref={ref}
+      data-sidebar="trigger"
+      variant={props.variant || "ghost"} // Default to ghost if not specified in props, or use user's
+      size={props.size || "icon"} // Default to icon if not specified in props, or use user's
+      className={cn("h-7 w-7", className)} // Base classes for SidebarTrigger, user's `className` will be merged by Button component
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+        if (onClick) {
+          (onClick as React.MouseEventHandler<HTMLButtonElement>)(event); // Call user-provided onClick
+        }
+        toggleSidebar();
+      }}
+      {...props} // Spread all props, including `asChild`. Button component handles `asChild` and `buttonVariants` logic.
+    >
+      {actualButtonChildren}
     </Button>
-  )
-})
+  );
+});
 SidebarTrigger.displayName = "SidebarTrigger"
 
 const SidebarRail = React.forwardRef<
