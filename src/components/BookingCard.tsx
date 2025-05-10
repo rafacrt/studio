@@ -1,3 +1,4 @@
+src/components/BookingCard.tsx
 "use client";
 
 import type { Booking } from '@/types';
@@ -6,7 +7,7 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, ArrowRight } from 'lucide-react';
+import { CalendarDays, KeyRound } from 'lucide-react'; // Changed ArrowRight to KeyRound
 import { triggerHapticFeedback } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
@@ -74,7 +75,7 @@ export function BookingCard({ booking }: BookingCardProps) {
                   onClick={() => triggerHapticFeedback()}
                 >
                   Acessar Quarto
-                  <ArrowRight size={16} className="ml-1.5" />
+                  <KeyRound size={16} className="ml-1.5" />
                 </Button>
               </Link>
             )}
@@ -95,4 +96,3 @@ export function BookingCard({ booking }: BookingCardProps) {
     </Card>
   );
 }
-
