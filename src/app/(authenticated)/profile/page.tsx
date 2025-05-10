@@ -87,8 +87,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-// Placeholder pages for menu items to avoid 404s
-export function EditProfilePage() { return <div className="p-4">Conteúdo da Página Editar Perfil</div>; }
-export function SettingsPage() { return <div className="p-4">Conteúdo da Página Configurações da Conta</div>; }
-// ... etc.
