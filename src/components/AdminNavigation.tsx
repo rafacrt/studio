@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, BedDouble, Users, LogOut, Eye, PanelLeft, HomePlus } from 'lucide-react'; // Added HomePlus
+import { LayoutDashboard, BedDouble, Users, LogOut, Eye, PanelLeft, HousePlus } from 'lucide-react'; // Changed HomePlus to HousePlus
 import {
   SidebarHeader,
   SidebarContent,
@@ -23,7 +23,7 @@ const adminNavItems = [
   { href: '/admin/dashboard', label: 'Painel de Controle', icon: LayoutDashboard },
   { href: '/admin/room-approvals', label: 'Aprovações de Quartos', icon: BedDouble },
   { href: '/admin/user-management', label: 'Gerenciamento de Usuários', icon: Users },
-  { href: '/admin/add-room', label: 'Adicionar Quarto', icon: HomePlus }, // New item
+  { href: '/admin/add-room', label: 'Adicionar Quarto', icon: HousePlus }, // Using HousePlus
 ];
 
 export function AdminNavigation() {
