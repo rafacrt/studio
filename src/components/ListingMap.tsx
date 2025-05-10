@@ -15,7 +15,7 @@ interface ListingMapProps {
   universityName: string;
 }
 
-const API_KEY = "AIzaSyDUS0wxpn8XbnktxOK9psAkRbp7Aq6OSUg"; // Updated API Key
+// Removed hardcoded API_KEY constant
 
 const mapContainerStyle = {
   width: '100%',
@@ -31,6 +31,8 @@ interface TravelInfo {
 }
 
 export function ListingMap({ listingLocation, universityLocation, universityName }: ListingMapProps) {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY; // Use environment variable
+
   const [directionsDriving, setDirectionsDriving] = useState<google.maps.DirectionsResult | null>(null);
   // const [directionsWalking, setDirectionsWalking] = useState<google.maps.DirectionsResult | null>(null); // Walking directions not rendered
   
@@ -80,7 +82,7 @@ export function ListingMap({ listingLocation, universityLocation, universityName
   }, [listingLocation, universityLocation]);
 
 
-  if (!API_KEY) { // Simplified check for the hardcoded key
+  if (!apiKey) { 
     return (
       <Card className="mt-4">
         <CardHeader>
@@ -88,7 +90,8 @@ export function ListingMap({ listingLocation, universityLocation, universityName
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            A chave da API do Google Maps não está configurada corretamente no código.
+            A chave da API do Google Maps (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) não está configurada no ambiente.
+            Por favor, adicione a chave ao seu arquivo .env.local e reinicie o servidor de desenvolvimento.
           </p>
         </CardContent>
       </Card>
@@ -97,7 +100,7 @@ export function ListingMap({ listingLocation, universityLocation, universityName
 
   return (
     <div className="space-y-3">
-      <LoadScript googleMapsApiKey={API_KEY} libraries={libraries} onLoad={() => setMapReady(true)} onError={() => setError("Falha ao carregar Google Maps SDK.")}>
+      <LoadScript googleMapsApiKey={apiKey} libraries={libraries} onLoad={() => setMapReady(true)} onError={() => setError("Falha ao carregar Google Maps SDK.")}>
         {mapReady ? (
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
