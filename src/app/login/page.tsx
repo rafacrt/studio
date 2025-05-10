@@ -12,6 +12,7 @@ import { AppLogo } from '@/components/AppLogo';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { triggerHapticFeedback } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Endereço de e-mail inválido" }),
@@ -24,6 +25,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoadingAuth } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>({
     resolver: zodResolver(loginSchema),
@@ -33,6 +35,7 @@ export default function LoginPage() {
     triggerHapticFeedback();
     try {
       await login(data.email, data.password);
+      // Redirection is handled within the login function in AuthContext
     } catch (error) {
       toast({
         title: "Falha no Login",

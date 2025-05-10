@@ -3,6 +3,7 @@ export interface User {
   email: string;
   name: string;
   avatarUrl: string;
+  isAdmin?: boolean;
 }
 
 export interface Amenity {
@@ -60,3 +61,4 @@ export interface Booking {
   totalPrice: number;
   status: BookingStatus;
 }
+

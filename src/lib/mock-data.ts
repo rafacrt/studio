@@ -7,7 +7,17 @@ export const mockUser: User = {
   email: 'teste@exemplo.com',
   name: 'Alex Silva',
   avatarUrl: 'https://picsum.photos/seed/user1/100/100',
+  isAdmin: false,
 };
+
+export const mockAdminUser: User = {
+  id: 'admin1',
+  email: 'admin@westudy.com',
+  name: 'Admin WeStudy',
+  avatarUrl: 'https://picsum.photos/seed/admin1/100/100',
+  isAdmin: true,
+};
+
 
 const commonAmenities: Amenity[] = [
   { id: 'wifi', name: 'Wi-Fi', icon: Wifi },
@@ -138,4 +148,33 @@ export const fetchListingById = async (id: string): Promise<Listing | undefined>
 
 export const fetchUserBookings = async (userId: string): Promise<Booking[]> => {
   return simulateApiCall(mockBookings.filter(booking => booking.userId === userId));
+};
+
+// Mock data for admin dashboard
+export const getAdminDashboardStats = async () => {
+  return simulateApiCall({
+    totalRevenue: 125430.50,
+    newUsers: 78,
+    pendingApprovals: 12,
+    activeBookings: mockBookings.filter(b => b.status === 'active').length,
+  });
+};
+
+export const getMonthlyRevenueData = async () => {
+  return simulateApiCall([
+    { month: "Jan", revenue: Math.floor(Math.random() * 5000) + 10000 },
+    { month: "Fev", revenue: Math.floor(Math.random() * 5000) + 12000 },
+    { month: "Mar", revenue: Math.floor(Math.random() * 5000) + 11000 },
+    { month: "Abr", revenue: Math.floor(Math.random() * 5000) + 15000 },
+    { month: "Mai", revenue: Math.floor(Math.random() * 5000) + 13000 },
+    { month: "Jun", revenue: Math.floor(Math.random() * 5000) + 17000 },
+  ]);
+};
+
+export const getBookingStatusData = async () => {
+  return simulateApiCall([
+    { status: "Ativas", count: mockBookings.filter(b => b.status === 'active').length, fill: "var(--color-active)" },
+    { status: "Anteriores", count: mockBookings.filter(b => b.status === 'past').length, fill: "var(--color-past)" },
+    { status: "Canceladas", count: mockBookings.filter(b => b.status === 'cancelled').length, fill: "var(--color-cancelled)" },
+  ]);
 };

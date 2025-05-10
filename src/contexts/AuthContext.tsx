@@ -4,11 +4,12 @@ import type { User } from '@/types';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { simulateApiCall } from '@/lib/utils';
-import { mockUser } from '@/lib/mock-data'; 
+import { mockUser, mockAdminUser } from '@/lib/mock-data'; 
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   isLoadingAuth: boolean;
   login: (email: string, password?: string) => Promise<void>; 
   logout: () => void;
@@ -32,13 +33,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password?: string) => {
     setIsLoadingAuth(true);
     try {
-      // Simulate accepting any email/password by always using the mockUser
-      const foundUser = { ...mockUser, email: email }; // Use provided email for display, but always "log in"
+      let foundUser: User;
+      if (email === mockAdminUser.email) { // Specific check for admin email
+        foundUser = { ...mockAdminUser };
+      } else {
+        // Simulate accepting any other email/password by using the mockUser
+        foundUser = { ...mockUser, email: email, isAdmin: false }; 
+      }
       
       await simulateApiCall(foundUser, 500); 
       setUser(foundUser);
       localStorage.setItem('weStudyUser', JSON.stringify(foundUser));
-      router.push('/explore');
+      
+      if (foundUser.isAdmin) {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/explore');
+      }
     } catch (error) {
       console.error("Login failed:", error);
       throw new Error("Credenciais inválidas"); 
@@ -54,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoadingAuth, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isAdmin: !!user?.isAdmin, isLoadingAuth, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
