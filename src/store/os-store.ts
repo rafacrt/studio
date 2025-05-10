@@ -74,7 +74,7 @@ const initialMockOS: OS[] = [
 export const useOSStore = create<OSState>()(
   persist(
     (set, get) => ({
-      osList: initialMockOS, // Start with mock data
+      osList: initialMockOS, // Start with mock data if localStorage is empty or item not found
       nextOsNumber: initialMockOS.length + 1, // Start next number after mock data
       
       setInitialData: (data, nextNumber) => set({ osList: data, nextOsNumber: nextNumber }),
@@ -115,15 +115,7 @@ export const useOSStore = create<OSState>()(
   )
 );
 
-// Initialize store with mock data if it's empty after hydration from localStorage
-// This typically runs on the client side
-if (typeof window !== 'undefined') {
-  const state = useOSStore.getState();
-  if (state.osList.length === 0 && localStorage.getItem('freelaos-storage')) {
-     // If localStorage had an empty list (e.g. after clearing), re-init with mocks
-     // This check might need refinement depending on desired behavior on fresh load vs. cleared storage
-  } else if (state.osList.length === 0) {
-     // If both store and localStorage are empty (first ever load without persisted state)
-     state.setInitialData(initialMockOS, initialMockOS.length + 1);
-  }
-}
+// The manual initialization block below was removed as it conflicted with
+// the `persist` middleware's own hydration logic and was likely causing the
+// infinite loading state. `persist` will use `initialMockOS` if `freelaos-storage`
+// is not found in localStorage.
