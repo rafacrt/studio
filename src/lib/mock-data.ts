@@ -1,4 +1,4 @@
-import type { Listing, Booking, User, Amenity, Review } from '@/types';
+import type { Listing, Booking, User, Amenity, Review, LatLngLiteral } from '@/types';
 import { Wifi, Tv, ParkingSquare, Utensils, Wind, Thermometer, Bath, Users, BedDouble, BookOpen, Briefcase, School } from 'lucide-react'; // Using BookOpen for Desk, Briefcase for Wardrobe, School for University
 import { simulateApiCall } from '@/lib/utils';
 
@@ -50,20 +50,33 @@ const generateReviews = (listingId: string, count: number): Review[] => {
   return reviews;
 };
 
-const universityAreas = [
-  { city: "São Paulo", name: "Universidade de São Paulo", acronym: "USP", neighborhood: "Butantã" },
-  { city: "Rio de Janeiro", name: "Universidade Federal do Rio de Janeiro", acronym: "UFRJ", neighborhood: "Urca" },
-  { city: "Belo Horizonte", name: "Universidade Federal de Minas Gerais", acronym: "UFMG", neighborhood: "Pampulha" },
-  { city: "Porto Alegre", name: "Universidade Federal do Rio Grande do Sul", acronym: "UFRGS", neighborhood: "Centro Histórico" },
-  { city: "Recife", name: "Universidade Federal de Pernambuco", acronym: "UFPE", neighborhood: "Cidade Universitária" },
-  { city: "Curitiba", name: "Universidade Federal do Paraná", acronym: "UFPR", neighborhood: "Jardim Botânico" },
-  { city: "Campinas", name: "Universidade Estadual de Campinas", acronym: "Unicamp", neighborhood: "Barão Geraldo" },
-  { city: "Salvador", name: "Universidade Federal da Bahia", acronym: "UFBA", neighborhood: "Federação" },
-  { city: "Fortaleza", name: "Universidade Federal do Ceará", acronym: "UFC", neighborhood: "Benfica" },
+export interface UniversityArea {
+  city: string;
+  name: string;
+  acronym: string;
+  neighborhood: string;
+  lat: number;
+  lng: number;
+}
+
+export const universityAreas: UniversityArea[] = [
+  { city: "São Paulo", name: "Universidade de São Paulo", acronym: "USP", neighborhood: "Butantã", lat: -23.5595, lng: -46.7313 },
+  { city: "Rio de Janeiro", name: "Universidade Federal do Rio de Janeiro", acronym: "UFRJ", neighborhood: "Urca", lat: -22.9523, lng: -43.1691 },
+  { city: "Belo Horizonte", name: "Universidade Federal de Minas Gerais", acronym: "UFMG", neighborhood: "Pampulha", lat: -19.8593, lng: -43.9682 },
+  { city: "Porto Alegre", name: "Universidade Federal do Rio Grande do Sul", acronym: "UFRGS", neighborhood: "Centro Histórico", lat: -30.0331, lng: -51.2302 },
+  { city: "Recife", name: "Universidade Federal de Pernambuco", acronym: "UFPE", neighborhood: "Cidade Universitária", lat: -8.0476, lng: -34.9518 },
+  { city: "Curitiba", name: "Universidade Federal do Paraná", acronym: "UFPR", neighborhood: "Jardim Botânico", lat: -25.4464, lng: -49.2398 },
+  { city: "Campinas", name: "Universidade Estadual de Campinas", acronym: "Unicamp", neighborhood: "Barão Geraldo", lat: -22.8175, lng: -47.0699 },
+  { city: "Salvador", name: "Universidade Federal da Bahia", acronym: "UFBA", neighborhood: "Federação", lat: -12.9935, lng: -38.5078 },
+  { city: "Fortaleza", name: "Universidade Federal do Ceará", acronym: "UFC", neighborhood: "Benfica", lat: -3.7419, lng: -38.5428 },
 ];
 
 export const mockListings: Listing[] = Array.from({ length: 9 }, (_, i) => {
   const areaInfo = universityAreas[i % universityAreas.length];
+  // Slightly randomize listing location around the university for more realistic spread
+  const latOffset = (Math.random() - 0.5) * 0.01; // approx +/- 550m
+  const lngOffset = (Math.random() - 0.5) * 0.01; // approx +/- 550m
+
   return {
     id: `quarto${i + 1}`,
     title: `Quarto Universitário perto da ${areaInfo.acronym} em ${areaInfo.neighborhood}`,
@@ -78,8 +91,8 @@ export const mockListings: Listing[] = Array.from({ length: 9 }, (_, i) => {
     rating: parseFloat((4.3 + Math.random() * 0.7).toFixed(1)), 
     location: {
       address: `Rua dos Estudantes, ${100 + i}, ${areaInfo.neighborhood}, ${areaInfo.city}, Próximo à ${areaInfo.acronym}`,
-      lat: -23.5505 + (i * 0.001), 
-      lng: -46.6333 + (i * 0.001),
+      lat: areaInfo.lat + latOffset, 
+      lng: areaInfo.lng + lngOffset,
     },
     amenities: commonAmenities.sort(() => 0.5 - Math.random()).slice(0, 3 + (i % 4)),
     host: {
@@ -177,4 +190,8 @@ export const getBookingStatusData = async () => {
     { status: "Anteriores", count: mockBookings.filter(b => b.status === 'past').length, fill: "var(--color-past)" },
     { status: "Canceladas", count: mockBookings.filter(b => b.status === 'cancelled').length, fill: "var(--color-cancelled)" },
   ]);
+};
+
+export const getUniversityByAcronym = (acronym: string): UniversityArea | undefined => {
+  return universityAreas.find(ua => ua.acronym === acronym);
 };

@@ -4,7 +4,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import type { Listing } from '@/types';
-import { fetchListingById } from '@/lib/mock-data';
+import { fetchListingById, getUniversityByAcronym } from '@/lib/mock-data';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import { useAuth } from '@/contexts/AuthContext';
+import { ListingMap } from '@/components/ListingMap';
 
 
 function ListingDetailsContent() {
@@ -96,6 +97,7 @@ function ListingDetailsContent() {
   };
 
   const amenitiesToShow = 4;
+  const universityDetails = getUniversityByAcronym(listing.universityAcronym);
 
   return (
     <div className="pb-24"> 
@@ -107,6 +109,7 @@ function ListingDetailsContent() {
           objectFit="cover"
           className="transition-opacity duration-300"
           data-ai-hint="student room interior"
+          priority
         />
         <button
           onClick={prevImage}
@@ -210,9 +213,17 @@ function ListingDetailsContent() {
         <div>
             <h2 className="text-xl font-semibold text-foreground mb-3">Onde você vai estar</h2>
             <p className="text-sm text-muted-foreground mb-2">{listing.location.address}</p>
-            <div className="aspect-video bg-secondary rounded-lg flex items-center justify-center">
-                <Image src={`https://picsum.photos/seed/${listing.id}_map/600/300`} alt="Localização no mapa" width={600} height={300} className="rounded-lg object-cover" data-ai-hint="map city" />
-            </div>
+            {universityDetails ? (
+              <ListingMap 
+                listingLocation={{ lat: listing.location.lat, lng: listing.location.lng }}
+                universityLocation={{ lat: universityDetails.lat, lng: universityDetails.lng }}
+                universityName={listing.universityName}
+              />
+            ) : (
+              <div className="aspect-video bg-secondary rounded-lg flex items-center justify-center">
+                <p className="text-muted-foreground">Não foi possível carregar o mapa. Detalhes da universidade não encontrados.</p>
+              </div>
+            )}
         </div>
         <Separator />
 
@@ -253,9 +264,9 @@ function ListingDetailsContent() {
             size="lg" 
             className={`${isRented ? 'bg-accent hover:bg-accent/90' : 'bg-primary hover:bg-primary/90'} text-primary-foreground font-semibold px-6 py-3 rounded-lg shadow-md`}
             onClick={handleRent}
-            disabled={isLoading} // Disable only when processing rent, not if already rented
+            disabled={isLoading && !isRented} 
           >
-            {isLoading && isRented === false ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isRented ? <CheckCircle className="mr-2 h-5 w-5" /> : null)}
+            {isLoading && !isRented ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isRented ? <CheckCircle className="mr-2 h-5 w-5" /> : null)}
             {isRented ? 'Alugado' : 'Alugar Quarto'}
           </Button>
         </div>

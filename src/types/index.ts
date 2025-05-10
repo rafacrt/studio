@@ -21,6 +21,11 @@ export interface Review {
   date: string;
 }
 
+export type LatLngLiteral = {
+  lat: number;
+  lng: number;
+};
+
 export interface Listing {
   id: string;
   title: string;
@@ -61,4 +66,3 @@ export interface Booking {
   totalPrice: number;
   status: BookingStatus;
 }
-
