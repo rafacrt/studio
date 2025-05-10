@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -9,14 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppLogo } from '@/components/AppLogo';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { triggerHapticFeedback } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { mockAdminUser } from '@/lib/mock-data'; // Import mockAdminUser
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Endereço de e-mail inválido" }),
-  password: z.string().min(1, { message: "A senha é obrigatória" }), // Allow any password for mock
+  password: z.string().min(1, { message: "A senha é obrigatória" }),
 });
 
 type LoginFormInputs = z.infer<typeof loginSchema>;
@@ -27,7 +29,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>({
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormInputs>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -35,11 +37,25 @@ export default function LoginPage() {
     triggerHapticFeedback();
     try {
       await login(data.email, data.password);
-      // Redirection is handled within the login function in AuthContext
+      // Redirection and animation are handled within AuthContext
     } catch (error) {
       toast({
         title: "Falha no Login",
         description: (error as Error).message || "Verifique suas credenciais e tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAdminLogin = async () => {
+    triggerHapticFeedback();
+    try {
+      // Use mockAdminUser.email and a dummy password
+      await login(mockAdminUser.email, 'adminpassword'); 
+    } catch (error) {
+      toast({
+        title: "Falha no Login como Admin",
+        description: (error as Error).message || "Não foi possível logar como administrador.",
         variant: "destructive",
       });
     }
@@ -65,6 +81,7 @@ export default function LoginPage() {
               className={`mt-1 ${errors.email ? 'border-destructive focus:ring-destructive' : ''}`}
               placeholder="seuemail@exemplo.com"
               aria-invalid={errors.email ? "true" : "false"}
+              disabled={isLoadingAuth || isSubmitting}
             />
             {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
           </div>
@@ -80,12 +97,14 @@ export default function LoginPage() {
                 className={`pr-10 ${errors.password ? 'border-destructive focus:ring-destructive' : ''}`}
                 placeholder="••••••••"
                 aria-invalid={errors.password ? "true" : "false"}
+                disabled={isLoadingAuth || isSubmitting}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground disabled:opacity-50"
                 aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                disabled={isLoadingAuth || isSubmitting}
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
@@ -94,17 +113,30 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoadingAuth}>
-              {isLoadingAuth ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoadingAuth || isSubmitting}>
+              {(isLoadingAuth || isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Entrar
             </Button>
           </div>
         </form>
-        <p className="text-center text-sm text-muted-foreground">
-          Encontre o quarto ideal para sua vida universitária.
-        </p>
+
+        <div className="space-y-4">
+            <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={handleAdminLogin} 
+                disabled={isLoadingAuth || isSubmitting}
+            >
+                 {(isLoadingAuth || isSubmitting) && loginSchema.safeParse({email: mockAdminUser.email, password: 'adminpassword'}).success && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                Entrar como Administrador
+            </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              Encontre o quarto ideal para sua vida universitária.
+            </p>
+        </div>
+
       </div>
     </div>
   );
 }
-

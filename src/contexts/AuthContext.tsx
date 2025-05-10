@@ -12,6 +12,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isLoadingAuth: boolean;
+  isAnimatingLogin: boolean; // Added for animation state
   login: (email: string, password?: string) => Promise<void>; 
   logout: () => void;
 }
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [isAnimatingLogin, setIsAnimatingLogin] = useState(false); // New state for animation
   const router = useRouter();
 
   useEffect(() => {
@@ -32,21 +34,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password?: string) => {
-    setIsLoadingAuth(true); // Set loading at the start
+    setIsLoadingAuth(true);
     try {
       let foundUser: User;
-      if (email === mockAdminUser.email) { // Specific check for admin email
+      if (email === mockAdminUser.email) { 
         foundUser = { ...mockAdminUser };
       } else {
-        // Simulate accepting any other email/password by using the mockUser
-        foundUser = { ...mockUser, email: email, isAdmin: false }; 
+        // Dynamically create user details for non-admin login
+        const userName = email.split('@')[0].replace(/[._0-9]/g, ' ').split(' ').map(namePart => namePart.charAt(0).toUpperCase() + namePart.slice(1)).join(' ');
+        foundUser = { 
+          ...mockUser, // Use base mockUser structure but override with dynamic details
+          id: `user-${Date.now()}`, // More unique ID
+          email: email, 
+          name: userName || "Usuário",
+          avatarUrl: `https://picsum.photos/seed/${encodeURIComponent(email)}/100/100`, // Ensure email is encoded for URL
+          isAdmin: false 
+        };
       }
       
       await simulateApiCall(foundUser, 500); 
       
+      setIsAnimatingLogin(true); // Start animation
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Animation duration
+
       setUser(foundUser);
       localStorage.setItem('weStudyUser', JSON.stringify(foundUser));
-      setIsLoadingAuth(false); // Set loading to false AFTER user state and localStorage are updated
+      
+      setIsAnimatingLogin(false); // Stop animation
+      setIsLoadingAuth(false); // Set loading to false AFTER animation and user state update
 
       if (foundUser.isAdmin) {
         router.push('/admin/dashboard');
@@ -55,20 +70,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error("Login failed:", error);
+      setIsAnimatingLogin(false); // Reset animation on error
       setIsLoadingAuth(false); // Ensure loading is false on error
       throw new Error("Credenciais inválidas"); 
     }
-    // No finally block needed for setIsLoadingAuth if handled in try/catch correctly
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('weStudyUser');
+    setIsAnimatingLogin(false); // Ensure animation state is reset on logout
     router.push('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isAdmin: !!user?.isAdmin, isLoadingAuth, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isAdmin: !!user?.isAdmin, isLoadingAuth, isAnimatingLogin, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -81,4 +97,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
