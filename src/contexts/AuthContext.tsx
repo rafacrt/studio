@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { User } from '@/types';
@@ -31,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password?: string) => {
-    setIsLoadingAuth(true);
+    setIsLoadingAuth(true); // Set loading at the start
     try {
       let foundUser: User;
       if (email === mockAdminUser.email) { // Specific check for admin email
@@ -42,9 +43,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       await simulateApiCall(foundUser, 500); 
+      
       setUser(foundUser);
       localStorage.setItem('weStudyUser', JSON.stringify(foundUser));
-      
+      setIsLoadingAuth(false); // Set loading to false AFTER user state and localStorage are updated
+
       if (foundUser.isAdmin) {
         router.push('/admin/dashboard');
       } else {
@@ -52,10 +55,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error("Login failed:", error);
+      setIsLoadingAuth(false); // Ensure loading is false on error
       throw new Error("Credenciais inválidas"); 
-    } finally {
-      setIsLoadingAuth(false);
     }
+    // No finally block needed for setIsLoadingAuth if handled in try/catch correctly
   };
 
   const logout = () => {
