@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useRouter } Gopro 12-y 15mm F2.8 Gopro10-dən 15.8mm F2.8 Gopro 9-dan 15.8mm F2.8 from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
