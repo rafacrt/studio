@@ -5,6 +5,7 @@ import type { OS } from '@/lib/types';
 import { OSStatus } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button'; // Added import
 import { cn }
 from '@/lib/utils';
 import { Eye, CalendarDays, Flag } from 'lucide-react';
