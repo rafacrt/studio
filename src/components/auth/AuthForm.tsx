@@ -3,8 +3,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+// useRouter is not strictly needed if we use window.location.href, but can be kept for other potential uses or future refactor
+// import { useRouter } from 'next/navigation'; 
+import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -29,9 +30,17 @@ const formSchema = z.object({
 type LoginFormValues = z.infer<typeof formSchema>;
 
 export function AuthForm() {
-  const router = useRouter();
+  // const router = useRouter(); // Keep for now, may not be used for post-login redirect
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Extract redirect path from query params
+    const params = new URLSearchParams(window.location.search);
+    setRedirectPath(params.get('redirectedFrom'));
+  }, []);
+
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
@@ -48,10 +57,13 @@ export function AuthForm() {
       if (user) {
         toast({
           title: 'Login Bem-Sucedido',
-          description: `Bem-vindo de volta, ${user.username}!`,
+          description: `Bem-vindo de volta, ${user.username}! Redirecionando...`,
         });
-        router.push('/dashboard');
-        router.refresh(); 
+        // Use window.location.href for a full page redirect
+        // This ensures the cookie set by the server action is sent with the new request
+        window.location.href = redirectPath || '/dashboard'; 
+        // router.push('/dashboard'); // Previous method
+        // router.refresh(); // Previous method
       } else {
         toast({
           title: 'Falha no Login',
@@ -60,12 +72,16 @@ export function AuthForm() {
         });
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: 'Ocorreu um erro',
         description: 'Por favor, tente novamente mais tarde.',
         variant: 'destructive',
       });
     } finally {
+      // Only set isLoading to false if not redirecting, to avoid UI flash
+      // However, with window.location.href, this component will unmount anyway.
+      // So, it's generally safe to always set it.
       setIsLoading(false);
     }
   }
@@ -89,7 +105,7 @@ export function AuthForm() {
                 <FormItem>
                   <FormLabel>Usuário</FormLabel>
                   <FormControl>
-                    <Input placeholder="ex: freelancer" {...field} />
+                    <Input placeholder="ex: admin" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
