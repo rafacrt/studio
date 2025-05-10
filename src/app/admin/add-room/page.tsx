@@ -13,8 +13,9 @@ import { useForm, type SubmitHandler, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2, PackagePlus } from "lucide-react";
-import { commonAmenities, universityAreas, addMockListing, mockListings } from "@/lib/mock-data"; // Import addMockListing
+import { commonAmenities, universityAreas, addMockListing } from "@/lib/mock-data"; 
 import type { Amenity, UniversityArea, Listing } from "@/types";
+import { Separator } from "@/components/ui/separator"; // Added import for Separator
 
 const listingSchema = z.object({
   title: z.string().min(5, { message: "O título deve ter pelo menos 5 caracteres." }),
@@ -239,3 +240,4 @@ export default function AddRoomPage() {
     </div>
   );
 }
+
