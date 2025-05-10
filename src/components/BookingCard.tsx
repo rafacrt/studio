@@ -1,4 +1,3 @@
-src/components/BookingCard.tsx
 "use client";
 
 import type { Booking } from '@/types';
