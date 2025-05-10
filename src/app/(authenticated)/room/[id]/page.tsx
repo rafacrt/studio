@@ -8,24 +8,28 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from '@/components/StarRating';
-import { ChevronLeft, ChevronRight, MapPin, Users, BedDouble, Bath, Star, Share2, Heart, Loader2, Armchair } from 'lucide-react'; // Using Armchair instead of Sofa
+import { ChevronLeft, ChevronRight, MapPin, Users, BedDouble, Bath, Star, Share2, Heart, Loader2, Armchair, CheckCircle } from 'lucide-react';
 import { triggerHapticFeedback } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
+import { useAuth } from '@/contexts/AuthContext';
+
 
 function ListingDetailsContent() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
   const id = params.id as string;
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [isRented, setIsRented] = useState(false); // New state to track if rented
 
   useEffect(() => {
     if (id) {
@@ -34,6 +38,11 @@ function ListingDetailsContent() {
         const fetchedListing = await fetchListingById(id);
         if (fetchedListing) {
           setListing(fetchedListing);
+          // Check if this listing is already "rented" by the user (mock check)
+          const rentedRooms = JSON.parse(localStorage.getItem('rentedRooms') || '[]');
+          if (rentedRooms.includes(id)) {
+            setIsRented(true);
+          }
         } else {
           toast({ title: "Erro", description: "Quarto não encontrado.", variant: "destructive" });
           router.push('/explore');
@@ -55,13 +64,38 @@ function ListingDetailsContent() {
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % listing.images.length);
   const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + listing.images.length) % listing.images.length);
 
-  const handleReserve = async () => {
+  const handleRent = async () => {
     triggerHapticFeedback();
+    if (!user) {
+      toast({
+        title: "Ação Necessária",
+        description: "Você precisa estar logado para alugar um quarto.",
+        variant: "destructive"
+      });
+      router.push('/login');
+      return;
+    }
+
+    // Simulate renting process
+    setIsLoading(true); // Show loading state on button perhaps
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+
+    // Add to mock "rented rooms" in localStorage
+    const rentedRooms = JSON.parse(localStorage.getItem('rentedRooms') || '[]');
+    if (!rentedRooms.includes(listing.id)) {
+      rentedRooms.push(listing.id);
+      localStorage.setItem('rentedRooms', JSON.stringify(rentedRooms));
+    }
+    setIsRented(true);
+    setIsLoading(false);
+
     toast({
-      title: "Reserva Simulada",
-      description: `A reserva para "${listing.title}" foi iniciada.`,
-      variant: "default"
+      title: "Quarto Alugado!",
+      description: `Você alugou "${listing.title}". Verifique seus aluguéis ativos.`,
+      variant: "default",
+      className: "bg-accent text-accent-foreground"
     });
+    // Optionally, redirect or update UI further
   };
 
   const amenitiesToShow = 4;
@@ -212,8 +246,14 @@ function ListingDetailsContent() {
           <div>
             <p className="text-lg font-semibold text-foreground">R${listing.pricePerNight.toFixed(0)} <span className="text-sm font-normal text-muted-foreground">/ mês (aprox.)</span></p>
           </div>
-          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-3 rounded-lg shadow-md" onClick={handleReserve}>
-            Reservar
+          <Button 
+            size="lg" 
+            className={`${isRented ? 'bg-accent hover:bg-accent/90' : 'bg-primary hover:bg-primary/90'} text-primary-foreground font-semibold px-6 py-3 rounded-lg shadow-md`}
+            onClick={handleRent}
+            disabled={isRented || isLoading}
+          >
+            {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isRented ? <CheckCircle className="mr-2 h-5 w-5" /> : null)}
+            {isRented ? 'Alugado' : 'Alugar Quarto'}
           </Button>
         </div>
       </div>
@@ -232,4 +272,3 @@ export default function ListingDetailsPage() {
     </Suspense>
   );
 }
-

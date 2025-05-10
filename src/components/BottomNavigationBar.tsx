@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, CalendarCheck, UserCircle2, KeyRound } from 'lucide-react';
+import { Compass, CalendarCheck, UserCircle2 } from 'lucide-react'; // Removed KeyRound
 import { cn, triggerHapticFeedback } from '@/lib/utils';
 
 const navItems = [
   { href: '/explore', label: 'Explorar', icon: Compass },
   { href: '/bookings', label: 'Reservas', icon: CalendarCheck },
   { href: '/profile', label: 'Perfil', icon: UserCircle2 },
-  { href: '/access', label: 'Acesso', icon: KeyRound },
+  // { href: '/access', label: 'Acesso', icon: KeyRound }, // Removed Access Item
 ];
 
 export function BottomNavigationBar() {
@@ -44,4 +44,3 @@ export function BottomNavigationBar() {
     </nav>
   );
 }
-
