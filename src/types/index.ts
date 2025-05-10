@@ -43,6 +43,8 @@ export interface Listing {
   bedrooms: number;
   beds: number;
   baths: number;
+  universityName: string;
+  universityAcronym: string;
 }
 
 export type BookingStatus = 'active' | 'past' | 'cancelled';

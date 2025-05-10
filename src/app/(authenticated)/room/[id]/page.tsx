@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, Suspense } from 'react';
@@ -8,7 +9,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from '@/components/StarRating';
-import { ChevronLeft, ChevronRight, MapPin, Users, BedDouble, Bath, Star, Share2, Heart, Loader2, Armchair, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPin, Users, BedDouble, Bath, Star, Share2, Heart, Loader2, Armchair, CheckCircle, School } from 'lucide-react';
 import { triggerHapticFeedback } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -29,7 +30,7 @@ function ListingDetailsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const [isRented, setIsRented] = useState(false); // New state to track if rented
+  const [isRented, setIsRented] = useState(false); 
 
   useEffect(() => {
     if (id) {
@@ -38,7 +39,6 @@ function ListingDetailsContent() {
         const fetchedListing = await fetchListingById(id);
         if (fetchedListing) {
           setListing(fetchedListing);
-          // Check if this listing is already "rented" by the user (mock check)
           const rentedRooms = JSON.parse(localStorage.getItem('rentedRooms') || '[]');
           if (rentedRooms.includes(id)) {
             setIsRented(true);
@@ -76,11 +76,9 @@ function ListingDetailsContent() {
       return;
     }
 
-    // Simulate renting process
-    setIsLoading(true); // Show loading state on button perhaps
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+    setIsLoading(true); 
+    await new Promise(resolve => setTimeout(resolve, 1000)); 
 
-    // Add to mock "rented rooms" in localStorage
     const rentedRooms = JSON.parse(localStorage.getItem('rentedRooms') || '[]');
     if (!rentedRooms.includes(listing.id)) {
       rentedRooms.push(listing.id);
@@ -95,7 +93,6 @@ function ListingDetailsContent() {
       variant: "default",
       className: "bg-accent text-accent-foreground"
     });
-    // Optionally, redirect or update UI further
   };
 
   const amenitiesToShow = 4;
@@ -155,6 +152,12 @@ function ListingDetailsContent() {
           <span>·</span>
           <MapPin size={14} className="inline" />
           <span>{listing.location.address.split(',')[1]?.trim() || listing.location.address.split(',')[0]?.trim()}</span>
+        </div>
+        <Separator />
+
+        <div className="flex items-center space-x-2 text-foreground">
+            <School size={20} className="text-primary" />
+            <p className="text-sm">Próximo à <span className="font-medium">{listing.universityName} ({listing.universityAcronym})</span></p>
         </div>
         <Separator />
         
@@ -250,9 +253,9 @@ function ListingDetailsContent() {
             size="lg" 
             className={`${isRented ? 'bg-accent hover:bg-accent/90' : 'bg-primary hover:bg-primary/90'} text-primary-foreground font-semibold px-6 py-3 rounded-lg shadow-md`}
             onClick={handleRent}
-            disabled={isRented || isLoading}
+            disabled={isLoading} // Disable only when processing rent, not if already rented
           >
-            {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isRented ? <CheckCircle className="mr-2 h-5 w-5" /> : null)}
+            {isLoading && isRented === false ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isRented ? <CheckCircle className="mr-2 h-5 w-5" /> : null)}
             {isRented ? 'Alugado' : 'Alugar Quarto'}
           </Button>
         </div>

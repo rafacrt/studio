@@ -1,5 +1,5 @@
 import type { Listing, Booking, User, Amenity, Review } from '@/types';
-import { Wifi, Tv, ParkingSquare, Utensils, Wind, Thermometer, Bath, Users, BedDouble, BookOpen, Briefcase } from 'lucide-react'; // Using BookOpen for Desk, Briefcase for Wardrobe
+import { Wifi, Tv, ParkingSquare, Utensils, Wind, Thermometer, Bath, Users, BedDouble, BookOpen, Briefcase, School } from 'lucide-react'; // Using BookOpen for Desk, Briefcase for Wardrobe, School for University
 import { simulateApiCall } from '@/lib/utils';
 
 export const mockUser: User = {
@@ -11,10 +11,10 @@ export const mockUser: User = {
 
 const commonAmenities: Amenity[] = [
   { id: 'wifi', name: 'Wi-Fi', icon: Wifi },
-  { id: 'desk', name: 'Escrivaninha', icon: BookOpen }, // Changed to Desk
-  { id: 'wardrobe', name: 'Guarda-roupa', icon: Briefcase }, // Added Wardrobe
+  { id: 'desk', name: 'Escrivaninha', icon: BookOpen },
+  { id: 'wardrobe', name: 'Guarda-roupa', icon: Briefcase },
   { id: 'kitchen', name: 'Cozinha Compartilhada', icon: Utensils },
-  { id: 'laundry', name: 'Lavanderia Compartilhada', icon: Wind }, // Changed AC to Laundry
+  { id: 'laundry', name: 'Lavanderia Compartilhada', icon: Wind },
   { id: 'bathroom', name: 'Banheiro Privativo', icon: Bath },
 ];
 
@@ -41,35 +41,37 @@ const generateReviews = (listingId: string, count: number): Review[] => {
 };
 
 const universityAreas = [
-  { city: "São Paulo", area: "Butantã (USP)", neighborhood: "Butantã" },
-  { city: "Rio de Janeiro", area: "Urca (UFRJ)", neighborhood: "Urca" },
-  { city: "Belo Horizonte", area: "Pampulha (UFMG)", neighborhood: "Pampulha" },
-  { city: "Porto Alegre", area: "Centro (UFRGS)", neighborhood: "Centro Histórico" },
-  { city: "Recife", area: "Cidade Universitária (UFPE)", neighborhood: "Cidade Universitária" },
-  { city: "Curitiba", area: "Jardim Botânico (UFPR)", neighborhood: "Jardim Botânico" },
-  { city: "Campinas", area: "Barão Geraldo (Unicamp)", neighborhood: "Barão Geraldo" },
+  { city: "São Paulo", name: "Universidade de São Paulo", acronym: "USP", neighborhood: "Butantã" },
+  { city: "Rio de Janeiro", name: "Universidade Federal do Rio de Janeiro", acronym: "UFRJ", neighborhood: "Urca" },
+  { city: "Belo Horizonte", name: "Universidade Federal de Minas Gerais", acronym: "UFMG", neighborhood: "Pampulha" },
+  { city: "Porto Alegre", name: "Universidade Federal do Rio Grande do Sul", acronym: "UFRGS", neighborhood: "Centro Histórico" },
+  { city: "Recife", name: "Universidade Federal de Pernambuco", acronym: "UFPE", neighborhood: "Cidade Universitária" },
+  { city: "Curitiba", name: "Universidade Federal do Paraná", acronym: "UFPR", neighborhood: "Jardim Botânico" },
+  { city: "Campinas", name: "Universidade Estadual de Campinas", acronym: "Unicamp", neighborhood: "Barão Geraldo" },
+  { city: "Salvador", name: "Universidade Federal da Bahia", acronym: "UFBA", neighborhood: "Federação" },
+  { city: "Fortaleza", name: "Universidade Federal do Ceará", acronym: "UFC", neighborhood: "Benfica" },
 ];
 
-export const mockListings: Listing[] = Array.from({ length: 36 }, (_, i) => {
+export const mockListings: Listing[] = Array.from({ length: 9 }, (_, i) => {
   const areaInfo = universityAreas[i % universityAreas.length];
   return {
     id: `quarto${i + 1}`,
-    title: `Quarto para Universitário em ${areaInfo.neighborhood}`,
-    description: `Quarto individual mobiliado, ideal para estudantes. Localizado em ${areaInfo.neighborhood}, ${areaInfo.city}, próximo à ${areaInfo.area}. Ambiente tranquilo e seguro, com escrivaninha, cadeira confortável e internet de alta velocidade. Perfeito para focar nos estudos e aproveitar a vida universitária.`,
+    title: `Quarto Universitário perto da ${areaInfo.acronym} em ${areaInfo.neighborhood}`,
+    description: `Quarto individual mobiliado, ideal para estudantes da ${areaInfo.name} (${areaInfo.acronym}). Localizado em ${areaInfo.neighborhood}, ${areaInfo.city}. Ambiente tranquilo e seguro, com escrivaninha, cadeira confortável e internet de alta velocidade. Perfeito para focar nos estudos e aproveitar a vida universitária.`,
     images: [
       `https://picsum.photos/seed/quarto${i + 1}_1/800/450`,
       `https://picsum.photos/seed/quarto${i + 1}_2/800/450`,
       `https://picsum.photos/seed/quarto${i + 1}_3/800/450`,
       `https://picsum.photos/seed/quarto${i + 1}_4/800/450`,
     ],
-    pricePerNight: 35 + i * 2, // Adjusted price for student rooms (per night, can be interpreted as daily rate for monthly calc)
-    rating: parseFloat((4.3 + Math.random() * 0.7).toFixed(1)), // Between 4.3 and 5.0
+    pricePerNight: 35 + i * 2, 
+    rating: parseFloat((4.3 + Math.random() * 0.7).toFixed(1)), 
     location: {
-      address: `Rua dos Estudantes, ${100 + i}, ${areaInfo.neighborhood}, ${areaInfo.city}`,
-      lat: -23.5505 + (i * 0.001), // Example Lat/Lng for São Paulo area
+      address: `Rua dos Estudantes, ${100 + i}, ${areaInfo.neighborhood}, ${areaInfo.city}, Próximo à ${areaInfo.acronym}`,
+      lat: -23.5505 + (i * 0.001), 
       lng: -46.6333 + (i * 0.001),
     },
-    amenities: commonAmenities.sort(() => 0.5 - Math.random()).slice(0, 3 + (i % 4)), // Vary amenities
+    amenities: commonAmenities.sort(() => 0.5 - Math.random()).slice(0, 3 + (i % 4)),
     host: {
       name: `Anfitrião ${String.fromCharCode(65 + (i % 26))}`, 
       avatarUrl: `https://picsum.photos/seed/host${i + 1}/80/80`,
@@ -80,6 +82,8 @@ export const mockListings: Listing[] = Array.from({ length: 36 }, (_, i) => {
     bedrooms: 1,
     beds: 1,
     baths: 1,
+    universityName: areaInfo.name,
+    universityAcronym: areaInfo.acronym,
   };
 });
 
@@ -91,8 +95,8 @@ export const mockBookings: Booking[] = [
     listingImage: mockListings[0].images[0],
     userId: 'user1',
     startDate: '2024-08-01',
-    endDate: '2024-12-20', // Longer term for students
-    totalPrice: mockListings[0].pricePerNight * 30 * 4.5, // Approximate monthly * duration
+    endDate: '2024-12-20', 
+    totalPrice: mockListings[0].pricePerNight * 30 * 4.5, 
     status: 'active',
   },
   {
@@ -120,10 +124,12 @@ export const mockBookings: Booking[] = [
 ];
 
 // API simulation functions
-export const fetchListings = async (page: number, limit: number = 12): Promise<Listing[]> => {
+export const fetchListings = async (page: number, limit: number = 9): Promise<Listing[]> => {
   const start = (page - 1) * limit;
   const end = start + limit;
-  return simulateApiCall(mockListings.slice(start, end));
+  // Ensure we don't go past the available mock listings if total is less than requested
+  const listingsToShow = mockListings.slice(start, Math.min(end, mockListings.length));
+  return simulateApiCall(listingsToShow);
 };
 
 export const fetchListingById = async (id: string): Promise<Listing | undefined> => {

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const LISTINGS_PER_PAGE = 12;
+const LISTINGS_PER_PAGE = 9; // Adjusted to 9
 
 export default function ExplorePage() {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -19,42 +19,48 @@ export default function ExplorePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const observer = useRef<IntersectionObserver | null>(null);
 
-  const loadListings = useCallback(async (currentPage: number) => {
+  const loadListings = useCallback(async (currentPage: number, currentSearchTerm: string) => {
     setIsLoading(true);
     try {
+      // Pass search term if your fetchListings supports it, otherwise filter client-side
       const newFetchedListings = await fetchListings(currentPage, LISTINGS_PER_PAGE);
-      if (newFetchedListings.length > 0) {
-        setListings(prevListings => {
-          if (currentPage === 1) {
-            // For the first page, or if we intend to reset (e.g. after a search term change)
-            // We should replace the existing listings.
-            return newFetchedListings;
-          } else {
-            // For subsequent pages (infinite scroll), append new listings.
-            // Ensure no duplicates are added.
-            const currentListingIds = new Set(prevListings.map(l => l.id));
-            const uniqueNewListings = newFetchedListings.filter(l => !currentListingIds.has(l.id));
-            return [...prevListings, ...uniqueNewListings];
-          }
-        });
-        setHasMore(newFetchedListings.length === LISTINGS_PER_PAGE);
-      } else {
-        setHasMore(false);
-      }
+      
+      // Client-side filtering (if backend doesn't filter)
+      const filteredBySearch = newFetchedListings.filter(listing =>
+        listing.title.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+        listing.description.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+        listing.location.address.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+        listing.universityName.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+        listing.universityAcronym.toLowerCase().includes(currentSearchTerm.toLowerCase())
+      );
+
+      setListings(prevListings => {
+        // If it's the first page (either initial load or new search), replace listings
+        if (currentPage === 1) {
+          return filteredBySearch;
+        }
+        // Otherwise, append unique new listings for infinite scroll
+        const currentListingIds = new Set(prevListings.map(l => l.id));
+        const uniqueNewListings = filteredBySearch.filter(l => !currentListingIds.has(l.id));
+        return [...prevListings, ...uniqueNewListings];
+      });
+      setHasMore(newFetchedListings.length === LISTINGS_PER_PAGE && filteredBySearch.length > 0);
+      
     } catch (error) {
       console.error("Falha ao buscar quartos:", error);
-      // Potentially show a toast message
     } finally {
       setIsLoading(false);
     }
-  }, []); // LISTINGS_PER_PAGE is a constant, so no need to include in dependencies
+  }, []);
+
 
   useEffect(() => {
-    // Initial load: reset page to 1 and load.
-    // This ensures that if the component re-mounts or for strict mode, page 1 is correctly (re)loaded.
+    // Reset page to 1 and load listings when search term changes or on initial mount
     setPage(1); 
-    loadListings(1);
-  }, [loadListings]);
+    // Pass `searchTerm` to `loadListings`
+    loadListings(1, searchTerm); 
+  }, [loadListings, searchTerm]); // Depend on searchTerm
+
 
   const lastListingElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
@@ -68,18 +74,16 @@ export default function ExplorePage() {
   }, [isLoading, hasMore]);
 
   useEffect(() => {
-    // Load more listings when page changes, but only if it's not the initial load (page 1).
-    // Initial load (page 1) is handled by the first useEffect.
+    // Load more listings when page changes (for infinite scroll)
+    // but only if it's not the initial load (page > 1)
     if (page > 1) { 
-      loadListings(page);
+      loadListings(page, searchTerm); // Pass searchTerm here as well
     }
-  }, [page, loadListings]);
+  }, [page, loadListings, searchTerm]); // Depend on searchTerm
   
-  const filteredListings = listings.filter(listing =>
-    listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    listing.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    listing.location.address.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filtered listings are now directly set by `loadListings` when searchTerm changes.
+  // For infinite scroll, `loadListings` appends, and client-side filtering is applied there.
+  // So, `listings` state already contains the correctly filtered items.
 
   return (
     <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
@@ -97,7 +101,7 @@ export default function ExplorePage() {
       </header>
 
       {listings.length === 0 && isLoading ? (
-        <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"> 
           {Array.from({ length: LISTINGS_PER_PAGE }).map((_, index) => (
             <div key={index} className="space-y-2">
               <Skeleton className="h-48 w-full rounded-xl" />
@@ -108,12 +112,12 @@ export default function ExplorePage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredListings.map((listing, index) => {
-            if (filteredListings.length === index + 1) {
-              return <div ref={lastListingElementRef} key={listing.id}><ListingCard listing={listing} /></div>;
+        <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+          {listings.map((listing, index) => {
+            if (listings.length === index + 1) {
+              return <div ref={lastListingElementRef} key={`${listing.id}-${index}`}><ListingCard listing={listing} /></div>;
             }
-            return <ListingCard key={listing.id} listing={listing} />;
+            return <ListingCard key={`${listing.id}-${index}`} listing={listing} />;
           })}
         </div>
       )}
@@ -127,10 +131,9 @@ export default function ExplorePage() {
       {!hasMore && listings.length > 0 && (
         <p className="mt-8 text-center text-muted-foreground">Não há mais quartos para mostrar.</p>
       )}
-       {listings.length > 0 && filteredListings.length === 0 && !isLoading && (
+       {listings.length === 0 && !isLoading && ( // Show this when no results for the search term and not loading
         <p className="mt-8 text-center text-muted-foreground">Nenhum quarto encontrado para "{searchTerm}".</p>
       )}
     </div>
   );
 }
-
