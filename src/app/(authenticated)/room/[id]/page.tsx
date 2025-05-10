@@ -12,7 +12,7 @@ import { StarRating } from '@/components/StarRating';
 import { ChevronLeft, ChevronRight, MapPin, Users, BedDouble, Bath, Star, Share2, Heart, Loader2, Armchair, CheckCircle, School } from 'lucide-react';
 import { triggerHapticFeedback } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+// Removed Avatar imports as host section is removed
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
@@ -164,7 +164,8 @@ function ListingDetailsContent() {
         </div>
         <Separator />
         
-        <div className="flex items-center space-x-3">
+        {/* Host information section removed */}
+        {/* <div className="flex items-center space-x-3">
           <Avatar>
             <AvatarImage src={listing.host.avatarUrl} alt={listing.host.name} data-ai-hint="person portrait" />
             <AvatarFallback>{listing.host.name.substring(0,1)}</AvatarFallback>
@@ -174,7 +175,7 @@ function ListingDetailsContent() {
             <p className="text-sm text-muted-foreground">Superhost · {Math.floor(Math.random() * 5) + 1} anos como anfitrião</p>
           </div>
         </div>
-        <Separator />
+        <Separator /> */}
 
         <div className="flex space-x-4 text-sm text-foreground">
           <span className="flex items-center"><Users size={18} className="mr-1.5 text-muted-foreground"/> {listing.guests} universitário(s)</span>
@@ -235,10 +236,10 @@ function ListingDetailsContent() {
             {listing.reviews.slice(0, 2).map((review) => (
               <div key={review.id} className="text-sm">
                 <div className="flex items-center space-x-2 mb-1">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={review.userAvatarUrl} alt={review.userName} data-ai-hint="person avatar"/>
-                    <AvatarFallback>{review.userName.substring(0,1)}</AvatarFallback>
-                  </Avatar>
+                   {/* Using a placeholder for avatar as review.userAvatarUrl is part of mock data */}
+                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-sm text-muted-foreground">
+                    {review.userName.substring(0,1)}
+                  </div>
                   <div>
                     <p className="font-medium text-foreground">{review.userName}</p>
                     <p className="text-xs text-muted-foreground">{format(parseISO(review.date), "MMMM 'de' yyyy", { locale: ptBR })}</p>
@@ -286,3 +287,4 @@ export default function ListingDetailsPage() {
     </Suspense>
   );
 }
+

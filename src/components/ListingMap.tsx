@@ -15,11 +15,11 @@ interface ListingMapProps {
   universityName: string;
 }
 
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+const API_KEY = "AIzaSyDUS0wxpn8XbnktxOK9psAkRbp7Aq6OSUg"; // Updated API Key
 
 const mapContainerStyle = {
   width: '100%',
-  height: '300px', // Adjusted height
+  height: '300px', 
   borderRadius: '0.5rem', 
 };
 
@@ -32,7 +32,7 @@ interface TravelInfo {
 
 export function ListingMap({ listingLocation, universityLocation, universityName }: ListingMapProps) {
   const [directionsDriving, setDirectionsDriving] = useState<google.maps.DirectionsResult | null>(null);
-  const [directionsWalking, setDirectionsWalking] = useState<google.maps.DirectionsResult | null>(null);
+  // const [directionsWalking, setDirectionsWalking] = useState<google.maps.DirectionsResult | null>(null); // Walking directions not rendered
   
   const [travelInfoDriving, setTravelInfoDriving] = useState<TravelInfo | null>(null);
   const [travelInfoWalking, setTravelInfoWalking] = useState<TravelInfo | null>(null);
@@ -55,6 +55,7 @@ export function ListingMap({ listingLocation, universityLocation, universityName
             setTravelInfoDriving(info);
           } else {
             // Don't set directions for walking to avoid clutter, just info
+            // setDirectionsWalking(response); // Not rendering walking path
             setTravelInfoWalking(info);
           }
         } else {
@@ -75,11 +76,11 @@ export function ListingMap({ listingLocation, universityLocation, universityName
         lng: (listingLocation.lng + universityLocation.lng) / 2,
       };
     }
-    return listingLocation || universityLocation; // Fallback if one is missing
+    return listingLocation || universityLocation; 
   }, [listingLocation, universityLocation]);
 
 
-  if (!API_KEY || API_KEY === "YOUR_GOOGLE_MAPS_API_KEY_HERE") {
+  if (!API_KEY) { // Simplified check for the hardcoded key
     return (
       <Card className="mt-4">
         <CardHeader>
@@ -87,9 +88,7 @@ export function ListingMap({ listingLocation, universityLocation, universityName
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            A chave da API do Google Maps não está configurada. Por favor, adicione 
-            <code className="mx-1 rounded bg-muted px-1 py-0.5 font-mono text-sm">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> 
-            ao seu arquivo de ambiente.
+            A chave da API do Google Maps não está configurada corretamente no código.
           </p>
         </CardContent>
       </Card>
@@ -103,12 +102,11 @@ export function ListingMap({ listingLocation, universityLocation, universityName
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
             center={center}
-            zoom={13} // Adjust zoom as needed
+            zoom={13} 
           >
             {listingLocation && <Marker position={listingLocation} title="Local do Quarto" />}
             {universityLocation && <Marker position={universityLocation} title={universityName} icon={{ url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" }} />}
             
-            {/* Directions for Driving */}
             {listingLocation && universityLocation && (
               <DirectionsService
                 options={{
@@ -120,7 +118,6 @@ export function ListingMap({ listingLocation, universityLocation, universityName
               />
             )}
 
-            {/* Directions for Walking (only for info, not rendering path by default) */}
             {listingLocation && universityLocation && !travelInfoWalking && (
                <DirectionsService
                 options={{
@@ -137,7 +134,7 @@ export function ListingMap({ listingLocation, universityLocation, universityName
                 options={{
                   directions: directionsDriving,
                   polylineOptions: { strokeColor: 'hsl(var(--primary))', strokeWeight: 4 },
-                  markerOptions: { visible: false } // Hide default A/B markers if custom ones are used
+                  markerOptions: { visible: false } 
                 }}
               />
             )}
@@ -199,3 +196,4 @@ export function ListingMap({ listingLocation, universityLocation, universityName
     </div>
   );
 }
+
