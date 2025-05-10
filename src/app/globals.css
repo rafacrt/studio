@@ -38,13 +38,21 @@ body {
 
     --radius: 0.5rem;
 
-    /* Custom status colors */
-    --status-aguardando-cliente: 38 92% 50%; /* Orange */
-    --status-em-producao: 200 82% 50%; /* Cyan-Blue */
-    --status-aguardando-parceiro: 260 82% 60%; /* Purple */
-    --status-finalizado: 145 63% 49%; /* Green */
-    --status-urgente-bg: 0 90% 60%; /* Bright Red */
-    --status-urgente-fg: 0 0% 100%; /* White */
+    /* Cores customizadas de status */
+    /* Os nomes das variáveis correspondem aos slugs dos valores do enum OSStatus em português. */
+    /* Ex: OSStatus.NA_FILA ("Na Fila") -> --status-na-fila (se necessário, mas geralmente --muted-foreground é usado) */
+    /* Ex: OSStatus.AGUARDANDO_CLIENTE ("Aguardando Cliente") -> --status-aguardando-cliente */
+    
+    /* Usaremos --muted-foreground para "Na Fila" por padrão, pode ser customizado aqui se desejado */
+    /* --status-na-fila: ... ; */
+
+    --status-aguardando-cliente: 38 92% 50%; /* Laranja */
+    --status-em-producao: 200 82% 50%; /* Ciano-Azul */
+    --status-aguardando-parceiro: 260 82% 60%; /* Roxo */
+    --status-finalizado: 145 63% 49%; /* Verde */
+    
+    --status-urgente-bg: 0 90% 60%; /* Vermelho Brilhante */
+    --status-urgente-fg: 0 0% 100%; /* Branco */
 
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -62,8 +70,8 @@ body {
   }
 
   .dark {
-    --background: 220 10% 10%; /* Dark Gray */
-    --foreground: 220 10% 85%; /* Light Gray */
+    --background: 220 10% 10%; 
+    --foreground: 220 10% 85%; 
 
     --card: 220 10% 15%;
     --card-foreground: 220 10% 90%;
@@ -71,27 +79,27 @@ body {
     --popover: 220 10% 15%;
     --popover-foreground: 220 10% 90%;
 
-    --primary: 210 100% 55%; /* Soft Blue (Dark) */
-    --primary-foreground: 210 100% 5%; /* Darker blue for text on primary (Dark) */
+    --primary: 210 100% 55%; 
+    --primary-foreground: 210 100% 5%; 
 
-    --secondary: 220 10% 20%; /* Darker Gray */
+    --secondary: 220 10% 20%; 
     --secondary-foreground: 220 10% 80%;
 
     --muted: 220 10% 25%;
     --muted-foreground: 220 10% 65%;
 
-    --accent: 145 63% 55%; /* Green (Dark) */
-    --accent-foreground: 0 0% 0%; /* Black for text on accent (Dark) */
+    --accent: 145 63% 55%; 
+    --accent-foreground: 0 0% 0%; 
 
     --destructive: 0 72.2% 50.6%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 220 10% 25%;
     --input: 220 10% 25%;
-    --ring: 210 100% 55%; /* Soft Blue for focus rings (Dark) */
+    --ring: 210 100% 55%; 
 
-    /* Custom status colors for dark theme could be adjusted if needed,
-       but HSL values might adapt well. For now, keeping them same. */
+    /* Cores customizadas de status para tema escuro */
+    /* --status-na-fila: ... ; */
     --status-aguardando-cliente: 38 92% 55%;
     --status-em-producao: 200 82% 55%;
     --status-aguardando-parceiro: 260 82% 65%;
@@ -125,33 +133,42 @@ body {
   }
 }
 
-/* Helper for status color text */
+/* Classes auxiliares para cores de status. Mapeiam para os nomes das variáveis CSS. */
+/* A lógica de qual classe usar é feita em JS com base no valor do enum OSStatus. */
+
+/* Para "Na Fila", usar text-muted-foreground e border-muted-foreground por padrão */
+/* .text-status-na-fila { color: hsl(var(--status-na-fila)); } */
+/* .bg-status-na-fila { background-color: hsl(var(--status-na-fila)); } */
+/* .border-status-na-fila { border-color: hsl(var(--status-na-fila)); } */
+
+
 .text-status-aguardando-cliente { color: hsl(var(--status-aguardando-cliente)); }
 .bg-status-aguardando-cliente { background-color: hsl(var(--status-aguardando-cliente)); }
+.border-status-aguardando-cliente { border-color: hsl(var(--status-aguardando-cliente)); }
 
 .text-status-em-producao { color: hsl(var(--status-em-producao)); }
 .bg-status-em-producao { background-color: hsl(var(--status-em-producao)); }
+.border-status-em-producao { border-color: hsl(var(--status-em-producao)); }
 
 .text-status-aguardando-parceiro { color: hsl(var(--status-aguardando-parceiro)); }
 .bg-status-aguardando-parceiro { background-color: hsl(var(--status-aguardando-parceiro)); }
+.border-status-aguardando-parceiro { border-color: hsl(var(--status-aguardando-parceiro)); }
 
 .text-status-finalizado { color: hsl(var(--status-finalizado)); }
 .bg-status-finalizado { background-color: hsl(var(--status-finalizado)); }
+.border-status-finalizado { border-color: hsl(var(--status-finalizado)); }
+
 
 .bg-status-urgente { background-color: hsl(var(--status-urgente-bg)); }
 .text-status-urgente { color: hsl(var(--status-urgente-fg)); }
 
-/* For card borders based on status */
-.border-status-aguardando-cliente { border-color: hsl(var(--status-aguardando-cliente)); }
-.border-status-em-producao { border-color: hsl(var(--status-em-producao)); }
-.border-status-aguardando-parceiro { border-color: hsl(var(--status-aguardando-parceiro)); }
-.border-status-finalizado { border-color: hsl(var(--status-finalizado)); }
 
-/* For urgent card highlight */
+/* Destaque para card urgente */
 .urgent-highlight {
-  border-left-width: 4px;
-  border-left-color: hsl(var(--status-urgente-bg));
-  box-shadow: 0 2px 10px -3px hsl(var(--status-urgente-bg) / 0.5);
+  border-left-width: 4px; /* ou a espessura que já estava sendo usada */
+  border-left-color: hsl(var(--status-urgente-bg)); /* Cor da borda urgente */
+  /* Pode adicionar um brilho sutil se desejar */
+  box-shadow: 0 2px 10px -3px hsl(var(--status-urgente-bg) / 0.5); 
 }
 .dark .urgent-highlight {
   box-shadow: 0 2px 10px -3px hsl(var(--status-urgente-bg) / 0.7);

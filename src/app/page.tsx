@@ -14,12 +14,10 @@ export default function HomePage() {
     redirect('/dashboard');
   }
 
-  // This part should ideally not be reached if redirects work.
-  // It serves as a fallback display during the very brief moment before redirection.
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background">
       <Loader2 className="h-10 w-10 animate-spin text-primary" />
-      <p className="mt-4 text-sm text-muted-foreground">Initializing FreelaOS...</p>
+      <p className="mt-4 text-sm text-muted-foreground">Inicializando FreelaOS...</p>
     </div>
   );
 }

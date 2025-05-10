@@ -1,10 +1,10 @@
 import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout';
-import KanbanBoard from '@/components/kanban/KanbanBoard';
+import OSGrid from '@/components/os-grid/OSGrid'; // Updated import
 
 export default function DashboardPage() {
   return (
     <AuthenticatedLayout>
-      <KanbanBoard />
+      <OSGrid /> {/* Updated component */}
     </AuthenticatedLayout>
   );
 }

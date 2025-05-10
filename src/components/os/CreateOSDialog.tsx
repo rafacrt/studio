@@ -39,12 +39,17 @@ import { useOSStore } from '@/store/os-store';
 import { OSStatus, ALL_OS_STATUSES, type CreateOSData } from '@/lib/types';
 
 const formSchema = z.object({
-  cliente: z.string().min(1, { message: 'Client name is required.' }),
-  projeto: z.string().min(1, { message: 'Project name is required.' }),
-  observacoes: z.string().min(1, { message: 'Description is required.' }),
-  status: z.nativeEnum(OSStatus, { errorMap: () => ({ message: "Please select a status." }) }),
+  cliente: z.string().min(1, { message: 'Nome do cliente é obrigatório.' }),
+  parceiro: z.string().optional(),
+  projeto: z.string().min(1, { message: 'Nome do projeto é obrigatório.' }),
+  tarefa: z.string().min(1, { message: 'A descrição da tarefa é obrigatória.' }),
+  observacoes: z.string().optional(),
+  tempoTrabalhado: z.string().optional(),
+  status: z.nativeEnum(OSStatus, { errorMap: () => ({ message: "Por favor, selecione um status." }) }).default(OSStatus.NA_FILA),
   isUrgent: z.boolean().default(false),
 });
+
+type CreateOSFormValues = z.infer<typeof formSchema>;
 
 export function CreateOSDialog() {
   const [isOpen, setIsOpen] = useState(false);
@@ -52,32 +57,41 @@ export function CreateOSDialog() {
   const { toast } = useToast();
   const addOS = useOSStore((state) => state.addOS);
 
-  const form = useForm<CreateOSData>({
+  const form = useForm<CreateOSFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       cliente: '',
+      parceiro: '',
       projeto: '',
+      tarefa: '',
       observacoes: '',
-      status: OSStatus.AGUARDANDO_CLIENTE,
+      tempoTrabalhado: '',
+      status: OSStatus.NA_FILA,
       isUrgent: false,
     },
   });
 
-  async function onSubmit(values: CreateOSData) {
+  async function onSubmit(values: CreateOSFormValues) {
     setIsSubmitting(true);
     try {
-      addOS(values);
+      // Ensure optional fields that are empty are passed as undefined or empty string as appropriate
+      const dataToSubmit: CreateOSData = {
+        ...values,
+        parceiro: values.parceiro || undefined,
+        observacoes: values.observacoes || '',
+        tempoTrabalhado: values.tempoTrabalhado || '',
+      };
+      addOS(dataToSubmit);
       toast({
-        title: 'OS Created',
-        description: `Order of Service for ${values.cliente} - ${values.projeto} has been successfully created.`,
-        variant: 'default', // Use accent for success if available in theme
+        title: 'OS Criada',
+        description: `Ordem de Serviço para ${values.cliente} - ${values.projeto} foi criada com sucesso.`,
       });
       form.reset();
       setIsOpen(false);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to create OS. Please try again.',
+        title: 'Erro',
+        description: 'Falha ao criar OS. Por favor, tente novamente.',
         variant: 'destructive',
       });
     } finally {
@@ -89,14 +103,14 @@ export function CreateOSDialog() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> New OS
+          <PlusCircle className="mr-2 h-4 w-4" /> Nova OS
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Create New Order of Service</DialogTitle>
+          <DialogTitle>Criar Nova Ordem de Serviço</DialogTitle>
           <DialogDescription>
-            Fill in the details below to create a new OS. Click save when you're done.
+            Preencha os detalhes abaixo para criar uma nova OS. Clique em salvar quando terminar.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -106,9 +120,22 @@ export function CreateOSDialog() {
               name="cliente"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Client Name</FormLabel>
+                  <FormLabel>Nome do Cliente *</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Acme Corp" {...field} />
+                    <Input placeholder="Ex: Empresa Acme" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="parceiro"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Parceiro (opcional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Agência XYZ" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -119,9 +146,22 @@ export function CreateOSDialog() {
               name="projeto"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Name</FormLabel>
+                  <FormLabel>Nome do Projeto *</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Website Development" {...field} />
+                    <Input placeholder="Ex: Desenvolvimento de Website" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="tarefa"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tarefa Principal *</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Descreva a tarefa principal a ser realizada..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -132,10 +172,26 @@ export function CreateOSDialog() {
               name="observacoes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description / Observations</FormLabel>
+                  <FormLabel>Observações</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Describe the task or any relevant notes..." {...field} />
+                    <Textarea placeholder="Notas adicionais, detalhes importantes..." {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="tempoTrabalhado"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tempo Trabalhado (inicial)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: 2h reunião, 4h desenvolvimento" {...field} />
+                  </FormControl>
+                   <p className="text-sm text-muted-foreground">
+                      Registre o tempo já dedicado ou sessões de trabalho.
+                    </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -149,7 +205,7 @@ export function CreateOSDialog() {
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select initial status" />
+                        <SelectValue placeholder="Selecione o status inicial" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -177,10 +233,10 @@ export function CreateOSDialog() {
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>
-                      Mark as Urgent
+                      Marcar como Urgente
                     </FormLabel>
                     <p className="text-sm text-muted-foreground">
-                      Urgent tasks will be highlighted on the board.
+                      Tarefas urgentes serão destacadas.
                     </p>
                   </div>
                 </FormItem>
@@ -188,11 +244,11 @@ export function CreateOSDialog() {
             />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
-                Cancel
+                Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Save OS
+                Salvar OS
               </Button>
             </DialogFooter>
           </form>

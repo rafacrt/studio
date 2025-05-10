@@ -5,9 +5,8 @@ export default function LoginPage() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
       <AuthForm />
        <p className="mt-8 text-sm text-muted-foreground">
-        Hint: Use username <code className="bg-muted px-1.5 py-0.5 rounded">admin</code> and any password.
+        Dica: Use o usuário <code className="bg-muted px-1.5 py-0.5 rounded">admin</code> e qualquer senha.
       </p>
     </main>
   );
 }
-
