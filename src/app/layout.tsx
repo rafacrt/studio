@@ -13,7 +13,7 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   title: 'WeStudy - Seu Próximo Quarto',
-  description: 'Descubra e reserve quartos universitários com o WeStudy. Inspirado no QuintoAndar, projetado para praticidade.',
+  description: 'Descubra e reserve quartos universitários com o WeStudy. Inspirado no Quinto Andar, projetado para praticidade.',
   applicationName: 'WeStudy',
   appleWebApp: {
     capable: true,
