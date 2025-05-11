@@ -14,21 +14,27 @@ export async function login(username: string, password?: string): Promise<null |
     if (user) {
       console.log('[AuthActions] auth.login successful for:', username, '. Redirecting to /dashboard.');
       redirect('/dashboard'); // This throws NEXT_REDIRECT
-      // Code after redirect() is not executed in the context of returning to the client.
-      // Thus, this function won't explicitly return in the success case seen by the caller.
+      // Code after redirect() is not executed.
     } else {
       console.log('[AuthActions] auth.login returned null (credentials incorrect for user):', username);
       return null; // Authentication failed
     }
   } catch (e: any) {
-    // Check if it's a redirect error and re-throw it for Next.js to handle
-    if (e.message?.includes('NEXT_REDIRECT') || e.digest?.includes('NEXT_REDIRECT')) {
+    const isRedirectError = e.digest?.includes('NEXT_REDIRECT') || (typeof e.message === 'string' && e.message.includes('NEXT_REDIRECT'));
+    
+    if (isRedirectError) {
       console.log('[AuthActions] Caught NEXT_REDIRECT, re-throwing.');
       throw e;
     }
-    // Handle other errors
-    console.error('[AuthActions] CRITICAL ERROR in login server action for user:', username, 'Error:', e.message, 'Stack:', e.stack);
-    // Throw a new error that the client can display
+    
+    // Log more details for non-redirect errors
+    console.error(
+      '[AuthActions] Non-redirect error in login server action for user:', username, 
+      'ErrorDigest:', e.digest, 
+      'ErrorMessage:', e.message, 
+      // 'ErrorStack:', e.stack, // Stack can be very verbose, consider enabling if needed
+      'FullError:', JSON.stringify(e, Object.getOwnPropertyNames(e)) // Attempt to serialize more of the error
+    );
     throw new Error('Falha no servidor durante o login. Por favor, tente novamente mais tarde.');
   }
 }
@@ -39,18 +45,14 @@ export async function logout(): Promise<void> {
     await auth.logout();
   } catch (e: any) {
     console.error('[AuthActions] CRITICAL ERROR in logout server action. Error:', e.message, 'Stack:', e.stack);
-    // Re-throw the error to be handled or logged by Next.js
     throw e;
   }
-  // Redirect after logout
   redirect('/login');
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  // console.log('[AuthActions] Server action "getCurrentUser" invoked.');
   try {
     const user = await auth.getCurrentUser();
-    // console.log('[AuthActions] getCurrentUser result:', user ? user.username : 'No user');
     return user;
   } catch (e: any) {
     console.error('[AuthActions] CRITICAL ERROR in getCurrentUser server action. Error:', e.message, 'Stack:', e.stack);
