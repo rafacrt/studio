@@ -10,21 +10,21 @@ import type { User } from './types';
 export async function login(username: string, password?: string): Promise<null | undefined> {
   console.log('[AuthActions] Server action "login" invoked for user:', username);
   try {
-    const user = await auth.login(username, password); // auth.login sets the cookie
+    const user = await auth.login(username, password); 
     if (user) {
       console.log('[AuthActions] auth.login successful for:', username, '. Redirecting to /dashboard.');
-      redirect('/dashboard'); // This throws NEXT_REDIRECT
+      redirect('/dashboard'); 
       // Code after redirect() is not executed.
     } else {
-      console.log('[AuthActions] auth.login returned null (credentials incorrect for user):', username);
-      return null; // Authentication failed
+      console.log('[AuthActions] auth.login returned null (e.g. empty username for):', username);
+      return null; // Authentication failed (e.g. empty username)
     }
   } catch (e: any) {
     const isRedirectError = e.digest?.includes('NEXT_REDIRECT') || (typeof e.message === 'string' && e.message.includes('NEXT_REDIRECT'));
     
     if (isRedirectError) {
       console.log('[AuthActions] Caught NEXT_REDIRECT from login, re-throwing.');
-      throw e; // Re-throw to let Next.js handle the redirect
+      throw e; 
     }
     
     // Log the actual error on the server for debugging
@@ -33,14 +33,16 @@ export async function login(username: string, password?: string): Promise<null |
       console.error('[AuthActions] Error Name:', e.name);
       console.error('[AuthActions] Error Message:', e.message);
       console.error('[AuthActions] Error Stack:', e.stack);
+      // Re-throw the original error if it's an Error instance.
+      // Next.js should be able to serialize standard Error objects.
+      // The 'digest' will be added by Next.js if it's not already there.
+      throw e;
     } else {
-      // If it's not an Error instance, log its string representation
-      console.error('[AuthActions] Caught non-Error object:', String(e));
+      // If 'e' is not an Error instance, log its string representation and wrap it in a new Error.
+      const errorMessage = String(e) || 'Ocorreu um erro desconhecido no servidor.';
+      console.error('[AuthActions] Caught non-Error object:', errorMessage);
+      throw new Error(errorMessage);
     }
-
-    // Throw a new, simple error to be sent to the client.
-    // This message should be what AuthForm.tsx receives in error.message.
-    throw new Error('Ocorreu um erro inesperado no servidor. Tente novamente.');
   }
 }
 
@@ -58,16 +60,10 @@ export async function logout(): Promise<void> {
     } else {
       console.error('[AuthActions] Logout Caught non-Error object:', String(e));
     }
-    // Even if logout fails to clear cookie for some reason, try to redirect.
-    // Or, rethrow a generic error. For logout, failing to redirect might be worse.
-    // For now, let's rethrow a generic error, but redirect might be an alternative.
-    // throw new Error('Ocorreu um erro inesperado durante o logout.');
+    // For logout, even if clearing the cookie fails, we should try to redirect.
+    // If we want to signal failure more clearly, we might throw new Error here too.
   }
-  // Redirect should happen regardless of auth.logout() success if no error is thrown that prevents it
-  // If auth.logout throws and is caught here, this redirect will still execute unless re-thrown.
-  // The current logic: if auth.logout throws, log it, but then proceed to redirect.
-  // If we want to signal failure more clearly, we might throw new Error here too.
-  // For now, let's assume the primary goal is to get the user to the login page.
+  // Redirect should happen regardless of auth.logout() success
   redirect('/login');
 }
 
@@ -80,6 +76,6 @@ export async function getCurrentUser(): Promise<User | null> {
     if (e instanceof Error && e.stack) {
       console.error('[AuthActions] getCurrentUser stack:', e.stack);
     }
-    return null;
+    return null; // Gracefully return null if there's an issue fetching the user
   }
 }
