@@ -1,3 +1,4 @@
+
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -10,12 +11,13 @@ export function middleware(request: NextRequest) {
   }
   console.log(`[Middleware] Processing request for path: ${pathname}`);
 
-  if (pathname === '/') {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/dashboard';
-    console.log(`[Middleware] Redirecting from / to /dashboard.`);
-    return NextResponse.redirect(redirectUrl);
-  }
+  // Temporarily commented out the redirect from / to /dashboard
+  // if (pathname === '/') {
+  //   const redirectUrl = request.nextUrl.clone();
+  //   redirectUrl.pathname = '/dashboard';
+  //   console.log(`[Middleware] Redirecting from / to /dashboard.`);
+  //   return NextResponse.redirect(redirectUrl);
+  // }
 
   console.log(`[Middleware] Allowing request to proceed for path: ${pathname}`);
   return NextResponse.next();

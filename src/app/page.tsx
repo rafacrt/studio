@@ -1,17 +1,23 @@
 
-import { redirect } from 'next/navigation';
+// import { redirect } from 'next/navigation'; // No longer redirecting from here for now
 import { Loader2 } from 'lucide-react';
+import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout'; // Keep layout consistent for testing
 
 export default function HomePage() {
-  // Directly redirect to dashboard as login is bypassed
-  redirect('/dashboard');
-
-  // This part will not be reached due to the redirect above,
-  // but kept as a fallback display during the redirect process.
+  // Render actual content instead of redirecting
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background">
-      <Loader2 className="h-10 w-10 animate-spin text-primary" />
-      <p className="mt-4 text-sm text-muted-foreground">Inicializando FreelaOS...</p>
-    </div>
+    <AuthenticatedLayout>
+      <div className="flex flex-col items-center justify-center flex-1 py-10 text-center">
+        <h1 className="text-3xl font-bold mb-4">Página Inicial de Teste</h1>
+        <p className="text-lg text-muted-foreground mb-6">
+          Se você está vendo esta mensagem, a rota principal (/) está funcionando.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          O próximo passo seria verificar o acesso à rota /dashboard.
+        </p>
+        <Loader2 className="mt-8 h-10 w-10 animate-spin text-primary" />
+        <p className="mt-4 text-sm text-muted-foreground">Simulando carregamento...</p>
+      </div>
+    </AuthenticatedLayout>
   );
 }
