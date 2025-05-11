@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import type { User } from './types';
-import { AUTH_COOKIE_NAME, MOCK_USER_ID } from './constants'; // MOCK_USERNAME no longer needed for validation here
+import { AUTH_COOKIE_NAME, MOCK_USER_ID } from './constants';
 
 // Mock JWT: In a real app, use a library like 'jsonwebtoken'
 const createMockToken = (user: Omit<User, 'id'>): string => {
@@ -29,10 +29,7 @@ const parseMockToken = (token: string): User | null => {
       parsedUser.id = MOCK_USER_ID; 
     }
     if (!parsedUser.username) {
-      // Attempt to recover username if token was for an old structure or anonymous
-      // For "any user" login, this shouldn't happen if token is created with username
       console.warn('[Auth parseMockToken] Parsed user object is missing a username.');
-      // Fallback or error, depending on strictness. For now, let it pass if id is there.
     }
     console.log('[Auth parseMockToken] Token parsed successfully for user id:', parsedUser.id, 'username:', parsedUser.username);
     return parsedUser;
@@ -42,12 +39,13 @@ const parseMockToken = (token: string): User | null => {
   }
 };
 
-export async function login(username: string, password?: string): Promise<User | null> { // Password argument is kept for API compatibility but not used for validation
-  console.log(`[Auth Login Attempt] Username: "${username}" (Password check is skipped for 'any user' login)`);
+// This login function is no longer called from the UI but kept for potential future use.
+export async function login(username: string, password?: string): Promise<User | null> {
+  console.log(`[Auth Login Attempt] Username: "${username}" (Password check is skipped)`);
 
   if (!username || typeof username !== 'string' || username.trim() === '') {
     console.log('[Auth Login Failure] Username is empty or invalid.');
-    return null; // Username must be provided and non-empty
+    return null;
   }
 
   const trimmedUsername = username.trim();
@@ -85,6 +83,7 @@ export async function login(username: string, password?: string): Promise<User |
   return { username: trimmedUsername, id: MOCK_USER_ID };
 }
 
+// This logout function is no longer called from the UI but kept for potential future use.
 export async function logout(): Promise<void> {
   console.log('[Auth logout] Attempting to clear cookie:', AUTH_COOKIE_NAME);
   try {
@@ -92,23 +91,15 @@ export async function logout(): Promise<void> {
     console.log('[Auth logout] Cookie cleared successfully.');
   } catch (e: any) {
     console.error('[Auth logout] CRITICAL: Error deleting cookie:', e.message, e.stack);
-    throw new Error('Server error during logout process.');
+    // Not throwing error here to allow redirect to proceed in auth-actions
   }
 }
 
+// getCurrentUser now always returns a mock user, bypassing cookie check for direct access.
 export async function getCurrentUser(): Promise<User | null> {
-  let token: string | undefined;
-  try {
-    const cookie = cookies().get(AUTH_COOKIE_NAME);
-    token = cookie?.value;
-  } catch (e: any) {
-     console.error('[Auth getCurrentUser] CRITICAL: Error fetching cookie:', e.message, e.stack);
-     return null; 
-  }
-  
-  if (token) {
-    const user = parseMockToken(token);
-    return user;
-  }
-  return null;
+  console.log('[Auth getCurrentUser] Bypassing cookie check, returning mock user.');
+  return {
+    id: MOCK_USER_ID,
+    username: 'Usuário Convidado', // Mock username
+  };
 }
