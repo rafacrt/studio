@@ -22,7 +22,7 @@ import { LogIn } from 'lucide-react';
 
 const formSchema = z.object({
   username: z.string().min(1, { message: 'Nome de usuário é obrigatório.' }),
-  password: z.string().min(1, { message: 'Senha é obrigatória.' }), 
+  password: z.string().min(1, { message: 'Senha é obrigatória.' }), // Kept for form structure, backend will ignore it
 });
 
 type LoginFormValues = z.infer<typeof formSchema>;
@@ -40,57 +40,40 @@ export function AuthForm() {
   });
 
   async function onSubmit(values: LoginFormValues) {
-    console.log('[AuthForm] onSubmit started. Current isLoading:', isLoading);
     setIsLoading(true);
-    console.log('[AuthForm] setIsLoading(true) called. New isLoading:', true);
-    console.log('[AuthForm] Submitting login form with values:', {username: values.username, password: values.password ? '******' : 'undefined'});
+    console.log('[AuthForm] Submitting login form with username:', values.username);
     
     try {
-      console.log('[AuthForm] Calling await login server action.');
       const result = await login(values.username, values.password);
-      console.log('[AuthForm] Server action result (if no redirect/error):', result);
-
+      // If login is successful, the server action redirects, and this part might not be reached.
+      // If login fails (e.g. auth.login returns null which auth-actions.login passes through), 'result' will be null.
       if (result === null) {
-        console.log('[AuthForm] Login failed (result is null). Displaying toast.');
+        console.log('[AuthForm] Login failed (server action returned null). Displaying toast.');
         toast({
           title: 'Falha no Login',
-          description: 'Nome de usuário ou senha inválidos.',
+          description: 'Verifique suas credenciais ou tente novamente.', // Generic message as any user/pass is allowed now, implies server issue if null
           variant: 'destructive',
         });
-      } else if (result !== undefined) {
-        // This case should ideally not be hit if successful login always redirects.
-        // If it does, it implies a successful login didn't redirect.
-        console.warn('[AuthForm] Server action returned an unexpected result (not null, not redirected):', result);
       }
-      // If login was successful, the server action redirects.
-      // Code here might not be reached if redirection is successful and component unmounts.
-      console.log('[AuthForm] Try block finished processing server action result.');
-
+      // No explicit success toast here, as redirection implies success and animation will play.
     } catch (error: any) { 
-      console.error("[AuthForm] Error caught during login action call. Error message:", error.message, "Error digest:", error.digest, "Full error object:", error);
+      console.error("[AuthForm] Error caught during login action call. Message:", error.message, "Digest:", error.digest);
 
-      const isRedirectError = error.message?.includes('NEXT_REDIRECT') || error.digest?.includes('NEXT_REDIRECT');
+      // NEXT_REDIRECT is an error thrown by redirect(), we don't need to toast for it.
+      const isRedirectError = error.digest?.includes('NEXT_REDIRECT');
 
-      if (isRedirectError) {
-        console.log('[AuthForm] NEXT_REDIRECT signal caught by AuthForm. Browser should be handling the redirect.');
-        // No toast needed here as browser should redirect.
-      } else {
-        // Handle other errors (e.g., server unavailable, non-auth related issues)
-        console.log('[AuthForm] Non-redirect error. Displaying error toast.');
+      if (!isRedirectError) {
         toast({
           title: 'Erro no Login',
-          description: error.message || 'Falha ao processar o login. Verifique sua conexão ou tente novamente mais tarde.',
+          description: error.message || 'Falha ao processar o login. Tente novamente.',
           variant: 'destructive',
         });
       }
     } finally {
-      console.log('[AuthForm] Reached finally block.');
       setIsLoading(false);
-      console.log('[AuthForm] setIsLoading(false) called in finally. New isLoading:', false);
+      console.log('[AuthForm] onSubmit finished.');
     }
   }
-
-  console.log('[AuthForm] Rendering. Current isLoading state:', isLoading);
 
   return (
     <Card className="w-full max-w-md shadow-xl">
@@ -111,7 +94,7 @@ export function AuthForm() {
                 <FormItem>
                   <FormLabel>Usuário</FormLabel>
                   <FormControl>
-                    <Input placeholder="ex: admin" {...field} />
+                    <Input placeholder="Digite qualquer nome de usuário" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -124,7 +107,7 @@ export function AuthForm() {
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Use 'admin' para logar" {...field} />
+                    <Input type="password" placeholder="Digite qualquer senha" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

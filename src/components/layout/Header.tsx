@@ -40,10 +40,7 @@ export default function Header({ user }: HeaderProps) {
         </Link>
         {user && (
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              Olá, <span className="font-medium text-foreground">{user.username}</span>
-            </span>
-             <UserCircle className="h-6 w-6 sm:hidden text-muted-foreground" />
+            <UserCircle className="h-6 w-6 text-muted-foreground" aria-label={`Usuário: ${user.username}`} />
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Sair
