@@ -11,13 +11,13 @@ export function middleware(request: NextRequest) {
   }
   console.log(`[Middleware] Processing request for path: ${pathname}`);
 
-  // Temporarily commented out the redirect from / to /dashboard
-  // if (pathname === '/') {
-  //   const redirectUrl = request.nextUrl.clone();
-  //   redirectUrl.pathname = '/dashboard';
-  //   console.log(`[Middleware] Redirecting from / to /dashboard.`);
-  //   return NextResponse.redirect(redirectUrl);
-  // }
+  // Redirect from / to /dashboard
+  if (pathname === '/') {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/dashboard';
+    console.log(`[Middleware] Redirecting from / to /dashboard.`);
+    return NextResponse.redirect(redirectUrl);
+  }
 
   console.log(`[Middleware] Allowing request to proceed for path: ${pathname}`);
   return NextResponse.next();
