@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useState } from 'react';
+// No longer need useRouter for client-side redirect on login
 
 import { Button } from '@/components/ui/button';
 import {
@@ -18,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { login } from '@/lib/auth-actions'; 
-import type { User } from '@/lib/types';
+// User type might not be directly needed from server action response if redirecting
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogIn } from 'lucide-react';
 
@@ -45,51 +46,48 @@ export function AuthForm() {
     setIsLoading(true);
     console.log('[AuthForm] Submitting login form with values:', {username: values.username, password: values.password ? '******' : 'undefined'});
     try {
-      const user: User | null = await login(values.username, values.password);
-      if (user) {
-        toast({
-          title: 'Login Bem-Sucedido',
-          description: `Bem-vindo de volta, ${user.username}! Redirecionando...`,
-        });
-        console.log('[AuthForm] Login successful, redirecting to /dashboard...');
-        setTimeout(() => {
-           window.location.href = '/dashboard'; 
-        }, 100);
-      } else {
-        // This case is hit if auth.login returns null (bad credentials or handled internal error in auth.ts)
+      // The `login` server action will redirect on success or return null on auth failure.
+      // It throws an error for other server-side issues.
+      const result = await login(values.username, values.password);
+
+      // If execution reaches here, the server action did not redirect successfully.
+      // This means login failed (result is null).
+      if (result === null) {
         toast({
           title: 'Falha no Login',
           description: 'Nome de usuário ou senha inválidos.',
           variant: 'destructive',
         });
-        setIsLoading(false);
       }
-    } catch (error: any) { // Catch as 'any' to inspect it
-      console.error("[AuthForm] Login error object:", error); // Log the actual error object to browser console
+      // If login was successful, the server action redirects, and this part of the code (after await)
+      // might not be reached, or the component might unmount before it processes.
+      // No client-side redirect (e.g., router.push) is needed here.
+      // No success toast is needed here as the user will be redirected to the dashboard.
 
-      let toastTitle = 'Ocorreu um Erro';
-      let toastDescription = 'Não foi possível conectar ao servidor. Por favor, tente novamente mais tarde.';
+    } catch (error: any) { 
+      console.error("[AuthForm] Login error object:", error);
 
-      if (error instanceof Error) {
-        toastTitle = 'Erro no Login';
-        // Use error.message if available, otherwise a generic message
-        toastDescription = error.message || 'Falha ao processar o login. Verifique os logs do servidor.';
-      } else if (typeof error === 'string') {
-        // If the server action throws a plain string (not recommended)
-        toastTitle = 'Erro Recebido do Servidor';
-        toastDescription = error;
-      } else if (error && typeof error.message === 'string') {
-        // Handle cases where error is an object with a message property (e.g. from some fetch wrappers)
-        toastTitle = 'Erro Detalhado';
-        toastDescription = error.message;
+      // Check if the error is due to NEXT_REDIRECT, which Next.js should handle.
+      // Application code typically doesn't need to catch NEXT_REDIRECT.
+      // If it's caught here, it implies an unexpected scenario or a different type of error.
+      if (error.message?.includes('NEXT_REDIRECT') || error.digest?.includes('NEXT_REDIRECT')) {
+        // This block might not be strictly necessary as Next.js handles redirect errors.
+        // However, logging it can be useful for debugging.
+        console.log('[AuthForm] NEXT_REDIRECT signal caught, browser should redirect.');
+        // Optionally, show a generic "Redirecting..." message, though usually not needed.
+        // toast({ title: 'Redirecionando...', description: 'Aguarde...' });
+      } else {
+        // Handle other errors (e.g., server unavailable, non-auth related issues)
+        toast({
+          title: 'Erro no Login',
+          description: error.message || 'Falha ao processar o login. Verifique sua conexão ou tente novamente mais tarde.',
+          variant: 'destructive',
+        });
       }
-      // Fallback to generic if no specific message could be extracted
-
-      toast({
-        title: toastTitle,
-        description: toastDescription,
-        variant: 'destructive',
-      });
+    } finally {
+      // Set loading to false if login failed or an error occurred.
+      // If a redirect is happening, the component will unmount, so this state change might not be visible
+      // or might execute just before unmounting. It's generally safe to include.
       setIsLoading(false);
     }
   }
@@ -126,7 +124,7 @@ export function AuthForm() {
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Digite 'admin' para mock" {...field} />
+                    <Input type="password" placeholder="Use 'admin' para logar" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -142,4 +140,3 @@ export function AuthForm() {
     </Card>
   );
 }
-

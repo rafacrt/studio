@@ -4,22 +4,32 @@ import { redirect } from 'next/navigation';
 import * as auth from './auth'; 
 import type { User } from './types';
 
-export async function login(username: string, password?: string): Promise<User | null> {
+// Returns null for authentication failure.
+// Redirects on success.
+// Throws other errors for server issues.
+export async function login(username: string, password?: string): Promise<null | undefined> {
   console.log('[AuthActions] Server action "login" invoked for user:', username);
   try {
-    const user = await auth.login(username, password);
+    const user = await auth.login(username, password); // auth.login sets the cookie
     if (user) {
-      console.log('[AuthActions] auth.login successful, user data for:', username, 'User ID:', user.id);
-      return user;
+      console.log('[AuthActions] auth.login successful for:', username, '. Redirecting to /dashboard.');
+      redirect('/dashboard'); // This throws NEXT_REDIRECT
+      // Code after redirect() is not executed in the context of returning to the client.
+      // Thus, this function won't explicitly return in the success case seen by the caller.
     } else {
-      console.log('[AuthActions] auth.login returned null (credentials likely incorrect for user):', username);
-      return null; 
+      console.log('[AuthActions] auth.login returned null (credentials incorrect for user):', username);
+      return null; // Authentication failed
     }
   } catch (e: any) {
+    // Check if it's a redirect error and re-throw it for Next.js to handle
+    if (e.message?.includes('NEXT_REDIRECT') || e.digest?.includes('NEXT_REDIRECT')) {
+      console.log('[AuthActions] Caught NEXT_REDIRECT, re-throwing.');
+      throw e;
+    }
+    // Handle other errors
     console.error('[AuthActions] CRITICAL ERROR in login server action for user:', username, 'Error:', e.message, 'Stack:', e.stack);
-    // Re-throw the error. This will cause the client's catch block to handle it.
-    // The Next.js server will likely return a 500 error status.
-    throw e; 
+    // Throw a new error that the client can display
+    throw new Error('Falha no servidor durante o login. Por favor, tente novamente mais tarde.');
   }
 }
 
@@ -27,18 +37,16 @@ export async function logout(): Promise<void> {
   console.log('[AuthActions] Server action "logout" invoked.');
   try {
     await auth.logout();
-    // Redirect is handled here as per original logic
   } catch (e: any) {
     console.error('[AuthActions] CRITICAL ERROR in logout server action. Error:', e.message, 'Stack:', e.stack);
+    // Re-throw the error to be handled or logged by Next.js
     throw e;
   }
-  // The redirect should ideally be outside the try-catch if auth.logout() can throw
-  // but for this mock, it's simple. If auth.logout() fails, redirect might not happen.
+  // Redirect after logout
   redirect('/login');
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  // This function is called by AuthenticatedLayout, ensure it's robust.
   // console.log('[AuthActions] Server action "getCurrentUser" invoked.');
   try {
     const user = await auth.getCurrentUser();
@@ -46,9 +54,6 @@ export async function getCurrentUser(): Promise<User | null> {
     return user;
   } catch (e: any) {
     console.error('[AuthActions] CRITICAL ERROR in getCurrentUser server action. Error:', e.message, 'Stack:', e.stack);
-    // Depending on how critical this is, you might return null or throw.
-    // For now, returning null to prevent breaking layouts entirely if there's a token parsing issue.
     return null;
   }
 }
-
