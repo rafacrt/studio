@@ -8,10 +8,10 @@ interface AuthenticatedLayoutProps {
   children: ReactNode;
 }
 
-export default async function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
-  // Calls the simplified getCurrentUser from lib/auth.ts directly.
-  // This function no longer uses cookies() but returns a mock user.
-  const user = await getCurrentUser(); 
+// Removed 'async' as Client Components cannot be async and getCurrentUser is now synchronous.
+export default function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
+  // Removed 'await' as getCurrentUser is no longer async.
+  const user = getCurrentUser(); 
 
   return (
     <div className="flex min-h-screen flex-col">
