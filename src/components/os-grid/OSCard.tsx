@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Eye, CalendarClock, Flag, Copy, AlertTriangle, Edit3, CheckCircle2, Clock, Server, Users, FileText } from 'lucide-react';
+import { Eye, CalendarClock, Flag, Copy, AlertTriangle, Edit3, CheckCircle2, Clock, Server, Users, FileText, User } from 'lucide-react'; // Added User icon here
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOSStore } from '@/store/os-store';
@@ -43,7 +43,7 @@ const getStatusColorClass = (status: OSStatus, type: 'text' | 'bg' | 'border' = 
 const getStatusIcon = (status: OSStatus) => {
   switch (status) {
     case OSStatus.NA_FILA: return <Clock className="h-3 w-3 mr-1" />;
-    case OSStatus.AGUARDANDO_CLIENTE: return <User className="h-3 w-3 mr-1" />;
+    case OSStatus.AGUARDANDO_CLIENTE: return <User className="h-3 w-3 mr-1" />; // User icon is now defined
     case OSStatus.EM_PRODUCAO: return <Server className="h-3 w-3 mr-1" />;
     case OSStatus.AGUARDANDO_PARCEIRO: return <Users className="h-3 w-3 mr-1" />;
     case OSStatus.FINALIZADO: return <CheckCircle2 className="h-3 w-3 mr-1" />;
