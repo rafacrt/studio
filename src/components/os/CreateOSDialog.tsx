@@ -4,17 +4,18 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { PlusCircle, Loader2 } from 'lucide-react'; // Keep lucide icons
 
 // Removed useToast import
 import { useOSStore } from '@/store/os-store';
+import type { Partner } from '@/store/os-store'; // Import Partner type
 import { OSStatus, ALL_OS_STATUSES, type CreateOSData } from '@/lib/types';
 
 // Use Bootstrap's form validation approach alongside react-hook-form
 const formSchema = z.object({
   cliente: z.string().min(1, { message: 'Nome do cliente é obrigatório.' }),
-  parceiro: z.string().optional(),
+  parceiro: z.string().optional(), // Partner name as string
   projeto: z.string().min(1, { message: 'Nome do projeto é obrigatório.' }),
   tarefa: z.string().min(1, { message: 'A descrição da tarefa é obrigatória.' }),
   observacoes: z.string().optional(),
@@ -31,7 +32,7 @@ export function CreateOSDialog() {
   // Removed toast related code
   const { addOS, partners, addPartner } = useOSStore((state) => ({
       addOS: state.addOS,
-      partners: state.partners,
+      partners: state.partners, // Now Partner[] type
       addPartner: state.addPartner,
   }));
   const modalRef = useRef<HTMLDivElement>(null);
@@ -60,14 +61,18 @@ export function CreateOSDialog() {
       // Check if modal instance exists and has dispose method
       if (bootstrapModal && typeof bootstrapModal.dispose === 'function') {
         try {
+            // Avoid errors if already hidden/disposed
+            if ((bootstrapModal as any)._isShown) {
+                bootstrapModal.hide();
+            }
             bootstrapModal.dispose();
         } catch (error) {
             console.warn("Error disposing Bootstrap modal:", error);
         }
       }
+       setBootstrapModal(null); // Clear instance state on unmount
     };
-    // Dependency array includes bootstrapModal to re-run if it changes, though it should only init once.
-  }, [bootstrapModal]);
+  }, []); // Run only once on mount
 
 
   const form = useForm<CreateOSFormValues>({
@@ -86,31 +91,35 @@ export function CreateOSDialog() {
     mode: 'onChange', // Validate on change for Bootstrap styles
   });
 
-  // Update partnerInput state when form value changes
+  // Memoize filtered partners
+  const filteredPartners = useMemo(() => {
+    if (!partnerInput) return [];
+    const lowerInput = partnerInput.toLowerCase();
+    return partners.filter(p => p.name.toLowerCase().includes(lowerInput));
+  }, [partnerInput, partners]);
+
+  // Update partnerInput state when form value changes and control suggestions
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'parceiro') {
         const currentPartnerValue = value.parceiro ?? '';
-        setPartnerInput(currentPartnerValue);
+        // Only update local input state if it differs from form, prevents loops
+        if (currentPartnerValue !== partnerInput) {
+           setPartnerInput(currentPartnerValue);
+        }
         // Show suggestions only if input is not empty and there are filtered partners
-        const currentFilteredPartners = partners.filter(p =>
-          p.toLowerCase().includes(currentPartnerValue.toLowerCase())
-        );
-        setShowSuggestions(!!currentPartnerValue && currentFilteredPartners.length > 0);
+        setShowSuggestions(!!currentPartnerValue && filteredPartners.length > 0 && document.activeElement === partnerInputRef.current);
       }
     });
     return () => subscription.unsubscribe();
-  }, [form.watch, partners]); // Added partners dependency
+  }, [form.watch, partnerInput, filteredPartners]); // Added dependencies
 
-
-  const filteredPartners = partnerInput
-    ? partners.filter(p => p.toLowerCase().includes(partnerInput.toLowerCase()))
-    : [];
 
   const handlePartnerSelect = (partnerName: string) => {
     form.setValue('parceiro', partnerName, { shouldValidate: true });
-    setPartnerInput(partnerName);
+    setPartnerInput(partnerName); // Sync local state
     setShowSuggestions(false);
+    partnerInputRef.current?.focus(); // Keep focus
   };
 
   async function onSubmit(values: CreateOSFormValues) {
@@ -124,11 +133,7 @@ export function CreateOSDialog() {
         programadoPara: values.programadoPara || undefined, // Ensure undefined if empty
       };
 
-      // Add partner to the list if it's new and not empty
-      if (values.parceiro && !partners.includes(values.parceiro)) {
-          addPartner(values.parceiro);
-      }
-
+      // addOS action now handles adding partner if needed
       addOS(dataToSubmit);
 
       // Removed success toast
@@ -210,9 +215,10 @@ export function CreateOSDialog() {
                     </div>
                     <div className="col-md-6">
                          {/* Parceiro with suggestions */}
-                        <div className="mb-3 position-relative" ref={partnerInputRef}>
+                        <div className="mb-3 position-relative">
                           <label htmlFor="parceiro" className="form-label">Parceiro (opcional)</label>
                           <input
+                            ref={partnerInputRef} // Assign ref
                             type="text"
                             id="parceiro"
                             placeholder="Ex: Agência XYZ"
@@ -222,14 +228,12 @@ export function CreateOSDialog() {
                             onChange={(e) => {
                                 const newValue = e.target.value;
                                 form.setValue('parceiro', newValue, { shouldValidate: true }); // Update form state
-                                setPartnerInput(newValue);
+                                setPartnerInput(newValue); // Update local state for suggestions
                                 // Update suggestion visibility based on new value and filtered partners
-                                const currentFilteredPartners = partners.filter(p =>
-                                    p.toLowerCase().includes(newValue.toLowerCase())
-                                );
-                                setShowSuggestions(!!newValue && currentFilteredPartners.length > 0);
+                                setShowSuggestions(!!newValue && filteredPartners.length > 0);
                             }}
                             onFocus={() => setShowSuggestions(!!partnerInput && filteredPartners.length > 0)}
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)} // Hide suggestions on blur with delay
                             autoComplete="off"
                           />
                           {showSuggestions && filteredPartners.length > 0 && (
@@ -237,11 +241,12 @@ export function CreateOSDialog() {
                               {filteredPartners.map(p => (
                                 <button
                                   type="button"
-                                  key={p}
+                                  key={p.id} // Use partner ID as key
                                   className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
-                                  onClick={() => handlePartnerSelect(p)}
+                                  onMouseDown={(e) => e.preventDefault()} // Prevent blur before click
+                                  onClick={() => handlePartnerSelect(p.name)} // Select partner name
                                 >
-                                  {p}
+                                  {p.name}
                                 </button>
                               ))}
                             </div>

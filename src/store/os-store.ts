@@ -5,19 +5,30 @@ import type { OS, CreateOSData, Client } from '@/lib/types'; // Import Client ty
 import { OSStatus } from '@/lib/types';
 // Removed toast import
 
+// Define Partner type explicitly for managed state
+export interface Partner {
+    id: string;
+    name: string;
+}
+
 interface OSState {
   osList: OS[];
   nextOsNumber: number;
-  partners: string[]; // Derived list of unique partners from OS
-  clients: Client[]; // Added list of clients
+  partners: Partner[]; // Changed from string[] to Partner[] - MANAGED state now
+  clients: Client[];
   addOS: (data: CreateOSData) => OS;
   updateOS: (updatedOS: OS) => void;
   updateOSStatus: (osId: string, newStatus: OSStatus) => void;
   getOSById: (osId: string) => OS | undefined;
-  setInitialData: (data: OS[], nextNumber: number, partners: string[], clients: Client[]) => void; // Updated signature
+  setInitialData: (data: OS[], nextNumber: number, partners: Partner[], clients: Client[]) => void; // Updated signature
   duplicateOS: (osId: string) => void;
   toggleUrgent: (osId: string) => void;
-  addPartner: (partnerName: string) => void; // Adds partner to derived list if new OS uses it
+  // Partner Actions (now operate on managed Partner[] list)
+  addPartner: (partnerData: Omit<Partner, 'id'>) => Partner;
+  updatePartner: (updatedPartner: Partner) => void;
+  deletePartner: (partnerId: string) => void;
+  getPartnerById: (partnerId: string) => Partner | undefined;
+  getPartnerByName: (partnerName: string) => Partner | undefined; // Helper
   // Client Actions
   addClient: (clientData: Omit<Client, 'id'>) => Client;
   updateClient: (updatedClient: Client) => void;
@@ -26,17 +37,6 @@ interface OSState {
 }
 
 const generateOSNumero = (num: number): string => String(num).padStart(6, '0');
-
-// Function to extract unique partners from OS list
-const getUniquePartners = (osList: OS[]): string[] => {
-  const partnerSet = new Set<string>();
-  osList.forEach(os => {
-    if (os.parceiro) {
-      partnerSet.add(os.parceiro);
-    }
-  });
-  return Array.from(partnerSet).sort(); // Sort alphabetically
-};
 
 // Helper to get date string for 'programadoPara' N days from now
 const getDatePlusDays = (days: number): string => {
@@ -123,18 +123,33 @@ const initialMockOS: OS[] = [
   },
 ];
 
+// Derive initial partners from mock OS data
+const getInitialPartners = (osList: OS[]): Partner[] => {
+  const partnerMap = new Map<string, Partner>();
+  osList.forEach(os => {
+    if (os.parceiro && !partnerMap.has(os.parceiro.toLowerCase())) {
+        const newPartner = { id: crypto.randomUUID(), name: os.parceiro };
+        partnerMap.set(os.parceiro.toLowerCase(), newPartner);
+    }
+  });
+  return Array.from(partnerMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+};
+
+const initialMockPartners = getInitialPartners(initialMockOS);
+
+
 export const useOSStore = create<OSState>()(
   persist(
     (set, get) => ({
       osList: initialMockOS,
       nextOsNumber: initialMockOS.length + 1,
-      partners: getUniquePartners(initialMockOS), // Initialize derived partners list
+      partners: initialMockPartners, // Initialize with derived partners
       clients: initialMockClients, // Initialize clients list
 
       setInitialData: (data, nextNumber, partners, clients) => set({
           osList: data,
           nextOsNumber: nextNumber,
-          partners: partners,
+          partners: partners, // Set initial partners
           clients: clients // Set initial clients
       }),
 
@@ -158,11 +173,17 @@ export const useOSStore = create<OSState>()(
         set((state) => ({
           osList: [...state.osList, newOS],
           nextOsNumber: currentOsNumber + 1,
-          // Update derived partners if a new one was used in the OS
-          partners: data.parceiro && !state.partners.includes(data.parceiro)
-                      ? [...state.partners, data.parceiro].sort()
-                      : state.partners,
+          // Partner list update is handled separately by addPartner if needed
         }));
+
+        // Add partner to managed list if it's new
+        if (data.parceiro) {
+            const partnerExists = get().partners.some(p => p.name.toLowerCase() === data.parceiro!.toLowerCase());
+            if (!partnerExists) {
+                 get().addPartner({ name: data.parceiro });
+            }
+        }
+
         // Add client to client list if it doesn't exist (simple name check for now)
         const clientExists = get().clients.some(c => c.name.toLowerCase() === data.cliente.toLowerCase());
         if (!clientExists) {
@@ -173,8 +194,13 @@ export const useOSStore = create<OSState>()(
 
       updateOS: (updatedOS) =>
         set((state) => {
-             // Check if the partner was updated and is new
-             const partnerIsNew = updatedOS.parceiro && !state.partners.includes(updatedOS.parceiro);
+             // Add partner if it's new
+             if (updatedOS.parceiro) {
+                 const partnerExists = state.partners.some(p => p.name.toLowerCase() === updatedOS.parceiro!.toLowerCase());
+                 if (!partnerExists) {
+                    get().addPartner({ name: updatedOS.parceiro }); // Call addPartner action
+                 }
+             }
              // Ensure programadoPara is stored correctly
              const finalUpdatedOS = {
                  ...updatedOS,
@@ -182,9 +208,7 @@ export const useOSStore = create<OSState>()(
              };
              return {
                  osList: state.osList.map((os) => (os.id === finalUpdatedOS.id ? finalUpdatedOS : os)),
-                 partners: partnerIsNew
-                             ? [...state.partners, updatedOS.parceiro!].sort()
-                             : state.partners,
+                 // partners list is managed by addPartner now
              };
         }),
 
@@ -233,14 +257,48 @@ export const useOSStore = create<OSState>()(
         }
       },
 
-      addPartner: (partnerName: string) => {
-          // This action is primarily for ensuring consistency if a partner is added via OS creation/update
-          set((state) => {
-              if (partnerName && !state.partners.includes(partnerName)) { // Ensure partnerName is not empty
-                  return { partners: [...state.partners, partnerName].sort() };
-              }
-              return {}; // No change if partner already exists or is empty
-          });
+      // --- Partner Actions ---
+      getPartnerById: (partnerId) => get().partners.find(p => p.id === partnerId),
+
+      getPartnerByName: (partnerName) => get().partners.find(p => p.name.toLowerCase() === partnerName.toLowerCase()),
+
+      addPartner: (partnerData) => {
+        // Prevent adding duplicates by name (case-insensitive)
+         const existingPartner = get().getPartnerByName(partnerData.name);
+         if (existingPartner) {
+            console.warn(`Partner "${partnerData.name}" already exists.`);
+            return existingPartner;
+         }
+        const newPartner: Partner = {
+          id: crypto.randomUUID(),
+          name: partnerData.name.trim(),
+        };
+        set((state) => ({
+          partners: [...state.partners, newPartner].sort((a, b) => a.name.localeCompare(b.name)),
+        }));
+        console.log(`Partner "${newPartner.name}" adicionado.`);
+        return newPartner;
+      },
+
+      updatePartner: (updatedPartner) => {
+         set((state) => ({
+          partners: state.partners.map((partner) =>
+            partner.id === updatedPartner.id ? { ...partner, name: updatedPartner.name.trim() } : partner
+          ).sort((a, b) => a.name.localeCompare(b.name)),
+        }));
+        console.log(`Partner "${updatedPartner.name}" atualizado.`);
+      },
+
+      deletePartner: (partnerId) => {
+        const partnerToDelete = get().getPartnerById(partnerId);
+        if (partnerToDelete) {
+            set((state) => ({
+                partners: state.partners.filter((partner) => partner.id !== partnerId),
+            }));
+            console.log(`Partner "${partnerToDelete.name}" removido.`);
+            // Note: This doesn't check if the partner is used in existing OS.
+            // Might need adjustments if deleting used partners should be prevented or handled differently.
+        }
       },
 
       // --- Client Actions ---
@@ -282,7 +340,7 @@ export const useOSStore = create<OSState>()(
 
     }),
     {
-      name: 'freelaos-storage-v5-calendar-entities', // Updated storage key name
+      name: 'freelaos-storage-v6-managed-partners', // Updated storage key name
       storage: createJSONStorage(() => localStorage),
        // Define parts of state to include/exclude if needed
        // partialize: (state) => ({ osList: state.osList, nextOsNumber: state.nextOsNumber, partners: state.partners }),

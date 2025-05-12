@@ -7,41 +7,79 @@ import Link from 'next/link';
 import { ArrowLeft, Building, Users, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { useOSStore } from '@/store/os-store';
 import type { Client } from '@/lib/types';
-import AddEditClientModal from '@/components/entities/AddEditClientModal'; // Import the modal
+import type { Partner } from '@/store/os-store'; // Import Partner type
+import AddEditClientModal from '@/components/entities/AddEditClientModal';
+import AddEditPartnerModal from '@/components/entities/AddEditPartnerModal'; // Import the partner modal
 
 export default function EntitiesPage() {
+  // Get managed partners list from the store
   const partners = useOSStore((state) => state.partners);
   const clients = useOSStore((state) => state.clients);
   const deleteClient = useOSStore((state) => state.deleteClient);
+  const deletePartner = useOSStore((state) => state.deletePartner); // Get delete action for partners
+
   const [isHydrated, setIsHydrated] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // State for Client Modal
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [clientToDelete, setClientToDelete] = useState<Client | null>(null); // For delete confirmation
+
+  // State for Partner Modal
+  const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
 
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  const openAddModal = () => {
-    setSelectedClient(null); // Ensure we are adding, not editing
-    setIsModalOpen(true);
+  // --- Client Actions ---
+  const openAddClientModal = () => {
+    setSelectedClient(null);
+    setIsClientModalOpen(true);
   };
 
-  const openEditModal = (client: Client) => {
+  const openEditClientModal = (client: Client) => {
     setSelectedClient(client);
-    setIsModalOpen(true);
+    setIsClientModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedClient(null); // Clear selection on close
+  const handleCloseClientModal = () => {
+    setIsClientModalOpen(false);
+    setSelectedClient(null);
   };
 
   const handleDeleteClient = (client: Client) => {
-    // Optional: Show a confirmation dialog/modal before deleting
     if (window.confirm(`Tem certeza que deseja excluir o cliente "${client.name}"? Esta ação não pode ser desfeita.`)) {
       deleteClient(client.id);
-      setClientToDelete(null); // Clear deletion state
+    }
+  };
+
+  // --- Partner Actions ---
+  const openAddPartnerModal = () => {
+    setSelectedPartner(null);
+    setIsPartnerModalOpen(true);
+  };
+
+  const openEditPartnerModal = (partner: Partner) => {
+    setSelectedPartner(partner);
+    setIsPartnerModalOpen(true);
+  };
+
+  const handleClosePartnerModal = () => {
+    setIsPartnerModalOpen(false);
+    setSelectedPartner(null);
+  };
+
+  const handleDeletePartner = (partner: Partner) => {
+     // Check if partner is used in any OS before deleting (optional but recommended)
+     // const osUsingPartner = osList.filter(os => os.parceiro === partner.name);
+     // if (osUsingPartner.length > 0) {
+     //    alert(`Não é possível excluir o parceiro "${partner.name}" pois ele está vinculado a ${osUsingPartner.length} Ordem(ns) de Serviço.`);
+     //    return;
+     // }
+
+    if (window.confirm(`Tem certeza que deseja excluir o parceiro "${partner.name}"? Esta ação não pode ser desfeita.`)) {
+      deletePartner(partner.id);
     }
   };
 
@@ -56,7 +94,7 @@ export default function EntitiesPage() {
       </div>
 
       <div className="row">
-        {/* Partners Column (Read-Only) */}
+        {/* Partners Column (Now Editable) */}
         <div className="col-md-6">
           <div className="card shadow-sm mb-4">
             <div className="card-header d-flex justify-content-between align-items-center">
@@ -64,38 +102,43 @@ export default function EntitiesPage() {
                 <Users size={18} className="me-2 text-primary" />
                 <h2 className="h5 mb-0 card-title">Parceiros</h2>
               </div>
-               {/* Add button might be needed here if partners become manageable */}
-               {/* <button className="btn btn-sm btn-outline-primary disabled">
-                 <PlusCircle size={16} /> Adicionar
-               </button> */}
+               {/* Add Partner button */}
+               <button className="btn btn-sm btn-primary" onClick={openAddPartnerModal}>
+                 <PlusCircle size={16} className="me-1" /> Adicionar Parceiro
+               </button>
             </div>
             <div className="card-body">
               {isHydrated ? (
                 partners.length > 0 ? (
                   <ul className="list-group list-group-flush">
                     {partners.map((partner) => (
-                      <li key={partner} className="list-group-item d-flex justify-content-between align-items-center">
-                        {partner}
-                        {/* <div className="btn-group btn-group-sm">
-                          <button className="btn btn-outline-secondary disabled"><Edit size={14} /></button>
-                          <button className="btn btn-outline-danger disabled"><Trash2 size={14} /></button>
-                        </div> */}
+                      <li key={partner.id} className="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{partner.name}</span>
+                        {/* Partner Action Buttons */}
+                        <div className="btn-group btn-group-sm" role="group" aria-label="Ações do Parceiro">
+                            <button className="btn btn-outline-secondary" onClick={() => openEditPartnerModal(partner)} title="Editar Parceiro">
+                                <Edit size={14} />
+                            </button>
+                            <button className="btn btn-outline-danger" onClick={() => handleDeletePartner(partner)} title="Excluir Parceiro">
+                                <Trash2 size={14} />
+                            </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-muted text-center">Nenhum parceiro registrado nas Ordens de Serviço ainda.</p>
+                  <p className="text-muted text-center">Nenhum parceiro adicionado ainda.</p>
                 )
               ) : (
                 <div className="d-flex justify-content-center">
-                  <div className="spinner-border spinner-border-sm" role="status">
+                  <div className="spinner-border spinner-border-sm text-primary" role="status">
                     <span className="visually-hidden">Carregando parceiros...</span>
                   </div>
                 </div>
               )}
             </div>
             <div className="card-footer text-muted small">
-              Lista de parceiros únicos encontrados nas OS (não editável aqui).
+              Gerencie seus parceiros cadastrados.
             </div>
           </div>
         </div>
@@ -108,7 +151,7 @@ export default function EntitiesPage() {
                     <Building size={18} className="me-2 text-success" />
                     <h2 className="h5 mb-0 card-title">Clientes</h2>
                </div>
-               <button className="btn btn-sm btn-success" onClick={openAddModal}>
+               <button className="btn btn-sm btn-success" onClick={openAddClientModal}>
                    <PlusCircle size={16} className="me-1" /> Adicionar Cliente
                </button>
             </div>
@@ -120,7 +163,7 @@ export default function EntitiesPage() {
                       <li key={client.id} className="list-group-item d-flex justify-content-between align-items-center">
                         <span>{client.name}</span>
                          <div className="btn-group btn-group-sm" role="group" aria-label="Ações do Cliente">
-                            <button className="btn btn-outline-secondary" onClick={() => openEditModal(client)} title="Editar Cliente">
+                            <button className="btn btn-outline-secondary" onClick={() => openEditClientModal(client)} title="Editar Cliente">
                                 <Edit size={14} />
                             </button>
                             <button className="btn btn-outline-danger" onClick={() => handleDeleteClient(client)} title="Excluir Cliente">
@@ -152,8 +195,17 @@ export default function EntitiesPage() {
       {isHydrated && (
          <AddEditClientModal
             client={selectedClient}
-            isOpen={isModalOpen}
-            onClose={handleCloseModal}
+            isOpen={isClientModalOpen}
+            onClose={handleCloseClientModal}
+        />
+      )}
+
+       {/* Partner Add/Edit Modal */}
+       {isHydrated && (
+         <AddEditPartnerModal
+            partner={selectedPartner}
+            isOpen={isPartnerModalOpen}
+            onClose={handleClosePartnerModal}
         />
       )}
 

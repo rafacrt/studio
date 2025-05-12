@@ -36,10 +36,29 @@ export default function OSGrid() {
       filtered = filtered.filter(os => os.status === filterStatus);
     }
 
-    // Filter by Selected Date (using dataAbertura for now)
+    // Filter by Selected Date (using programadoPara or dataAbertura as fallback)
     if (selectedDate) {
-      filtered = filtered.filter(os => isSameDay(parseISO(os.dataAbertura), selectedDate));
+       filtered = filtered.filter(os => {
+          if (os.programadoPara) {
+              try {
+                 return isSameDay(parseISO(os.programadoPara), selectedDate);
+              } catch {
+                 // Handle potential invalid date format in programadoPara
+                 return false;
+              }
+          }
+          // Optional: Fallback to dataAbertura if programadoPara is not set
+          // else {
+          //    try {
+          //       return isSameDay(parseISO(os.dataAbertura), selectedDate);
+          //    } catch {
+          //        return false;
+          //    }
+          // }
+          return false; // Only filter by programadoPara if set
+       });
     }
+
 
     // Filter by Search Term (Client, Project, OS Number, Partner, Tarefa)
     if (searchTerm.trim() !== '') {
@@ -82,22 +101,33 @@ export default function OSGrid() {
     // Simplified loading state using placeholders
     return (
       <div className="container-fluid mt-4">
-        <div className="placeholder-glow mb-4 d-flex justify-content-between align-items-center">
-          <span className="placeholder col-3 placeholder-lg"></span>
-          <span className="placeholder col-2 placeholder-lg"></span>
-          <span className="placeholder col-1 placeholder-lg"></span>
+        {/* Placeholder for controls */}
+        <div className="mb-4 p-3 border rounded bg-light placeholder-glow">
+            <div className="row g-2 align-items-end">
+                <div className="col-md-6 col-lg-3"><span className="placeholder col-12"></span></div>
+                <div className="col-md-6 col-lg-3"><span className="placeholder col-12"></span></div>
+                <div className="col-lg-4"><span className="placeholder col-12"></span></div>
+                <div className="col-lg-2"><span className="placeholder col-12"></span></div>
+            </div>
         </div>
+        {/* Placeholder for grid */}
         <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
           {[...Array(8)].map((_, i) => (
             <div className="col" key={i}>
-              <div className="card placeholder-glow" aria-hidden="true">
-                <div className="card-body">
-                  <span className="placeholder col-6"></span>
-                  <span className="placeholder col-8"></span>
-                  <span className="placeholder col-4"></span>
-                  <span className="placeholder col-7"></span>
-                  <span className="placeholder col-5"></span>
+              <div className="card placeholder-glow" aria-hidden="true" style={{ height: '250px' }}>
+                <div className="card-header placeholder-glow">
+                    <span className="placeholder col-4"></span>
                 </div>
+                <div className="card-body">
+                  <span className="placeholder col-6 d-block mb-2"></span>
+                  <span className="placeholder col-8 d-block mb-2"></span>
+                  <span className="placeholder col-7 d-block mb-2"></span>
+                  <span className="placeholder col-5 d-block mt-auto"></span>
+                </div>
+                 <div className="card-footer placeholder-glow">
+                    <span className="placeholder col-10 d-block mb-1"></span>
+                    <span className="placeholder col-10 d-block"></span>
+                 </div>
               </div>
             </div>
           ))}
@@ -121,21 +151,33 @@ export default function OSGrid() {
       />
 
       {filteredAndSortedOS.length === 0 ? (
-        <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center mt-5">
-          <p className="fs-5 text-muted">Nenhuma Ordem de Serviço encontrada.</p>
+        <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center mt-5 p-4 rounded bg-light">
+          <p className="fs-5 text-muted fw-medium">Nenhuma Ordem de Serviço encontrada.</p>
           <p className="text-muted small">
-            Tente ajustar os filtros ou crie uma nova OS.
-            {selectedDate && ` (Data selecionada: ${selectedDate.toLocaleDateString('pt-BR')})`}
+            Tente ajustar os filtros ou {searchTerm ? `limpar o termo de busca "${searchTerm}".` : 'crie uma nova OS.'}
+            {selectedDate && ` (Data programada filtrada: ${selectedDate.toLocaleDateString('pt-BR')})`}
           </p>
            {selectedDate && (
               <button className="btn btn-sm btn-outline-secondary mt-2" onClick={() => setSelectedDate(undefined)}>
                  Limpar Filtro de Data
               </button>
             )}
+            {(filterStatus !== 'all' || searchTerm) && (
+                 <button
+                    className="btn btn-sm btn-outline-secondary mt-2 ms-2"
+                    onClick={() => {
+                        setFilterStatus('all');
+                        setSearchTerm('');
+                        setSelectedDate(undefined); // Also clear date if clearing filters
+                    }}
+                 >
+                    Limpar Todos os Filtros
+                 </button>
+            )}
         </div>
       ) : (
          // Use Bootstrap grid: Updated for 4 columns on xl screens
-         // NOTE: Drag and Drop functionality is complex and has been deferred.
+         // Drag and Drop functionality is complex and not implemented here.
          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3 pb-4 flex-grow-1"> {/* g-3 for slightly less gap */}
           {filteredAndSortedOS.map((os) => (
             <div className="col" key={os.id}>

@@ -1,13 +1,14 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { OS } from '@/lib/types';
 import Link from 'next/link';
 import { ArrowLeft, CalendarClock, CheckCircle2, Clock, FileText, Flag, Server, User as UserIcon, Users, Briefcase, MessageSquare, Clock3, Save, Edit, Calendar as CalendarIcon } from 'lucide-react'; // Keeping lucide icons, added Edit, CalendarIcon, renamed User
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOSStore } from '@/store/os-store';
+import type { Partner } from '@/store/os-store'; // Import Partner type
 // Removed useToast import
 import { OSStatus, ALL_OS_STATUSES } from '@/lib/types'; // Import enums/constants
 
@@ -29,8 +30,8 @@ interface OSDetailsViewProps {
 
 export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   const updateOS = useOSStore((state) => state.updateOS);
-  const partners = useOSStore((state) => state.partners); // Get partners for suggestions
-  const addPartner = useOSStore((state) => state.addPartner);
+  const partners = useOSStore((state) => state.partners); // Get Partner[] list
+  const addPartner = useOSStore((state) => state.addPartner); // Get addPartner action
   // Removed toast related code
 
   const [isEditing, setIsEditing] = useState(false);
@@ -51,7 +52,17 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
     setFormData(formattedInitialOs);
     setPartnerInput(initialOs.parceiro || '');
     setIsEditing(false); // Reset editing state on OS change
+    setShowPartnerSuggestions(false);
   }, [initialOs]);
+
+
+  // Memoize filtered partners for suggestions
+  const filteredPartners = useMemo(() => {
+    if (!partnerInput) return [];
+    const lowerInput = partnerInput.toLowerCase();
+    return partners.filter(p => p.name.toLowerCase().includes(lowerInput));
+  }, [partnerInput, partners]);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -59,10 +70,9 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
     if (name === 'parceiro') {
         const newValue = value;
         setPartnerInput(newValue); // Update separate state for suggestion input
-        const currentFiltered = partners.filter(p => p.toLowerCase().includes(newValue.toLowerCase()));
-        setShowPartnerSuggestions(!!newValue && currentFiltered.length > 0);
-         // Update formData as well for consistency if needed immediately,
-         // otherwise it gets updated fully on save from partnerInput state.
+        // Update suggestion visibility
+        setShowPartnerSuggestions(!!newValue && filteredPartners.length > 0 && document.activeElement === partnerInputRef.current);
+         // Update formData as well for consistency
          setFormData(prev => ({ ...prev, parceiro: newValue }));
     } else if (type === 'checkbox') {
          setFormData(prev => ({
@@ -89,6 +99,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
     setFormData(prev => ({ ...prev, parceiro: partnerName }));
     setPartnerInput(partnerName);
     setShowPartnerSuggestions(false);
+    partnerInputRef.current?.focus(); // Keep focus
   };
 
   const handleSave = async () => {
@@ -102,12 +113,8 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
            programadoPara: formData.programadoPara || undefined,
        };
 
-       // Add new partner if necessary
-       if (dataToSave.parceiro && !partners.includes(dataToSave.parceiro)) {
-           addPartner(dataToSave.parceiro);
-       }
-
-      updateOS(dataToSave);
+       // updateOS action now handles adding partner if needed
+       updateOS(dataToSave);
       // Removed success toast
       console.log(`OS Atualizada: ${dataToSave.numero}`);
       setIsEditing(false);
@@ -150,10 +157,6 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
     };
   }, []); // Empty dependency array means this runs once on mount/unmount
 
-  const filteredPartners = partnerInput
-    ? partners.filter(p => p.toLowerCase().includes(partnerInput.toLowerCase()))
-    : [];
-
 
   // Detail Item component adapted for Bootstrap structure and editability
   const DetailItem = ({ label, value, icon, name, isEditable, children, className }: {
@@ -165,13 +168,15 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
       children?: React.ReactNode; // Allows passing custom input components
       className?: string
    }) => {
-     // Special formatting for programadoPara date display
+     // Special formatting for dates display
      let displayValue = value;
-     if (name === 'programadoPara' && typeof value === 'string' && value) {
+     if ((name === 'programadoPara' || name === 'dataAbertura' || name === 'dataFinalizacao') && typeof value === 'string' && value) {
         try {
-            // Assuming value is 'YYYY-MM-DD', parse it as such
-            const dateOnly = value.split('T')[0]; // Ensure only date part
-            displayValue = format(parseISO(dateOnly), "dd/MM/yyyy", { locale: ptBR });
+            const date = parseISO(value);
+            if (isValid(date)) {
+                const formatString = name === 'programadoPara' ? "dd/MM/yyyy" : "dd/MM/yyyy 'às' HH:mm";
+                displayValue = format(date, formatString, { locale: ptBR });
+            }
         } catch {
              displayValue = value; // Fallback to original string if parsing fails
         }
@@ -224,12 +229,25 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
       <div className="card shadow-lg mb-4">
         <div className="card-header bg-light p-3 border-bottom d-flex justify-content-between align-items-start">
           <div>
-            <h1 className="card-title h4 mb-1 text-primary fw-bold">{initialOs.projeto}</h1>
+             {/* Project Name - Editable */}
+             {isEditing ? (
+                  <input
+                      type="text"
+                      className="form-control form-control-lg mb-1 fw-bold" // Larger input for title
+                      name="projeto"
+                      value={formData.projeto}
+                      onChange={handleInputChange}
+                      placeholder="Nome do Projeto"
+                      style={{ fontSize: '1.25rem' }} // Match h4 size
+                   />
+             ) : (
+                  <h1 className="card-title h4 mb-1 text-primary fw-bold">{formData.projeto}</h1>
+             )}
             <p className="card-subtitle text-muted mb-0">
               Ordem de Serviço: {initialOs.numero}
             </p>
           </div>
-          {initialOs.isUrgent && (
+          {initialOs.isUrgent && !isEditing && ( // Hide urgent badge when editing
             <span className="badge bg-danger text-white fs-6 px-3 py-1 d-flex align-items-center shadow-sm">
               <Flag size={16} className="me-1" /> URGENTE
             </span>
@@ -252,14 +270,16 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
 
             {/* Parceiro - Editable with Suggestions */}
             <DetailItem label="Parceiro" value={formData.parceiro} icon={<Users size={16} className="me-2 text-primary" />} name="parceiro" isEditable={true}>
-                <div className="position-relative" ref={partnerInputRef}> {/* Position relative for suggestions */}
+                <div className="position-relative"> {/* Position relative for suggestions */}
                     <input
+                        ref={partnerInputRef} // Assign ref
                         type="text"
                         className="form-control form-control-sm"
                         name="parceiro" // Name matches state key
                         value={partnerInput} // Controlled by partnerInput state
                         onChange={handleInputChange}
                         onFocus={() => setShowPartnerSuggestions(!!partnerInput && filteredPartners.length > 0)}
+                        onBlur={() => setTimeout(() => setShowPartnerSuggestions(false), 150)} // Hide with delay
                         autoComplete="off"
                         placeholder="Digite ou selecione um parceiro"
                         disabled={!isEditing} // Field disabled when not editing
@@ -269,11 +289,12 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
                         {filteredPartners.map(p => (
                             <button
                             type="button" // Important: type="button" to prevent form submission
-                            key={p}
+                            key={p.id} // Use partner ID
                             className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
-                            onClick={() => handlePartnerSelect(p)}
+                            onMouseDown={(e) => e.preventDefault()} // Prevent blur before click
+                            onClick={() => handlePartnerSelect(p.name)} // Select partner name
                             >
-                            {p}
+                            {p.name}
                             </button>
                         ))}
                         </div>
@@ -295,7 +316,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
             </DetailItem>
 
             {/* Data Abertura - Not Editable */}
-            <DetailItem label="Data de Abertura" value={format(parseISO(initialOs.dataAbertura), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} icon={<CalendarClock size={16} className="me-2 text-secondary" />} isEditable={false} />
+            <DetailItem label="Data de Abertura" value={initialOs.dataAbertura} icon={<CalendarClock size={16} className="me-2 text-secondary" />} name="dataAbertura" isEditable={false} />
 
             {/* Data Programado Para - Editable */}
             <DetailItem label="Programado Para" value={formData.programadoPara} icon={<CalendarIcon size={16} className="me-2 text-info" />} name="programadoPara" isEditable={true}>
@@ -311,7 +332,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
 
             {/* Data Finalizacao - Not Editable */}
             {initialOs.dataFinalizacao && (
-              <DetailItem label="Data de Finalização" value={format(parseISO(initialOs.dataFinalizacao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} icon={<CheckCircle2 size={16} className="me-2 text-success" />} isEditable={false}/>
+              <DetailItem label="Data de Finalização" value={initialOs.dataFinalizacao} icon={<CheckCircle2 size={16} className="me-2 text-success" />} name="dataFinalizacao" isEditable={false}/>
             )}
 
              {/* Tarefa - Editable */}
