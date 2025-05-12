@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { OS, CreateOSData, Client } from '@/lib/types'; // Import Client type
 import { OSStatus } from '@/lib/types';
-// Removed toast import
+import { parseISO, differenceInMinutes } from 'date-fns'; // Import date-fns functions
 
 // Define Partner type explicitly for managed state
 export interface Partner {
@@ -53,7 +53,7 @@ const initialMockClients: Client[] = [
     { id: 'client-4', name: 'Eco Verde Sustentável' },
 ];
 
-// Initial mock data - Added 'programadoPara'
+// Initial mock data - Added 'programadoPara' and time tracking fields
 const initialMockOS: OS[] = [
   {
     id: '1',
@@ -67,7 +67,9 @@ const initialMockOS: OS[] = [
     status: OSStatus.AGUARDANDO_CLIENTE,
     dataAbertura: new Date(2023, 10, 15, 10, 30).toISOString(),
     programadoPara: getDatePlusDays(7), // Programmed for 7 days from now
-    isUrgent: false
+    isUrgent: false,
+    dataInicioProducao: undefined,
+    tempoProducaoMinutos: undefined,
   },
   {
     id: '2',
@@ -79,8 +81,10 @@ const initialMockOS: OS[] = [
     tempoTrabalhado: '16h design',
     status: OSStatus.EM_PRODUCAO,
     dataAbertura: new Date(2023, 11, 1, 14, 0).toISOString(),
+    dataInicioProducao: new Date(2023, 11, 2, 9, 0).toISOString(), // Started production later
     programadoPara: getDatePlusDays(3), // Programmed for 3 days from now
-    isUrgent: true
+    isUrgent: true,
+    tempoProducaoMinutos: undefined,
   },
   {
     id: '3',
@@ -93,7 +97,9 @@ const initialMockOS: OS[] = [
     status: OSStatus.AGUARDANDO_PARCEIRO,
     dataAbertura: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
     programadoPara: undefined, // Not programmed yet
-    isUrgent: false
+    isUrgent: false,
+    dataInicioProducao: undefined,
+    tempoProducaoMinutos: undefined,
   },
   {
     id: '4',
@@ -104,9 +110,11 @@ const initialMockOS: OS[] = [
     observacoes: 'Guia completo de branding entregue e aprovado pelo cliente.',
     status: OSStatus.FINALIZADO,
     dataAbertura: new Date(2023, 9, 5, 9, 0).toISOString(),
+    dataInicioProducao: new Date(2023, 9, 10, 11, 0).toISOString(),
     dataFinalizacao: new Date(2023, 9, 25, 17, 30).toISOString(),
     programadoPara: new Date(2023, 9, 24).toISOString().split('T')[0], // Was programmed for this date
-    isUrgent: false
+    isUrgent: false,
+    tempoProducaoMinutos: differenceInMinutes(new Date(2023, 9, 25, 17, 30), new Date(2023, 9, 10, 11, 0)), // Example calculation
   },
   {
     id: '5',
@@ -119,7 +127,9 @@ const initialMockOS: OS[] = [
     status: OSStatus.NA_FILA,
     dataAbertura: new Date().toISOString(),
     programadoPara: getDatePlusDays(14), // Programmed for 14 days from now
-    isUrgent: true
+    isUrgent: true,
+    dataInicioProducao: undefined,
+    tempoProducaoMinutos: undefined,
   },
 ];
 
@@ -169,6 +179,9 @@ export const useOSStore = create<OSState>()(
           // Ensure programadoPara is stored as YYYY-MM-DD string or undefined
           programadoPara: data.programadoPara ? data.programadoPara.split('T')[0] : undefined,
           isUrgent: data.isUrgent || false,
+          // Initialize time tracking fields
+          dataInicioProducao: data.status === OSStatus.EM_PRODUCAO ? new Date().toISOString() : undefined,
+          tempoProducaoMinutos: undefined,
         };
         set((state) => ({
           osList: [...state.osList, newOS],
@@ -214,9 +227,40 @@ export const useOSStore = create<OSState>()(
 
       updateOSStatus: (osId, newStatus) =>
         set((state) => ({
-          osList: state.osList.map((os) =>
-            os.id === osId ? { ...os, status: newStatus, ...(newStatus === OSStatus.FINALIZADO && !os.dataFinalizacao && { dataFinalizacao: new Date().toISOString() }) } : os
-          ),
+          osList: state.osList.map((os) => {
+            if (os.id !== osId) return os;
+
+            const now = new Date().toISOString();
+            let updates: Partial<OS> = { status: newStatus };
+
+            // Set start production date
+            if (newStatus === OSStatus.EM_PRODUCAO && !os.dataInicioProducao) {
+              updates.dataInicioProducao = now;
+            }
+
+            // Set finalization date and calculate production time
+            if (newStatus === OSStatus.FINALIZADO) {
+              if (!os.dataFinalizacao) {
+                 updates.dataFinalizacao = now;
+              }
+              // Calculate duration only if started and not already calculated
+              if (os.dataInicioProducao && !os.tempoProducaoMinutos) {
+                try {
+                    // Use the finalization date that's being set now, or the existing one if somehow it was already set
+                    const finalizationDate = updates.dataFinalizacao || os.dataFinalizacao || now;
+                    updates.tempoProducaoMinutos = differenceInMinutes(
+                        parseISO(finalizationDate),
+                        parseISO(os.dataInicioProducao)
+                    );
+                } catch (error) {
+                     console.error("Error calculating production time for OS:", os.numero, error);
+                     updates.tempoProducaoMinutos = -1; // Indicate error or invalid dates
+                }
+              }
+            }
+
+            return { ...os, ...updates };
+          }),
         })),
 
       getOSById: (osId) => get().osList.find((os) => os.id === osId),
@@ -233,6 +277,8 @@ export const useOSStore = create<OSState>()(
             status: OSStatus.NA_FILA, // Duplicates start in NA_FILA
             dataFinalizacao: undefined, // Clear finalization date
             programadoPara: undefined, // Clear programmed date on duplication
+            dataInicioProducao: undefined, // Clear time tracking fields
+            tempoProducaoMinutos: undefined, // Clear time tracking fields
           };
           set((state) => ({
             osList: [...state.osList, duplicatedOS],
@@ -305,6 +351,14 @@ export const useOSStore = create<OSState>()(
        getClientById: (clientId) => get().clients.find(c => c.id === clientId),
 
       addClient: (clientData) => {
+        // Prevent adding duplicates by name (case-insensitive)
+        const clientExists = get().clients.some(c => c.name.toLowerCase() === clientData.name.trim().toLowerCase());
+        if (clientExists) {
+            console.warn(`Client "${clientData.name}" already exists.`);
+            // Optionally return the existing client
+            return get().clients.find(c => c.name.toLowerCase() === clientData.name.trim().toLowerCase())!;
+        }
+
         const newClient: Client = {
           id: crypto.randomUUID(),
           name: clientData.name.trim(),
@@ -340,13 +394,27 @@ export const useOSStore = create<OSState>()(
 
     }),
     {
-      name: 'freelaos-storage-v6-managed-partners', // Updated storage key name
+      name: 'freelaos-storage-v7-time-tracking', // Updated storage key name for potential migration
       storage: createJSONStorage(() => localStorage),
        // Define parts of state to include/exclude if needed
-       // partialize: (state) => ({ osList: state.osList, nextOsNumber: state.nextOsNumber, partners: state.partners }),
+       // partialize: (state) => ({ osList: state.osList, nextOsNumber: state.nextOsNumber, partners: state.partners, clients: state.clients }),
        // Versioning can be added here if schema changes significantly
-       // version: 1,
+       version: 7, // Increment version
        // migrate: (persistedState, version) => { ... migration logic ... },
     }
   )
 );
+
+// --- Migration logic example (if needed in the future) ---
+// migrate: (persistedState: any, version: number) => {
+//   if (version < 7) {
+//     // Add new fields with default values if migrating from a version before time tracking
+//     persistedState.osList = persistedState.osList.map((os: any) => ({
+//       ...os,
+//       dataInicioProducao: os.dataInicioProducao ?? undefined,
+//       tempoProducaoMinutos: os.tempoProducaoMinutos ?? undefined,
+//     }));
+//   }
+//   // Add more migration steps if needed
+//   return persistedState as OSState;
+// },

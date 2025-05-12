@@ -39,29 +39,33 @@ export default function DashboardControls({
     setShowCalendar(false); // Hide calendar after selection
   };
 
+  const statusFilterOptions: (OSStatus | 'all')[] = ['all', ...ALL_OS_STATUSES];
+
   return (
     <div className="mb-4 p-3 border rounded bg-light shadow-sm">
-      <div className="row g-2 align-items-end">
-        {/* Status Filter */}
-        <div className="col-md-6 col-lg-3">
-          <label htmlFor="statusFilter" className="form-label form-label-sm fw-medium">
-            <Filter size={14} className="me-1" /> Filtrar Status
-          </label>
-          <select
-            id="statusFilter"
-            className="form-select form-select-sm"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as OSStatus | 'all')}
-          >
-            <option value="all">Ver Todos</option>
-            {ALL_OS_STATUSES.map(status => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </select>
+        {/* Status Filter Buttons */}
+        <div className="mb-3">
+            <label className="form-label form-label-sm fw-medium d-block mb-1">
+                 <Filter size={14} className="me-1" /> Filtrar Status
+            </label>
+            <div className="btn-group flex-wrap" role="group" aria-label="Filtro de Status">
+                {statusFilterOptions.map(statusValue => (
+                    <button
+                        key={statusValue}
+                        type="button"
+                        className={`btn btn-sm ${filterStatus === statusValue ? 'btn-primary' : 'btn-outline-secondary'} m-1`} // Added margin
+                        onClick={() => setFilterStatus(statusValue)}
+                    >
+                        {statusValue === 'all' ? 'Ver Todos' : statusValue}
+                    </button>
+                ))}
+            </div>
         </div>
 
+      {/* Row for Sort, Search, and Date filters */}
+      <div className="row g-2 align-items-end">
         {/* Sort By */}
-        <div className="col-md-6 col-lg-3">
+        <div className="col-md-4 col-lg-3">
           <label htmlFor="sortBy" className="form-label form-label-sm fw-medium">
              <SortAsc size={14} className="me-1" /> Ordenar Por
           </label>
@@ -79,7 +83,7 @@ export default function DashboardControls({
         </div>
 
         {/* Search Input */}
-        <div className="col-lg-4">
+        <div className="col-md-4 col-lg-5"> {/* Adjusted columns */}
           <label htmlFor="searchTerm" className="form-label form-label-sm fw-medium">
             <Search size={14} className="me-1" /> Buscar OS
           </label>
@@ -94,27 +98,31 @@ export default function DashboardControls({
         </div>
 
         {/* Calendar Filter */}
-        <div className="col-lg-2 position-relative">
+        <div className="col-md-4 col-lg-4 position-relative"> {/* Adjusted columns */}
            <label className="form-label form-label-sm fw-medium">
-             <CalendarIcon size={14} className="me-1" /> Filtrar por Data
+             <CalendarIcon size={14} className="me-1" /> Filtrar por Data Programada
            </label>
-           <button
-             className="btn btn-sm btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
-             onClick={() => setShowCalendar(!showCalendar)}
-           >
-             {selectedDate ? selectedDate.toLocaleDateString('pt-BR') : "Selecionar Data"}
-             <CalendarIcon size={14} />
-           </button>
-           {selectedDate && (
-             <button
-                className="btn btn-sm btn-outline-danger position-absolute top-50 end-0 translate-middle-y me-2 mt-3" // Position clear button
-                onClick={() => setSelectedDate(undefined)}
-                aria-label="Limpar data"
-                style={{ zIndex: 5, padding: '0.1rem 0.3rem', lineHeight: 1 }}
-             >
-               <X size={12} />
-             </button>
-           )}
+           <div className="input-group input-group-sm"> {/* Use input group for clear button */}
+                <button
+                    className="btn btn-sm btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
+                    onClick={() => setShowCalendar(!showCalendar)}
+                    style={{textAlign: 'left'}} // Ensure text aligns left
+                >
+                    {selectedDate ? selectedDate.toLocaleDateString('pt-BR') : "Selecionar Data"}
+                    <CalendarIcon size={14} />
+                </button>
+                 {selectedDate && (
+                    <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => setSelectedDate(undefined)}
+                        aria-label="Limpar data"
+                        style={{ zIndex: 5, padding: '0.1rem 0.3rem', lineHeight: 1 }}
+                     >
+                       <X size={12} />
+                     </button>
+                 )}
+           </div>
+
 
            {showCalendar && (
              <div

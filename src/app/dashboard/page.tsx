@@ -7,7 +7,7 @@ import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout';
 import PostLoginAnimation from '@/components/layout/PostLoginAnimation';
 import OSGrid from '@/components/os-grid/OSGrid'; // Import OSGrid
 import { CreateOSDialog } from '@/components/os/CreateOSDialog'; // Keep dialog trigger here at top level
-import { Calendar, Building } from 'lucide-react'; // Import icons
+import { Calendar, Building, FileText as ReportIcon } from 'lucide-react'; // Import icons
 
 // Session storage key
 const ANIMATION_PLAYED_KEY = 'freelaos_animation_played';
@@ -68,12 +68,15 @@ export default function DashboardPage() {
     <AuthenticatedLayout>
       <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom flex-wrap gap-2"> {/* Added flex-wrap and gap */}
         <h1 className="h3 mb-0 me-auto">Ordens de Serviço</h1>
-         <div className="d-flex gap-2"> {/* Group buttons */}
-            <Link href="/calendar" className="btn btn-outline-secondary">
+         <div className="d-flex gap-2 flex-wrap"> {/* Group buttons, allow wrapping */}
+            <Link href="/calendar" className="btn btn-sm btn-outline-secondary">
                 <Calendar size={16} className="me-1" /> Calendário
             </Link>
-             <Link href="/entities" className="btn btn-outline-info">
+             <Link href="/entities" className="btn btn-sm btn-outline-info">
                  <Building size={16} className="me-1" /> Entidades
+             </Link>
+              <Link href="/reports" className="btn btn-sm btn-outline-warning">
+                 <ReportIcon size={16} className="me-1" /> Relatórios
              </Link>
             <CreateOSDialog /> {/* Place the "Nova OS" button here */}
         </div>

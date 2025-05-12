@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type { OS } from '@/lib/types';
 import { OSStatus, ALL_OS_STATUSES } from '@/lib/types';
 import { CalendarClock, Flag, Copy, AlertTriangle, CheckCircle2, Clock, Server, Users, FileText, User as UserIcon, Briefcase, Calendar as CalendarIcon } from 'lucide-react'; // Renamed User to UserIcon
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOSStore } from '@/store/os-store';
 import { useTheme } from '@/hooks/useTheme'; // Import useTheme
@@ -84,30 +84,43 @@ export default function OSCard({ os }: OSCardProps) {
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   };
 
+  // Format 'Programado Para' date
+  const formattedProgramadoPara = useMemo(() => {
+      if (!os.programadoPara) return null;
+      try {
+          // Check if it's already YYYY-MM-DD, otherwise parse full ISO
+          const date = os.programadoPara.length === 10 ? parseISO(os.programadoPara + 'T00:00:00Z') : parseISO(os.programadoPara);
+          if (isValid(date)) {
+              return format(date, "dd/MM/yy", { locale: ptBR });
+          }
+      } catch {
+          // Ignore parsing errors
+      }
+      return null; // Return null if invalid or not present
+  }, [os.programadoPara]);
+
 
   return (
     <Link href={`/os/${os.id}`} passHref legacyBehavior>
         <a className={`text-decoration-none text-reset d-block h-100 ${hoverEffectClass}`}>
             <div className={cardClasses}>
-                <div className="card-header p-2 pb-1"> {/* Reduced padding */}
-                    <div className="d-flex justify-content-between align-items-center mb-1">
-                        {/* OS Number */}
-                        <span className="fw-bold text-primary small font-monospace">OS: {os.numero}</span>
-                        {/* Urgent Badge */}
-                        {os.isUrgent && (
-                            <span className="badge bg-danger text-white px-1 py-0 small d-flex align-items-center">
-                                <AlertTriangle size={12} className="me-1" /> Urgente
-                            </span>
-                        )}
-                    </div>
+                <div className="card-header p-2 pb-1 d-flex justify-content-between align-items-center"> {/* Combined header elements */}
+                    {/* OS Number */}
+                    <span className="fw-bold text-primary small font-monospace">OS: {os.numero}</span>
+                    {/* Urgent Badge */}
+                    {os.isUrgent && (
+                        <span className="badge bg-danger text-white rounded-pill px-2 py-1 small d-flex align-items-center ms-auto" style={{fontSize: '0.7em'}}> {/* Improved styling */}
+                            <AlertTriangle size={12} className="me-1" /> URGENTE
+                        </span>
+                    )}
                 </div>
                 <div className={`card-body p-2 pt-1 pb-2 d-flex flex-column text-wrap ${urgentBgClass}`}> {/* Added text-wrap and urgent bg */}
-                    {/* Client */}
+                    {/* Cliente */}
                     <div className="mb-1" title={`Cliente: ${os.cliente}`}>
                         <UserIcon size={14} className="me-1 text-muted align-middle" />
                         <span className="fw-medium small text-break">{truncateText(os.cliente, 30)}</span>
                     </div>
-                    {/* Partner (if exists) */}
+                    {/* Parceiro (if exists) */}
                     {os.parceiro && (
                         <div className="mb-1" title={`Parceiro: ${os.parceiro}`}>
                             <Users size={14} className="me-1 text-muted align-middle" />
@@ -125,16 +138,16 @@ export default function OSCard({ os }: OSCardProps) {
                         {/* Abertura Date */}
                         <div className="text-muted small d-flex align-items-center mb-1">
                              <CalendarClock size={14} className="me-1 flex-shrink-0" />
-                             <span className="text-truncate">
+                             <span className="text-truncate" title={`Aberto em: ${format(parseISO(os.dataAbertura), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}`}>
                                 Aberto em: {format(parseISO(os.dataAbertura), "dd/MM/yy HH:mm", { locale: ptBR })}
                              </span>
                         </div>
                          {/* Programado Para Date */}
-                        {os.programadoPara && (
+                        {formattedProgramadoPara && (
                             <div className="text-muted small d-flex align-items-center mb-2" title="Data programada">
                                 <CalendarIcon size={14} className="me-1 flex-shrink-0 text-info" />
                                 <span className="text-truncate">
-                                    Programado: {format(parseISO(os.programadoPara), "dd/MM/yy", { locale: ptBR })}
+                                    Programado: {formattedProgramadoPara}
                                 </span>
                             </div>
                         )}

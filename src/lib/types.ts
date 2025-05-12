@@ -29,6 +29,9 @@ export interface OS {
   dataFinalizacao?: string; // ISO Date string
   programadoPara?: string; // ISO Date string (optional, YYYY-MM-DD format expected from input) - NEW
   isUrgent: boolean;
+  // Time Tracking Fields
+  dataInicioProducao?: string; // ISO Date string when status moves to 'Em Produção'
+  tempoProducaoMinutos?: number; // Calculated duration in minutes from 'Em Produção' to 'Finalizado'
 }
 
 export interface User {
@@ -56,3 +59,4 @@ export interface Client {
     name: string;
     // Add other client details as needed (e.g., contact, address)
 }
+
