@@ -1,5 +1,4 @@
 
-
 /* Use system font stack */
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -10,6 +9,54 @@ body {
   transform: translateY(-4px);
   box-shadow: 0 0.4rem 0.8rem rgba(0, 0, 0, 0.12) !important;
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+/* Ensure DayPicker takes full height available in its container */
+.rdp {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.rdp-table {
+  flex-grow: 1; /* Allow table to grow */
+  border-collapse: collapse; /* Ensure borders combine correctly */
+}
+
+.rdp-tbody {
+    height: 100%; /* Allow body to take height */
+}
+
+.rdp-row {
+    height: calc(100% / 6); /* Distribute height among rows (assuming 6 weeks) */
+}
+
+.rdp-cell {
+  height: 100%; /* Ensure cell takes full row height */
+  vertical-align: top;
+}
+
+.rdp-day {
+  height: 100%; /* Make day link fill the cell */
+  display: flex; /* Use flex for content alignment */
+  align-items: flex-start; /* Align content to top */
+  justify-content: flex-start; /* Align content to left */
+  padding: 0 !important; /* Remove default padding */
+  border-radius: 0 !important; /* Remove default rounding */
+  border: none !important; /* Remove default border */
+  text-decoration: none !important; /* Remove underline from day number */
+  color: inherit !important; /* Inherit text color */
+  background-color: transparent !important; /* No background unless specified */
+}
+
+.rdp-day:focus {
+    outline: 2px solid var(--bs-primary); /* Add focus outline */
+    z-index: 1;
+}
+
+.rdp-day_outside .day-content {
+  opacity: 0.5;
 }
 
 /* Dark Mode Adjustments */
@@ -115,7 +162,7 @@ body {
 
     /* Fix DayPicker styles for dark mode */
     .rdp {
-        --rdp-cell-size: 36px; /* Adjust size if needed */
+        --rdp-cell-size: auto; /* Let cell size be determined by grid */
         --rdp-accent-color: #6ea8fe; /* Use a light blue */
         --rdp-background-color: #495057; /* Darker background for selected */
         --rdp-accent-color-dark: #6ea8fe;
@@ -124,9 +171,32 @@ body {
         --rdp-outline-selected: 3px solid var(--rdp-accent-color);
         --rdp-selected-color: #fff; /* Text color for selected day */
         color: #dee2e6; /* Default text color */
-        border-color: #6c757d !important;
-        background-color: #343a40 !important; /* Background of the picker */
+        background-color: transparent; /* Let card handle background */
     }
+     .rdp-table {
+        border-color: #495057 !important; /* Ensure table borders are visible */
+     }
+     .rdp-cell {
+        border-color: #495057 !important; /* Ensure cell borders are visible */
+     }
+
+     .rdp-head_cell {
+        color: #adb5bd; /* Lighter muted color for weekdays */
+        border-color: #495057 !important; /* Ensure head cell borders are visible */
+     }
+
+    /* Dark mode for DayContent elements */
+    .rdp-day .bg-light-subtle {
+        background-color: #495057 !important; /* Darker subtle background for OS items */
+    }
+     .rdp-day .text-dark {
+        color: #dee2e6 !important; /* Ensure strong text is light */
+     }
+      .rdp-day .border-start {
+         /* Ensure border colors are distinct if needed, but rely on status class */
+      }
+
+
     .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
       background-color: #495057; /* Darker hover */
     }
@@ -138,9 +208,6 @@ body {
     .rdp-caption_label {
         color: #dee2e6;
     }
-     .rdp-head_cell {
-        color: #adb5bd; /* Lighter muted color for weekdays */
-     }
      .rdp-caption_dropdowns { /* Style dropdowns */
         background-color: #495057;
      }

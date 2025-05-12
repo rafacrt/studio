@@ -1,34 +1,43 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout';
 import Link from 'next/link';
-import { ArrowLeft, Calendar as CalendarIcon, Clock, CheckCircle, Info } from 'lucide-react';
-import { DayPicker, type Modifiers } from 'react-day-picker';
+import { ArrowLeft, CheckCircle, Clock, Square, Circle } from 'lucide-react'; // Use Square/Circle for indicators
+import { DayPicker, type DayProps, type Modifiers } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { format, parseISO, startOfMonth, isSameDay, isValid } from 'date-fns';
+import { format, parseISO, startOfMonth, isSameDay, isValid, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOSStore } from '@/store/os-store';
 import type { OS } from '@/lib/types';
-import { OSStatus } from '@/lib/types'; // Import OSStatus for styling
+import { OSStatus } from '@/lib/types';
 
-// Helper to get status color (simplified for calendar)
-const getStatusColor = (status: OSStatus): string => {
+// Helper to get status color (Bootstrap class names)
+const getStatusColorClass = (status: OSStatus): string => {
   switch (status) {
-    case OSStatus.NA_FILA: return 'secondary';
-    case OSStatus.AGUARDANDO_CLIENTE: return 'warning';
-    case OSStatus.EM_PRODUCAO: return 'info';
-    case OSStatus.AGUARDANDO_PARCEIRO: return 'primary';
-    case OSStatus.FINALIZADO: return 'success';
-    default: return 'secondary';
+    case OSStatus.NA_FILA: return 'text-secondary';
+    case OSStatus.AGUARDANDO_CLIENTE: return 'text-warning';
+    case OSStatus.EM_PRODUCAO: return 'text-info';
+    case OSStatus.AGUARDANDO_PARCEIRO: return 'text-primary';
+    case OSStatus.FINALIZADO: return 'text-success';
+    default: return 'text-secondary';
   }
 };
 
+// Helper to get a darker border color for contrast
+const getStatusBorderColorClass = (status: OSStatus): string => {
+    switch (status) {
+        case OSStatus.NA_FILA: return 'border-secondary';
+        case OSStatus.AGUARDANDO_CLIENTE: return 'border-warning';
+        case OSStatus.EM_PRODUCAO: return 'border-info';
+        case OSStatus.AGUARDANDO_PARCEIRO: return 'border-primary';
+        case OSStatus.FINALIZADO: return 'border-success';
+        default: return 'border-secondary';
+    }
+};
 
 export default function CalendarPage() {
   const osList = useOSStore((state) => state.osList);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [currentMonth, setCurrentMonth] = useState<Date>(startOfMonth(new Date()));
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -36,44 +45,46 @@ export default function CalendarPage() {
     setIsHydrated(true);
   }, []);
 
+  // Memoize OS data processing
   const { scheduledDates, finalizedDates, osByDate } = useMemo(() => {
     const scheduled = new Set<string>();
     const finalized = new Set<string>();
     const osMap = new Map<string, OS[]>();
 
     osList.forEach(os => {
+      const addOsToMap = (dateStr: string, osToAdd: OS) => {
+        if (!osMap.has(dateStr)) osMap.set(dateStr, []);
+        // Avoid duplicates if scheduled and finalized on same day
+        if (!osMap.get(dateStr)?.some(existing => existing.id === osToAdd.id)) {
+          osMap.get(dateStr)?.push(osToAdd);
+        }
+      };
+
       // Handle scheduled date
       if (os.programadoPara) {
-          try {
-            // Expecting YYYY-MM-DD string
-            const date = parseISO(os.programadoPara);
-            if (isValid(date)) {
-                const dateStr = format(date, 'yyyy-MM-dd');
-                scheduled.add(dateStr);
-                if (!osMap.has(dateStr)) osMap.set(dateStr, []);
-                osMap.get(dateStr)?.push(os);
-            }
+        try {
+          const date = parseISO(os.programadoPara); // Expecting YYYY-MM-DD
+          if (isValid(date)) {
+            const dateStr = format(date, 'yyyy-MM-dd');
+            scheduled.add(dateStr);
+            addOsToMap(dateStr, os);
+          }
         } catch (e) {
-             console.warn(`Invalid programadoPara date format for OS ${os.numero}: ${os.programadoPara}`);
+          console.warn(`Invalid programadoPara date format for OS ${os.numero}: ${os.programadoPara}`);
         }
       }
       // Handle finalized date
       if (os.dataFinalizacao) {
-         try {
-             // Expecting ISO string
-            const date = parseISO(os.dataFinalizacao);
-             if (isValid(date)) {
-                const dateStr = format(date, 'yyyy-MM-dd');
-                finalized.add(dateStr);
-                if (!osMap.has(dateStr)) osMap.set(dateStr, []);
-                // Avoid adding duplicate if finalized date is same as scheduled date
-                if (!osMap.get(dateStr)?.some(existingOs => existingOs.id === os.id)) {
-                    osMap.get(dateStr)?.push(os);
-                }
-            }
-         } catch (e) {
-              console.warn(`Invalid dataFinalizacao date format for OS ${os.numero}: ${os.dataFinalizacao}`);
-         }
+        try {
+          const date = parseISO(os.dataFinalizacao); // Expecting ISO string
+          if (isValid(date)) {
+            const dateStr = format(date, 'yyyy-MM-dd');
+            finalized.add(dateStr);
+            addOsToMap(dateStr, os);
+          }
+        } catch (e) {
+          console.warn(`Invalid dataFinalizacao date format for OS ${os.numero}: ${os.dataFinalizacao}`);
+        }
       }
     });
 
@@ -84,150 +95,133 @@ export default function CalendarPage() {
     };
   }, [osList]);
 
-  const modifiers: Modifiers = {
+  // --- Custom Day Component ---
+  const DayContent = (props: DayProps) => {
+    const dateStr = format(props.date, 'yyyy-MM-dd');
+    const dayOS = osByDate.get(dateStr) || [];
+    const isSelected = props.displayMonth === currentMonth && props.modifiers.selected; // Check if day is selected
+
+    // Sort OS: Scheduled first, then by number
+     const sortedDayOS = dayOS.sort((a, b) => {
+        const aIsScheduled = a.programadoPara && format(parseISO(a.programadoPara), 'yyyy-MM-dd') === dateStr;
+        const bIsScheduled = b.programadoPara && format(parseISO(b.programadoPara), 'yyyy-MM-dd') === dateStr;
+        if (aIsScheduled && !bIsScheduled) return -1;
+        if (!aIsScheduled && bIsScheduled) return 1;
+        return parseInt(a.numero, 10) - parseInt(b.numero, 10);
+     });
+
+    return (
+        <div className={`d-flex flex-column h-100 position-relative p-1 ${isSelected ? 'bg-primary-subtle' : ''}`} style={{ minHeight: '100px' }}> {/* Added minHeight */}
+           {/* Day Number - Positioned top-right */}
+            <span className={`position-absolute top-0 end-0 p-1 small ${isToday(props.date) ? 'bg-primary text-white rounded-circle lh-1 d-inline-flex justify-content-center align-items-center' : ''}`}
+                  style={isToday(props.date) ? { width: '1.5rem', height: '1.5rem'} : {}}
+            >
+                {format(props.date, 'd')}
+            </span>
+           {/* OS List */}
+            <div className="mt-3 small flex-grow-1 overflow-auto" style={{ fontSize: '0.7rem' }}> {/* Reduced font size, allow scroll */}
+             {sortedDayOS.slice(0, 3).map(os => { // Limit displayed OS
+               const isScheduled = os.programadoPara && format(parseISO(os.programadoPara), 'yyyy-MM-dd') === dateStr;
+               const isFinalized = os.dataFinalizacao && format(parseISO(os.dataFinalizacao), 'yyyy-MM-dd') === dateStr;
+               const colorClass = getStatusColorClass(os.status);
+
+               return (
+                   <Link key={os.id} href={`/os/${os.id}`} className={`d-block text-decoration-none mb-1 p-1 rounded border-start border-2 ${getStatusBorderColorClass(os.status)} bg-light-subtle shadow-sm`}>
+                     <div className={`d-flex align-items-center ${colorClass}`}>
+                       {isFinalized ? <CheckCircle size={10} className="me-1 flex-shrink-0"/> : <Clock size={10} className="me-1 flex-shrink-0"/>}
+                       <span className="text-truncate fw-medium" title={`${os.numero}: ${os.projeto}`}>
+                         <strong className="text-dark">{os.numero}</strong>: {os.projeto}
+                       </span>
+                     </div>
+                   </Link>
+               );
+             })}
+             {sortedDayOS.length > 3 && (
+                 <div className="text-muted text-center mt-1">+{sortedDayOS.length - 3} mais</div>
+             )}
+            </div>
+        </div>
+     );
+  };
+
+  // --- Modifiers ---
+  // Minimal modifiers, styling mostly done in DayContent
+  const modifiers: Modifiers = useMemo(() => ({
     scheduled: scheduledDates,
     finalized: finalizedDates,
-    selected: selectedDate ? [selectedDate] : [],
-  };
+  }), [scheduledDates, finalizedDates]);
 
   const modifiersStyles = {
-    // Order matters for precedence if dates overlap (finalized style wins)
-    scheduled: {
-      border: '2px solid var(--bs-info)',
-      borderRadius: '50%',
-    },
-    finalized: {
-      border: '2px solid var(--bs-success)',
-      fontWeight: 'bold',
-      borderRadius: '50%',
-    },
-    selected: {
-         backgroundColor: 'var(--bs-primary)',
-         color: 'white',
-         borderRadius: '50%', // Ensure selected is also round
-     },
+     // Add subtle indicators if needed, but DayContent handles most visual cues
+     // scheduled: { backgroundColor: 'rgba(var(--bs-info-rgb), 0.1)' },
+     // finalized: { backgroundColor: 'rgba(var(--bs-success-rgb), 0.1)' },
   };
 
-  const handleDayClick = (day: Date, modifiers: Modifiers) => {
-      if (modifiers.scheduled || modifiers.finalized) {
-          setSelectedDate(day);
-      } else {
-          setSelectedDate(undefined); // Deselect if clicking a day with no OS
-      }
-  };
 
-   const selectedDayOS = useMemo(() => {
-    if (!selectedDate) return [];
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    return osByDate.get(dateStr) || [];
-  }, [selectedDate, osByDate]);
-
-   const Footer = () => {
-        if (!selectedDate) {
-            return <p className="text-center text-muted mt-3">Selecione uma data no calendário para ver as OS.</p>;
-        }
-        return (
-            <div className="mt-4">
-                <h3 className="h5 mb-3">
-                    Ordens de Serviço para {format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })}
-                </h3>
-                {selectedDayOS.length > 0 ? (
-                    <div className="list-group">
-                        {selectedDayOS.map(os => (
-                            <Link key={os.id} href={`/os/${os.id}`} className={`list-group-item list-group-item-action flex-column align-items-start border-start border-4 border-${getStatusColor(os.status)}`}>
-                                <div className="d-flex w-100 justify-content-between">
-                                    <h5 className="mb-1 h6 text-primary">{os.projeto} <span className="text-muted small fw-normal">(OS: {os.numero})</span></h5>
-                                    <small className={`text-${getStatusColor(os.status)} d-flex align-items-center`}>
-                                        {os.dataFinalizacao && isSameDay(selectedDate, parseISO(os.dataFinalizacao)) ? <CheckCircle size={14} className="me-1"/> : <Clock size={14} className="me-1"/>}
-                                        {os.status}
-                                    </small>
-                                </div>
-                                <p className="mb-1 small text-muted">Cliente: {os.cliente}</p>
-                                {os.parceiro && <p className="mb-0 small text-muted">Parceiro: {os.parceiro}</p>}
-                            </Link>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-center text-muted">Nenhuma OS encontrada para esta data.</p>
-                )}
-            </div>
-        );
-    };
-
-   if (!isHydrated) {
-       return (
-          <AuthenticatedLayout>
-                <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
-                   <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Carregando calendário...</span>
-                   </div>
-                </div>
-          </AuthenticatedLayout>
-       );
-   }
+  if (!isHydrated) {
+    return (
+      <AuthenticatedLayout>
+        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Carregando calendário...</span>
+          </div>
+        </div>
+      </AuthenticatedLayout>
+    );
+  }
 
   return (
     <AuthenticatedLayout>
-       <div className="d-flex justify-content-between align-items-center mb-4">
-            <h1 className="h3 mb-0">Calendário de OS</h1>
-            <Link href="/dashboard" className="btn btn-outline-secondary btn-sm">
-                <ArrowLeft className="me-2" size={16} /> Voltar ao Painel
-            </Link>
-       </div>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="h3 mb-0">Calendário de OS</h1>
+        <Link href="/dashboard" className="btn btn-outline-secondary btn-sm">
+          <ArrowLeft className="me-2" size={16} /> Voltar ao Painel
+        </Link>
+      </div>
 
-        <div className="card shadow-sm">
-             <div className="card-body d-flex flex-column flex-md-row align-items-start p-lg-4">
-                 {/* Calendar */}
-                 <div className="w-100 w-md-auto mx-auto mb-4 mb-md-0 me-md-4 d-flex justify-content-center">
-                     <DayPicker
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(day) => handleDayClick(day!, modifiers)} // Pass modifiers to handler
-                        month={currentMonth}
-                        onMonthChange={setCurrentMonth}
-                        locale={ptBR}
-                        showOutsideDays
-                        fixedWeeks
-                        modifiers={modifiers}
-                        modifiersStyles={modifiersStyles}
-                        captionLayout="dropdown-buttons"
-                        fromYear={2020}
-                        toYear={new Date().getFullYear() + 2}
-                        className="border rounded p-3 bg-light shadow-sm"
-                        classNames={{
-                            caption_label: 'fs-6 fw-medium',
-                            nav_button: 'btn btn-sm btn-outline-secondary border-0',
-                            day: 'btn btn-sm border-0 rounded-circle',
-                            day_today: 'fw-bold text-primary bg-primary-subtle', // Highlight today
-                            // Modifiers handled by modifiersStyles prop mostly
-                            // day_selected: handled by modifiersStyles
-                            // day_scheduled: handled by modifiersStyles
-                            // day_finalized: handled by modifiersStyles
-                         }}
-                    />
-                 </div>
-
-                 {/* Selected Day Details */}
-                 <div className="flex-grow-1 w-100">
-                      {/* Legend */}
-                     <div className="mb-3 d-flex justify-content-center justify-content-md-start gap-3 small text-muted">
-                         <span className="d-inline-flex align-items-center">
-                             <span className="d-inline-block border border-2 border-info rounded-circle me-1" style={{ width: '1rem', height: '1rem' }}></span> Programada
-                         </span>
-                         <span className="d-inline-flex align-items-center">
-                             <span className="d-inline-block border border-2 border-success rounded-circle me-1" style={{ width: '1rem', height: '1rem' }}></span> Finalizada
-                         </span>
-                         <span className="d-inline-flex align-items-center">
-                            <span className="d-inline-block bg-primary rounded-circle me-1" style={{ width: '1rem', height: '1rem' }}></span> Selecionada
-                         </span>
-                     </div>
-                    <Footer />
-                 </div>
-            </div>
-             <div className="card-footer text-muted small d-flex align-items-center">
-                 <Info size={14} className="me-2"/> Datas com borda azul indicam OS programadas. Datas com borda verde indicam OS finalizadas.
-            </div>
+      {/* Calendar takes full width */}
+      <div className="card shadow-sm">
+        <div className="card-body p-0"> {/* Remove padding from card body */}
+            <DayPicker
+               mode="single" // Keep single selection for potential focus/highlight
+               // selected={selectedDate} // Manage selection if needed
+               // onSelect={setSelectedDate}
+               month={currentMonth}
+               onMonthChange={setCurrentMonth}
+               locale={ptBR}
+               showOutsideDays
+               fixedWeeks // Important for grid layout
+               modifiers={modifiers}
+               modifiersStyles={modifiersStyles}
+               components={{ DayContent }} // Use custom component
+               captionLayout="dropdown-buttons"
+               fromYear={2020}
+               toYear={new Date().getFullYear() + 2}
+               className="w-100 border-0" // Full width, remove default border
+               classNames={{
+                   root: 'p-3', // Add padding to the root container instead
+                   table: 'border-top border-start w-100', // Full width table with borders
+                   head_row: 'bg-light',
+                   head_cell: 'text-muted small fw-medium text-center border-end border-bottom py-2',
+                   row: '', // Rows don't need specific styles here
+                   cell: 'border-end border-bottom p-0 align-top', // Remove padding, align top, add borders
+                   day: 'd-block w-100 h-100', // Make day fill cell
+                   day_today: '', // Today styling handled in DayContent
+                   day_outside: 'text-muted opacity-50',
+                   day_selected: '', // Selection styling handled in DayContent
+                   caption_label: 'fs-5 fw-bold',
+                   nav_button: 'btn btn-outline-secondary border-0',
+                   // Add other classes as needed
+               }}
+           />
         </div>
+        {/* Legend (optional, might be redundant with inline indicators) */}
+         <div className="card-footer text-muted small d-flex align-items-center justify-content-center gap-3">
+             <span className="d-inline-flex align-items-center"><Clock size={12} className="me-1"/> Programada</span>
+             <span className="d-inline-flex align-items-center"><CheckCircle size={12} className="me-1 text-success"/> Finalizada</span>
+             {/* Add more legend items if needed */}
+         </div>
+      </div>
     </AuthenticatedLayout>
   );
 }
