@@ -5,34 +5,39 @@ import { NextResponse } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Avoid logging for static assets
-  if (pathname.startsWith('/_next/') || pathname.includes('.')) {
+  // Avoid processing for static assets and API routes
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/api/') ||
+    pathname.includes('.') // Assume files with extensions are static assets
+   ) {
     return NextResponse.next();
   }
+
   console.log(`[Middleware] Processing request for path: ${pathname}`);
 
-  // Temporarily comment out the redirect from / to /dashboard.
-  // This allows src/app/page.tsx to be rendered directly via the / path
-  // for testing the navigation button on it.
+  // Allow access to the root path (landing page) and the workflow page explicitly
+  if (pathname === '/' || pathname.startsWith('/workflow')) {
+    console.log(`[Middleware] Allowing request to proceed for path: ${pathname}`);
+    return NextResponse.next();
+  }
+
+  // Redirect root path logic (currently commented out for landing page)
   /*
   if (pathname === '/') {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/dashboard';
-    console.log(`[Middleware] Redirecting from / to /dashboard (currently disabled for testing).`);
+    console.log(`[Middleware] Redirecting from / to /dashboard.`);
     return NextResponse.redirect(redirectUrl);
   }
   */
-  
-  // If specifically on /, allow it for now to show the test page.
-  if (pathname === '/') {
-    console.log('[Middleware] Allowing request to / (test home page).');
-    return NextResponse.next();
-  }
 
+  // For any other path, allow it to proceed (assuming it's handled by other routes like /dashboard, /os/[id], etc.)
   console.log(`[Middleware] Allowing request to proceed for path: ${pathname}`);
   return NextResponse.next();
 }
 
 export const config = {
+  // Adjust matcher to exclude API routes as well
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
