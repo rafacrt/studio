@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout';
-import { Check, Edit3, Save, ThumbsUp, ThumbsDown, MessageSquare } from 'lucide-react';
+import { Check, Edit3, Save, ThumbsUp, ThumbsDown, MessageSquare, GitBranch } from 'lucide-react'; // Added GitBranch import
 import Image from 'next/image'; // Using next/image for optimization
 
 // Define the structure for an artwork item
