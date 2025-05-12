@@ -19,6 +19,7 @@ const formSchema = z.object({
   tarefa: z.string().min(1, { message: 'A descrição da tarefa é obrigatória.' }),
   observacoes: z.string().optional(),
   tempoTrabalhado: z.string().optional(),
+  programadoPara: z.string().optional(), // Added: Accept string date (YYYY-MM-DD)
   status: z.nativeEnum(OSStatus).default(OSStatus.NA_FILA),
   isUrgent: z.boolean().default(false),
 });
@@ -78,6 +79,7 @@ export function CreateOSDialog() {
       tarefa: '',
       observacoes: '',
       tempoTrabalhado: '',
+      programadoPara: '', // Default to empty string
       status: OSStatus.NA_FILA,
       isUrgent: false,
     },
@@ -119,6 +121,7 @@ export function CreateOSDialog() {
         parceiro: values.parceiro || undefined,
         observacoes: values.observacoes || '',
         tempoTrabalhado: values.tempoTrabalhado || '',
+        programadoPara: values.programadoPara || undefined, // Ensure undefined if empty
       };
 
       // Add partner to the list if it's new and not empty
@@ -188,62 +191,68 @@ export function CreateOSDialog() {
             <div className="modal-body">
               <p className="text-muted mb-4">Preencha os detalhes abaixo para criar uma nova OS. Clique em salvar quando terminar.</p>
               <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-                {/* Cliente */}
-                <div className="mb-3">
-                  <label htmlFor="cliente" className="form-label">Nome do Cliente *</label>
-                  <input
-                    type="text"
-                    id="cliente"
-                    placeholder="Ex: Empresa Acme"
-                    className={`form-control ${form.formState.errors.cliente ? 'is-invalid' : ''}`}
-                    {...form.register('cliente')}
-                  />
-                  {form.formState.errors.cliente && (
-                    <div className="invalid-feedback">{form.formState.errors.cliente.message}</div>
-                  )}
-                </div>
-
-                {/* Parceiro with suggestions */}
-                <div className="mb-3 position-relative" ref={partnerInputRef}>
-                  <label htmlFor="parceiro" className="form-label">Parceiro (opcional)</label>
-                  <input
-                    type="text"
-                    id="parceiro"
-                    placeholder="Ex: Agência XYZ"
-                    className={`form-control ${form.formState.errors.parceiro ? 'is-invalid' : ''}`}
-                    {...form.register('parceiro')}
-                    value={partnerInput} // Bind directly to state for suggestions
-                    onChange={(e) => {
-                        const newValue = e.target.value;
-                        form.setValue('parceiro', newValue, { shouldValidate: true }); // Update form state
-                        setPartnerInput(newValue);
-                        // Update suggestion visibility based on new value and filtered partners
-                        const currentFilteredPartners = partners.filter(p =>
-                            p.toLowerCase().includes(newValue.toLowerCase())
-                        );
-                        setShowSuggestions(!!newValue && currentFilteredPartners.length > 0);
-                    }}
-                    onFocus={() => setShowSuggestions(!!partnerInput && filteredPartners.length > 0)}
-                    autoComplete="off"
-                  />
-                  {showSuggestions && filteredPartners.length > 0 && (
-                    <div className="list-group position-absolute w-100" style={{ zIndex: 10, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}>
-                      {filteredPartners.map(p => (
-                        <button
-                          type="button"
-                          key={p}
-                          className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
-                          onClick={() => handlePartnerSelect(p)}
-                        >
-                          {p}
-                        </button>
-                      ))}
+                 <div className="row"> {/* Using Bootstrap grid for layout */}
+                    <div className="col-md-6">
+                        {/* Cliente */}
+                        <div className="mb-3">
+                          <label htmlFor="cliente" className="form-label">Nome do Cliente *</label>
+                          <input
+                            type="text"
+                            id="cliente"
+                            placeholder="Ex: Empresa Acme"
+                            className={`form-control ${form.formState.errors.cliente ? 'is-invalid' : ''}`}
+                            {...form.register('cliente')}
+                          />
+                          {form.formState.errors.cliente && (
+                            <div className="invalid-feedback">{form.formState.errors.cliente.message}</div>
+                          )}
+                        </div>
                     </div>
-                  )}
-                  {form.formState.errors.parceiro && (
-                    <div className="invalid-feedback">{form.formState.errors.parceiro.message}</div>
-                  )}
-                </div>
+                    <div className="col-md-6">
+                         {/* Parceiro with suggestions */}
+                        <div className="mb-3 position-relative" ref={partnerInputRef}>
+                          <label htmlFor="parceiro" className="form-label">Parceiro (opcional)</label>
+                          <input
+                            type="text"
+                            id="parceiro"
+                            placeholder="Ex: Agência XYZ"
+                            className={`form-control ${form.formState.errors.parceiro ? 'is-invalid' : ''}`}
+                            {...form.register('parceiro')}
+                            value={partnerInput} // Bind directly to state for suggestions
+                            onChange={(e) => {
+                                const newValue = e.target.value;
+                                form.setValue('parceiro', newValue, { shouldValidate: true }); // Update form state
+                                setPartnerInput(newValue);
+                                // Update suggestion visibility based on new value and filtered partners
+                                const currentFilteredPartners = partners.filter(p =>
+                                    p.toLowerCase().includes(newValue.toLowerCase())
+                                );
+                                setShowSuggestions(!!newValue && currentFilteredPartners.length > 0);
+                            }}
+                            onFocus={() => setShowSuggestions(!!partnerInput && filteredPartners.length > 0)}
+                            autoComplete="off"
+                          />
+                          {showSuggestions && filteredPartners.length > 0 && (
+                            <div className="list-group position-absolute w-100" style={{ zIndex: 10, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}>
+                              {filteredPartners.map(p => (
+                                <button
+                                  type="button"
+                                  key={p}
+                                  className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
+                                  onClick={() => handlePartnerSelect(p)}
+                                >
+                                  {p}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {form.formState.errors.parceiro && (
+                            <div className="invalid-feedback">{form.formState.errors.parceiro.message}</div>
+                          )}
+                        </div>
+                    </div>
+                 </div>
+
 
                 {/* Projeto */}
                 <div className="mb-3">
@@ -308,25 +317,48 @@ export function CreateOSDialog() {
                   )}
                 </div>
 
-                {/* Status */}
-                <div className="mb-3">
-                  <label htmlFor="status" className="form-label">Status</label>
-                  <select
-                    id="status"
-                    className={`form-select ${form.formState.errors.status ? 'is-invalid' : ''}`}
-                    defaultValue={OSStatus.NA_FILA}
-                    {...form.register('status')}
-                  >
-                    {ALL_OS_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                  {form.formState.errors.status && (
-                    <div className="invalid-feedback">{form.formState.errors.status.message}</div>
-                  )}
+                <div className="row">
+                    <div className="col-md-6">
+                         {/* Status */}
+                        <div className="mb-3">
+                          <label htmlFor="status" className="form-label">Status</label>
+                          <select
+                            id="status"
+                            className={`form-select ${form.formState.errors.status ? 'is-invalid' : ''}`}
+                            defaultValue={OSStatus.NA_FILA}
+                            {...form.register('status')}
+                          >
+                            {ALL_OS_STATUSES.map((status) => (
+                              <option key={status} value={status}>
+                                {status}
+                              </option>
+                            ))}
+                          </select>
+                          {form.formState.errors.status && (
+                            <div className="invalid-feedback">{form.formState.errors.status.message}</div>
+                          )}
+                        </div>
+                    </div>
+                     <div className="col-md-6">
+                        {/* Programado Para */}
+                        <div className="mb-3">
+                            <label htmlFor="programadoPara" className="form-label">Programado Para (opcional)</label>
+                            <input
+                                type="date" // Use HTML5 date input
+                                id="programadoPara"
+                                className={`form-control ${form.formState.errors.programadoPara ? 'is-invalid' : ''}`}
+                                {...form.register('programadoPara')}
+                            />
+                            {form.formState.errors.programadoPara && (
+                                <div className="invalid-feedback">{form.formState.errors.programadoPara.message}</div>
+                            )}
+                             <div className="form-text">
+                                Data prevista para conclusão ou próxima etapa.
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
 
                  {/* Urgente */}
                 <div className="mb-3 form-check border p-3 rounded shadow-sm">
@@ -340,7 +372,7 @@ export function CreateOSDialog() {
                         Marcar como Urgente
                     </label>
                      <p className="text-muted small mt-1 mb-0"> {/* Added mb-0 */}
-                        Tarefas urgentes serão destacadas.
+                        Tarefas urgentes serão destacadas e priorizadas na visualização.
                      </p>
                 </div>
 

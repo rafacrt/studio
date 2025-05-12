@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import type { OS } from '@/lib/types';
 import { OSStatus, ALL_OS_STATUSES } from '@/lib/types';
-import { CalendarClock, Flag, Copy, AlertTriangle, CheckCircle2, Clock, Server, Users, FileText, User, Briefcase } from 'lucide-react'; // Using lucide-react icons, added Briefcase
+import { CalendarClock, Flag, Copy, AlertTriangle, CheckCircle2, Clock, Server, Users, FileText, User as UserIcon, Briefcase, Calendar as CalendarIcon } from 'lucide-react'; // Renamed User to UserIcon
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOSStore } from '@/store/os-store';
@@ -39,7 +39,7 @@ const getUrgentBgClass = (isUrgent: boolean, theme: 'light' | 'dark'): string =>
 const getStatusIcon = (status: OSStatus) => {
   switch (status) {
     case OSStatus.NA_FILA: return <Clock size={14} className="me-1" />;
-    case OSStatus.AGUARDANDO_CLIENTE: return <User size={14} className="me-1" />;
+    case OSStatus.AGUARDANDO_CLIENTE: return <UserIcon size={14} className="me-1" />;
     case OSStatus.EM_PRODUCAO: return <Server size={14} className="me-1" />;
     case OSStatus.AGUARDANDO_PARCEIRO: return <Users size={14} className="me-1" />;
     case OSStatus.FINALIZADO: return <CheckCircle2 size={14} className="me-1" />;
@@ -104,7 +104,7 @@ export default function OSCard({ os }: OSCardProps) {
                 <div className={`card-body p-2 pt-1 pb-2 d-flex flex-column text-wrap ${urgentBgClass}`}> {/* Added text-wrap and urgent bg */}
                     {/* Client */}
                     <div className="mb-1" title={`Cliente: ${os.cliente}`}>
-                        <User size={14} className="me-1 text-muted align-middle" />
+                        <UserIcon size={14} className="me-1 text-muted align-middle" />
                         <span className="fw-medium small text-break">{truncateText(os.cliente, 30)}</span>
                     </div>
                     {/* Partner (if exists) */}
@@ -120,12 +120,24 @@ export default function OSCard({ os }: OSCardProps) {
                         <span className="small text-muted fst-italic text-break">{truncateText(os.tarefa, 40)}</span>
                     </div>
 
-                    {/* Abertura Date */}
-                    <div className="text-muted small d-flex align-items-center mb-2 mt-auto pt-1 border-top"> {/* Push date/status down */}
-                         <CalendarClock size={14} className="me-1 flex-shrink-0" />
-                         <span className="text-truncate">
-                            Aberto em: {format(parseISO(os.dataAbertura), "dd/MM/yy HH:mm", { locale: ptBR })}
-                         </span>
+                    {/* Dates Section - moved to bottom, above status */}
+                    <div className="mt-auto pt-1 border-top">
+                        {/* Abertura Date */}
+                        <div className="text-muted small d-flex align-items-center mb-1">
+                             <CalendarClock size={14} className="me-1 flex-shrink-0" />
+                             <span className="text-truncate">
+                                Aberto em: {format(parseISO(os.dataAbertura), "dd/MM/yy HH:mm", { locale: ptBR })}
+                             </span>
+                        </div>
+                         {/* Programado Para Date */}
+                        {os.programadoPara && (
+                            <div className="text-muted small d-flex align-items-center mb-2" title="Data programada">
+                                <CalendarIcon size={14} className="me-1 flex-shrink-0 text-info" />
+                                <span className="text-truncate">
+                                    Programado: {format(parseISO(os.programadoPara), "dd/MM/yy", { locale: ptBR })}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Status Dropdown */}

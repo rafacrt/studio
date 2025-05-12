@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import type { OS } from '@/lib/types';
 import Link from 'next/link';
-import { ArrowLeft, CalendarClock, CheckCircle2, Clock, FileText, Flag, Server, User, Users, Briefcase, MessageSquare, Clock3, Save, Edit } from 'lucide-react'; // Keeping lucide icons, added Edit
+import { ArrowLeft, CalendarClock, CheckCircle2, Clock, FileText, Flag, Server, User as UserIcon, Users, Briefcase, MessageSquare, Clock3, Save, Edit, Calendar as CalendarIcon } from 'lucide-react'; // Keeping lucide icons, added Edit, CalendarIcon, renamed User
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOSStore } from '@/store/os-store';
@@ -15,7 +15,7 @@ import { OSStatus, ALL_OS_STATUSES } from '@/lib/types'; // Import enums/constan
 const getStatusIcon = (status: OSStatus) => {
   switch (status) {
     case OSStatus.NA_FILA: return <Clock size={16} className="me-2" />;
-    case OSStatus.AGUARDANDO_CLIENTE: return <User size={16} className="me-2" />;
+    case OSStatus.AGUARDANDO_CLIENTE: return <UserIcon size={16} className="me-2" />;
     case OSStatus.EM_PRODUCAO: return <Server size={16} className="me-2" />;
     case OSStatus.AGUARDANDO_PARCEIRO: return <Users size={16} className="me-2" />;
     case OSStatus.FINALIZADO: return <CheckCircle2 size={16} className="me-2" />;
@@ -43,7 +43,12 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
 
   // Reset form data if the initial OS prop changes (e.g., navigating between OS pages)
   useEffect(() => {
-    setFormData(initialOs);
+    // Format programadoPara for HTML date input (YYYY-MM-DD)
+     const formattedInitialOs = {
+        ...initialOs,
+        programadoPara: initialOs.programadoPara ? initialOs.programadoPara.split('T')[0] : '',
+     };
+    setFormData(formattedInitialOs);
     setPartnerInput(initialOs.parceiro || '');
     setIsEditing(false); // Reset editing state on OS change
   }, [initialOs]);
@@ -64,6 +69,13 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
             ...prev,
             [name]: (e.target as HTMLInputElement).checked,
         }));
+    }
+    // Handle date input specifically
+    else if (type === 'date' && name === 'programadoPara') {
+         setFormData(prev => ({
+           ...prev,
+           [name]: value || undefined // Store as YYYY-MM-DD or undefined if cleared
+         }));
     }
     else {
         setFormData(prev => ({
@@ -86,6 +98,8 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
        const dataToSave: OS = {
            ...formData,
            parceiro: partnerInput || undefined, // Use partnerInput state value
+           // Ensure programadoPara is undefined if empty, otherwise keep the YYYY-MM-DD string
+           programadoPara: formData.programadoPara || undefined,
        };
 
        // Add new partner if necessary
@@ -107,7 +121,12 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   };
 
   const handleCancel = () => {
-    setFormData(initialOs); // Reset form to initial data
+     // Format programadoPara correctly when resetting
+     const formattedInitialOs = {
+        ...initialOs,
+        programadoPara: initialOs.programadoPara ? initialOs.programadoPara.split('T')[0] : '',
+     };
+    setFormData(formattedInitialOs); // Reset form to initial data
     setPartnerInput(initialOs.parceiro || ''); // Reset partner input
     setShowPartnerSuggestions(false); // Hide suggestions
     setIsEditing(false);
@@ -146,7 +165,19 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
       children?: React.ReactNode; // Allows passing custom input components
       className?: string
    }) => {
-    const displayValue = typeof value === 'boolean' ? (value ? 'Sim' : 'Não') : value;
+     // Special formatting for programadoPara date display
+     let displayValue = value;
+     if (name === 'programadoPara' && typeof value === 'string' && value) {
+        try {
+            // Assuming value is 'YYYY-MM-DD', parse it as such
+            const dateOnly = value.split('T')[0]; // Ensure only date part
+            displayValue = format(parseISO(dateOnly), "dd/MM/yyyy", { locale: ptBR });
+        } catch {
+             displayValue = value; // Fallback to original string if parsing fails
+        }
+     } else if (typeof value === 'boolean') {
+        displayValue = value ? 'Sim' : 'Não';
+     }
 
     return (
         <div className={`row py-2 ${className || ''}`}>
@@ -208,7 +239,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
           {/* Use dl for description list */}
           <dl className="mb-0">
             {/* Cliente - Editable */}
-            <DetailItem label="Cliente" value={formData.cliente} icon={<User size={16} className="me-2 text-primary" />} name="cliente" isEditable={true}>
+            <DetailItem label="Cliente" value={formData.cliente} icon={<UserIcon size={16} className="me-2 text-primary" />} name="cliente" isEditable={true}>
                <input
                 type="text"
                 className="form-control form-control-sm"
@@ -265,6 +296,18 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
 
             {/* Data Abertura - Not Editable */}
             <DetailItem label="Data de Abertura" value={format(parseISO(initialOs.dataAbertura), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} icon={<CalendarClock size={16} className="me-2 text-secondary" />} isEditable={false} />
+
+            {/* Data Programado Para - Editable */}
+            <DetailItem label="Programado Para" value={formData.programadoPara} icon={<CalendarIcon size={16} className="me-2 text-info" />} name="programadoPara" isEditable={true}>
+                 <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    name="programadoPara"
+                    value={formData.programadoPara || ''} // Bind to YYYY-MM-DD or empty string
+                    onChange={handleInputChange}
+                    disabled={!isEditing} // Field disabled when not editing
+                 />
+            </DetailItem>
 
             {/* Data Finalizacao - Not Editable */}
             {initialOs.dataFinalizacao && (

@@ -18,7 +18,7 @@ export interface OS {
   id: string;
   numero: string; // 6-digit sequential number
   cliente: string;
-  parceiro?: string; 
+  parceiro?: string;
   projeto: string;
   tarefa: string; // New field
   observacoes: string;
@@ -26,6 +26,7 @@ export interface OS {
   status: OSStatus;
   dataAbertura: string; // ISO Date string (includes time)
   dataFinalizacao?: string; // ISO Date string
+  programadoPara?: string; // ISO Date string (optional) - NEW
   isUrgent: boolean;
 }
 
@@ -44,6 +45,6 @@ export interface CreateOSData {
   observacoes: string;
   tempoTrabalhado?: string;
   status: OSStatus; // Should default to NA_FILA
+  programadoPara?: string; // NEW
   isUrgent: boolean;
 }
-

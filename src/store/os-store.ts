@@ -32,7 +32,14 @@ const getUniquePartners = (osList: OS[]): string[] => {
   return Array.from(partnerSet).sort(); // Sort alphabetically
 };
 
-// Initial mock data
+// Helper to get date string for 'programadoPara' N days from now
+const getDatePlusDays = (days: number): string => {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date.toISOString().split('T')[0]; // Return only YYYY-MM-DD
+}
+
+// Initial mock data - Added 'programadoPara'
 const initialMockOS: OS[] = [
   {
     id: '1',
@@ -45,6 +52,7 @@ const initialMockOS: OS[] = [
     tempoTrabalhado: '2h reunião, 1h documentação',
     status: OSStatus.AGUARDANDO_CLIENTE,
     dataAbertura: new Date(2023, 10, 15, 10, 30).toISOString(),
+    programadoPara: getDatePlusDays(7), // Programmed for 7 days from now
     isUrgent: false
   },
   {
@@ -57,6 +65,7 @@ const initialMockOS: OS[] = [
     tempoTrabalhado: '16h design',
     status: OSStatus.EM_PRODUCAO,
     dataAbertura: new Date(2023, 11, 1, 14, 0).toISOString(),
+    programadoPara: getDatePlusDays(3), // Programmed for 3 days from now
     isUrgent: true
   },
   {
@@ -69,6 +78,7 @@ const initialMockOS: OS[] = [
     observacoes: 'Aguardando chaves de API e documentação da empresa parceira.',
     status: OSStatus.AGUARDANDO_PARCEIRO,
     dataAbertura: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+    programadoPara: undefined, // Not programmed yet
     isUrgent: false
   },
   {
@@ -81,6 +91,7 @@ const initialMockOS: OS[] = [
     status: OSStatus.FINALIZADO,
     dataAbertura: new Date(2023, 9, 5, 9, 0).toISOString(),
     dataFinalizacao: new Date(2023, 9, 25, 17, 30).toISOString(),
+    programadoPara: new Date(2023, 9, 24).toISOString().split('T')[0], // Was programmed for this date
     isUrgent: false
   },
   {
@@ -93,6 +104,7 @@ const initialMockOS: OS[] = [
     observacoes: 'Planejando estratégia de mídia social para o primeiro trimestre. Prazo urgente.',
     status: OSStatus.NA_FILA,
     dataAbertura: new Date().toISOString(),
+    programadoPara: getDatePlusDays(14), // Programmed for 14 days from now
     isUrgent: true
   },
 ];
@@ -119,6 +131,7 @@ export const useOSStore = create<OSState>()(
           tempoTrabalhado: data.tempoTrabalhado,
           status: data.status || OSStatus.NA_FILA, // Default to NA_FILA
           dataAbertura: new Date().toISOString(),
+          programadoPara: data.programadoPara || undefined, // Add programadoPara
           isUrgent: data.isUrgent || false,
         };
         set((state) => ({
@@ -164,6 +177,7 @@ export const useOSStore = create<OSState>()(
             dataAbertura: new Date().toISOString(),
             status: OSStatus.NA_FILA, // Duplicates start in NA_FILA
             dataFinalizacao: undefined, // Clear finalization date
+            programadoPara: undefined, // Clear programmed date on duplication
           };
           set((state) => ({
             osList: [...state.osList, duplicatedOS],
@@ -190,15 +204,15 @@ export const useOSStore = create<OSState>()(
 
       addPartner: (partnerName: string) => {
           set((state) => {
-              if (!state.partners.includes(partnerName)) {
+              if (partnerName && !state.partners.includes(partnerName)) { // Ensure partnerName is not empty
                   return { partners: [...state.partners, partnerName].sort() };
               }
-              return {}; // No change if partner already exists
+              return {}; // No change if partner already exists or is empty
           });
       },
     }),
     {
-      name: 'freelaos-storage-v3-bootstrap', // Updated storage key name
+      name: 'freelaos-storage-v4-schedule', // Updated storage key name for potential migration
       storage: createJSONStorage(() => localStorage),
        // Define parts of state to include/exclude if needed
        // partialize: (state) => ({ osList: state.osList, nextOsNumber: state.nextOsNumber, partners: state.partners }),
@@ -208,3 +222,4 @@ export const useOSStore = create<OSState>()(
     }
   )
 );
+

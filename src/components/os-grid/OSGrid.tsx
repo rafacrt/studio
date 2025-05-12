@@ -36,7 +36,7 @@ export default function OSGrid() {
       filtered = filtered.filter(os => os.status === filterStatus);
     }
 
-    // Filter by Selected Date
+    // Filter by Selected Date (using dataAbertura for now)
     if (selectedDate) {
       filtered = filtered.filter(os => isSameDay(parseISO(os.dataAbertura), selectedDate));
     }
@@ -53,23 +53,26 @@ export default function OSGrid() {
       );
     }
 
-    // Sort
+    // Sort: Primary sort + Urgent priority
     filtered.sort((a, b) => {
+      // 1. Prioritize Urgent OS
+      if (a.isUrgent && !b.isUrgent) return -1;
+      if (!a.isUrgent && b.isUrgent) return 1;
+
+      // 2. Apply selected sort key
       if (sortBy === 'dataAbertura') {
-        // Sort by date descending (most recent first)
-        return parseISO(b.dataAbertura).getTime() - parseISO(a.dataAbertura).getTime();
+        return parseISO(b.dataAbertura).getTime() - parseISO(a.dataAbertura).getTime(); // Descending
       }
       if (sortBy === 'numero') {
-        // Sort by OS number ascending
-        return parseInt(a.numero, 10) - parseInt(b.numero, 10);
+        return parseInt(a.numero, 10) - parseInt(b.numero, 10); // Ascending
       }
       if (sortBy === 'cliente') {
-        return a.cliente.localeCompare(b.cliente);
+        return a.cliente.localeCompare(b.cliente); // Ascending
       }
       if (sortBy === 'projeto') {
-        return a.projeto.localeCompare(b.projeto);
+        return a.projeto.localeCompare(b.projeto); // Ascending
       }
-      return 0;
+      return 0; // Should not happen
     });
 
     return filtered;
@@ -132,6 +135,7 @@ export default function OSGrid() {
         </div>
       ) : (
          // Use Bootstrap grid: Updated for 4 columns on xl screens
+         // NOTE: Drag and Drop functionality is complex and has been deferred.
          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3 pb-4 flex-grow-1"> {/* g-3 for slightly less gap */}
           {filteredAndSortedOS.map((os) => (
             <div className="col" key={os.id}>
