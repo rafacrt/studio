@@ -7,7 +7,7 @@ import * as z from 'zod';
 import React, { useState, useEffect, useRef } from 'react';
 import { PlusCircle, Loader2 } from 'lucide-react'; // Keep lucide icons
 
-import { useToast } from '@/hooks/use-toast';
+// Removed useToast import
 import { useOSStore } from '@/store/os-store';
 import { OSStatus, ALL_OS_STATUSES, type CreateOSData } from '@/lib/types';
 
@@ -27,7 +27,7 @@ type CreateOSFormValues = z.infer<typeof formSchema>;
 
 export function CreateOSDialog() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+  // Removed toast related code
   const { addOS, partners, addPartner } = useOSStore((state) => ({
       addOS: state.addOS,
       partners: state.partners,
@@ -113,20 +113,15 @@ export function CreateOSDialog() {
 
       addOS(dataToSubmit);
 
-      toast({
-        title: 'OS Criada',
-        description: `Ordem de Serviço para ${values.cliente} - ${values.projeto} foi criada com sucesso.`,
-      });
+      // Removed success toast
+      console.log(`OS Criada: ${values.cliente} - ${values.projeto}`);
       form.reset();
       setPartnerInput(''); // Reset partner input state
       bootstrapModal?.hide(); // Use Bootstrap API to hide modal
     } catch (error) {
       console.error("Failed to create OS:", error);
-      toast({
-        title: 'Erro',
-        description: 'Falha ao criar OS. Por favor, tente novamente.',
-        variant: 'destructive',
-      });
+      // Removed error toast
+      alert('Falha ao criar OS. Por favor, tente novamente.'); // Basic alert fallback
     } finally {
       setIsSubmitting(false);
     }

@@ -8,7 +8,7 @@ import { ArrowLeft, CalendarClock, CheckCircle2, Clock, FileText, Flag, Server, 
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOSStore } from '@/store/os-store';
-import { useToast } from '@/hooks/use-toast';
+// Removed useToast import
 import { OSStatus, ALL_OS_STATUSES } from '@/lib/types'; // Import enums/constants
 
 // Helper for status icons (copied from OSCard for consistency)
@@ -31,7 +31,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   const updateOS = useOSStore((state) => state.updateOS);
   const partners = useOSStore((state) => state.partners); // Get partners for suggestions
   const addPartner = useOSStore((state) => state.addPartner);
-  const { toast } = useToast();
+  // Removed toast related code
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -83,18 +83,13 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
        }
 
       updateOS(dataToSave);
-      toast({
-        title: 'OS Atualizada',
-        description: `Ordem de Serviço ${dataToSave.numero} atualizada com sucesso.`,
-      });
+      // Removed success toast
+      console.log(`OS Atualizada: ${dataToSave.numero}`);
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to update OS:", error);
-      toast({
-        title: 'Erro',
-        description: 'Falha ao atualizar OS. Tente novamente.',
-        variant: 'destructive',
-      });
+      // Removed error toast
+      alert('Falha ao atualizar OS. Tente novamente.'); // Basic alert fallback
     } finally {
       setIsSaving(false);
     }

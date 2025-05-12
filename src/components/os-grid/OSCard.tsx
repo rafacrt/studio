@@ -8,7 +8,7 @@ import { CalendarClock, Flag, Copy, AlertTriangle, CheckCircle2, Clock, Server, 
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOSStore } from '@/store/os-store';
-import { useToast } from '@/hooks/use-toast';
+// Removed useToast import
 
 interface OSCardProps {
   os: OS;
@@ -49,7 +49,7 @@ const getStatusIcon = (status: OSStatus) => {
 
 export default function OSCard({ os }: OSCardProps) {
   const { updateOSStatus, toggleUrgent, duplicateOS } = useOSStore();
-  const { toast } = useToast();
+  // Removed toast related code
 
   const statusClass = getStatusClass(os.status, os.isUrgent);
   const urgentBgClass = getUrgentBgClass(os.isUrgent);
@@ -59,10 +59,8 @@ export default function OSCard({ os }: OSCardProps) {
   const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = event.target.value as OSStatus;
     updateOSStatus(os.id, newStatus);
-    toast({
-      title: 'Status Atualizado',
-      description: `OS "${os.projeto}" movida para ${newStatus}.`,
-    });
+    // Removed status update toast
+    console.log(`OS "${os.projeto}" movida para ${newStatus}.`);
   };
 
   const handleToggleUrgent = (e: React.MouseEvent) => {

@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { OS, CreateOSData } from '@/lib/types';
 import { OSStatus } from '@/lib/types';
-import { toast } from '@/hooks/use-toast';
+// Removed toast import
 
 interface OSState {
   osList: OS[];
@@ -170,10 +170,8 @@ export const useOSStore = create<OSState>()(
             nextOsNumber: currentOsNumber + 1,
             // Partner list remains unchanged on duplication
           }));
-          toast({
-            title: "OS Duplicada",
-            description: `OS "${duplicatedOS.projeto}" duplicada com sucesso. Novo número: ${duplicatedOS.numero}.`,
-          });
+          // Removed duplicate toast
+          console.log(`OS "${duplicatedOS.projeto}" duplicada com sucesso. Novo número: ${duplicatedOS.numero}.`);
         }
       },
 
@@ -185,10 +183,8 @@ export const useOSStore = create<OSState>()(
         }));
         const updatedOS = get().osList.find(os => os.id === osId);
         if (updatedOS) {
-          toast({
-            title: `OS ${updatedOS.isUrgent ? "Marcada como Urgente" : "Desmarcada como Urgente"}`,
-            description: `A OS "${updatedOS.projeto}" foi ${updatedOS.isUrgent ? "marcada como urgente" : "desmarcada como urgente"}.`,
-          });
+           // Removed toggle urgent toast
+           console.log(`A OS "${updatedOS.projeto}" foi ${updatedOS.isUrgent ? "marcada como urgente" : "desmarcada como urgente"}.`);
         }
       },
 

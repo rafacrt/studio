@@ -2,7 +2,7 @@
 import type {Metadata} from 'next';
 // Removed Geist font imports
 import './globals.css';
-import { Toaster } from '@/components/ui/toaster'; // Keep using ShadCN toaster for now
+// Removed ShadCN toaster import
 import Providers from '@/components/Providers';
 import Script from 'next/script'; // Import Script component
 
@@ -38,7 +38,7 @@ export default function RootLayout({
       <body className="antialiased d-flex flex-column min-vh-100">
         <Providers>
           {children}
-          <Toaster /> {/* Keep using ShadCN Toaster */}
+          {/* Removed Toaster component */}
         </Providers>
         {/* Add Bootstrap JS Bundle CDN - place at the end of body */}
         <Script
