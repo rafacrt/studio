@@ -54,7 +54,10 @@ export default function OSCard({ os }: OSCardProps) {
   const statusClass = getStatusClass(os.status, os.isUrgent);
   const urgentBgClass = getUrgentBgClass(os.isUrgent);
 
-  const cardClasses = `card h-100 shadow-sm hover-shadow transition-shadow duration-200 border-start border-4 ${statusClass} ${urgentBgClass}`;
+  // Base card classes with transition for hover effect
+  const cardClasses = `card h-100 shadow-sm border-start border-4 ${statusClass} ${urgentBgClass} transition-shadow duration-200 ease-in-out`;
+  // Hover effect class (applied on the anchor tag)
+  const hoverEffectClass = "hover-lift"; // Custom class to define in CSS or use Bootstrap's shadow-lg on hover potentially
 
   const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = event.target.value as OSStatus;
@@ -78,7 +81,8 @@ export default function OSCard({ os }: OSCardProps) {
   return (
     // Wrap the entire card content in a Link
     <Link href={`/os/${os.id}`} passHref legacyBehavior>
-        <a className="text-decoration-none text-reset d-block h-100">
+        {/* Apply hover effect class here */}
+        <a className={`text-decoration-none text-reset d-block h-100 ${hoverEffectClass}`}>
             <div className={cardClasses}>
                 <div className="card-header p-3 pb-2">
                     <div className="d-flex justify-content-between align-items-start mb-1">
@@ -94,7 +98,7 @@ export default function OSCard({ os }: OSCardProps) {
                         <p className="text-muted small ms-2 text-truncate flex-shrink-0" title={os.projeto}>{os.projeto}</p>
                     </div>
                     {os.parceiro && (
-                        <p className="card-subtitle small text-muted mt-1 mb-0">Parceiro: {os.parceiro}</p>
+                        <p className="card-subtitle small text-muted mt-1 mb-0 text-truncate" title={`Parceiro: ${os.parceiro}`}>P: {os.parceiro}</p>
                     )}
                 </div>
                 <div className="card-body p-3 pt-2 pb-2 d-flex flex-column">
@@ -149,3 +153,12 @@ export default function OSCard({ os }: OSCardProps) {
     </Link>
   );
 }
+
+// Add some basic CSS for the hover effect if needed
+// You could place this in globals.css or a component-specific CSS file
+/*
+.hover-lift:hover .card {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+*/

@@ -42,21 +42,31 @@ export function CreateOSDialog() {
 
   useEffect(() => {
     // Initialize Bootstrap modal instance when the component mounts
-    if (modalRef.current) {
+    // Ensure window is defined (runs only on client)
+    if (typeof window !== 'undefined' && modalRef.current) {
       // Dynamically import Bootstrap modal to ensure it runs client-side
       import('bootstrap/js/dist/modal').then((ModalModule) => {
           const Modal = ModalModule.default;
-          if (modalRef.current) {
+          // Check ref again inside the promise resolution
+          if (modalRef.current && !bootstrapModal) {
              setBootstrapModal(new Modal(modalRef.current));
           }
-      });
+      }).catch(err => console.error("Failed to load Bootstrap modal:", err));
     }
 
     // Cleanup function to destroy modal instance
     return () => {
-      bootstrapModal?.dispose();
+      // Check if modal instance exists and has dispose method
+      if (bootstrapModal && typeof bootstrapModal.dispose === 'function') {
+        try {
+            bootstrapModal.dispose();
+        } catch (error) {
+            console.warn("Error disposing Bootstrap modal:", error);
+        }
+      }
     };
-  }, [bootstrapModal]); // Re-run if bootstrapModal changes (it shouldn't after init)
+    // Dependency array includes bootstrapModal to re-run if it changes, though it should only init once.
+  }, [bootstrapModal]);
 
 
   const form = useForm<CreateOSFormValues>({
@@ -78,20 +88,25 @@ export function CreateOSDialog() {
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'parceiro') {
-        setPartnerInput(value.parceiro ?? '');
-        setShowSuggestions(!!value.parceiro); // Show suggestions if input is not empty
+        const currentPartnerValue = value.parceiro ?? '';
+        setPartnerInput(currentPartnerValue);
+        // Show suggestions only if input is not empty and there are filtered partners
+        const currentFilteredPartners = partners.filter(p =>
+          p.toLowerCase().includes(currentPartnerValue.toLowerCase())
+        );
+        setShowSuggestions(!!currentPartnerValue && currentFilteredPartners.length > 0);
       }
     });
     return () => subscription.unsubscribe();
-  }, [form.watch]);
+  }, [form.watch, partners]); // Added partners dependency
 
 
-  const filteredPartners = partners.filter(p =>
-    p.toLowerCase().includes(partnerInput.toLowerCase())
-  );
+  const filteredPartners = partnerInput
+    ? partners.filter(p => p.toLowerCase().includes(partnerInput.toLowerCase()))
+    : [];
 
   const handlePartnerSelect = (partnerName: string) => {
-    form.setValue('parceiro', partnerName);
+    form.setValue('parceiro', partnerName, { shouldValidate: true });
     setPartnerInput(partnerName);
     setShowSuggestions(false);
   };
@@ -117,7 +132,9 @@ export function CreateOSDialog() {
       console.log(`OS Criada: ${values.cliente} - ${values.projeto}`);
       form.reset();
       setPartnerInput(''); // Reset partner input state
-      bootstrapModal?.hide(); // Use Bootstrap API to hide modal
+       if (bootstrapModal && typeof bootstrapModal.hide === 'function') {
+            bootstrapModal.hide(); // Use Bootstrap API to hide modal
+       }
     } catch (error) {
       console.error("Failed to create OS:", error);
       // Removed error toast
@@ -141,9 +158,14 @@ export function CreateOSDialog() {
         setShowSuggestions(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    // Check if document is defined (client-side)
+     if (typeof document !== 'undefined') {
+        document.addEventListener('mousedown', handleClickOutside);
+     }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('mousedown', handleClickOutside);
+      }
     };
   }, []);
 
@@ -192,20 +214,25 @@ export function CreateOSDialog() {
                     {...form.register('parceiro')}
                     value={partnerInput} // Bind directly to state for suggestions
                     onChange={(e) => {
-                        form.setValue('parceiro', e.target.value, { shouldValidate: true }); // Update form state
-                        setPartnerInput(e.target.value);
-                        setShowSuggestions(!!e.target.value && filteredPartners.length > 0);
+                        const newValue = e.target.value;
+                        form.setValue('parceiro', newValue, { shouldValidate: true }); // Update form state
+                        setPartnerInput(newValue);
+                        // Update suggestion visibility based on new value and filtered partners
+                        const currentFilteredPartners = partners.filter(p =>
+                            p.toLowerCase().includes(newValue.toLowerCase())
+                        );
+                        setShowSuggestions(!!newValue && currentFilteredPartners.length > 0);
                     }}
                     onFocus={() => setShowSuggestions(!!partnerInput && filteredPartners.length > 0)}
                     autoComplete="off"
                   />
                   {showSuggestions && filteredPartners.length > 0 && (
-                    <div className="list-group position-absolute w-100" style={{ zIndex: 10, maxHeight: '150px', overflowY: 'auto' }}>
+                    <div className="list-group position-absolute w-100" style={{ zIndex: 10, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}>
                       {filteredPartners.map(p => (
                         <button
                           type="button"
                           key={p}
-                          className="list-group-item list-group-item-action"
+                          className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
                           onClick={() => handlePartnerSelect(p)}
                         >
                           {p}
@@ -312,17 +339,17 @@ export function CreateOSDialog() {
                     <label className="form-check-label" htmlFor="isUrgent">
                         Marcar como Urgente
                     </label>
-                     <p className="text-muted small mt-1">
+                     <p className="text-muted small mt-1 mb-0"> {/* Added mb-0 */}
                         Tarefas urgentes serão destacadas.
                      </p>
                 </div>
 
                  {/* Submit Buttons - Moved inside form */}
-                <div className="modal-footer mt-4">
+                <div className="modal-footer mt-4 pt-3 border-top"> {/* Added border-top */}
                     <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal" onClick={handleModalClose} disabled={isSubmitting}>
                         Cancelar
                     </button>
-                    <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                    <button type="submit" className="btn btn-primary" disabled={!form.formState.isValid || isSubmitting}> {/* Disable if form invalid */}
                         {isSubmitting ? (
                             <>
                                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
