@@ -5,11 +5,53 @@ body {
 }
 
 /* Basic hover lift effect for OSCard */
+.hover-lift .card {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
 .hover-lift:hover .card {
   transform: translateY(-4px);
   box-shadow: 0 0.4rem 0.8rem rgba(0, 0, 0, 0.12) !important;
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
 }
+
+/* General Smooth Transitions */
+.transition-all {
+    transition: all 0.3s ease-in-out;
+}
+.transition-opacity {
+    transition: opacity 0.3s ease-in-out;
+}
+.transition-transform {
+    transition: transform 0.3s ease-in-out;
+}
+.transition-colors {
+     transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+
+/* Card Grid Animations (Fade in/out on filter change) */
+.os-grid-container {
+    /* Container to manage transitions */
+}
+
+.os-grid-item {
+    transition: opacity 0.4s ease-in-out, transform 0.3s ease-in-out;
+    /* Start slightly scaled down and transparent */
+    opacity: 0;
+    transform: scale(0.98);
+    animation: fadeInScale 0.4s ease-out forwards; /* Apply animation on load/filter */
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 
 /* Ensure DayPicker takes full height available in its container */
 .rdp {
@@ -55,6 +97,7 @@ body {
   text-decoration: none !important; /* Remove underline from day number */
   color: inherit !important; /* Inherit text color */
   background-color: transparent !important; /* No background unless specified */
+  transition: background-color 0.2s ease-in-out; /* Add transition to day */
 }
 
 .rdp-day:focus {

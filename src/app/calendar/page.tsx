@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -42,7 +43,11 @@ export default function CalendarPage() {
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    setIsHydrated(true);
+    // Simulate loading delay for demonstration
+    const timer = setTimeout(() => {
+        setIsHydrated(true);
+    }, 500); // 0.5 second delay
+    return () => clearTimeout(timer);
   }, []);
 
   // Memoize OS data processing
@@ -63,14 +68,17 @@ export default function CalendarPage() {
       // Handle scheduled date
       if (os.programadoPara) {
         try {
-          const date = parseISO(os.programadoPara); // Expecting YYYY-MM-DD
-          if (isValid(date)) {
-            const dateStr = format(date, 'yyyy-MM-dd');
-            scheduled.add(dateStr);
-            addOsToMap(dateStr, os);
-          }
+            // Handle YYYY-MM-DD format directly
+            const dateStr = os.programadoPara.split('T')[0];
+            const date = parseISO(dateStr); // Parse just the date part
+            if (isValid(date)) {
+                scheduled.add(dateStr);
+                addOsToMap(dateStr, os);
+            } else {
+                 console.warn(`Invalid programadoPara date format for OS ${os.numero}: ${os.programadoPara}`);
+            }
         } catch (e) {
-          console.warn(`Invalid programadoPara date format for OS ${os.numero}: ${os.programadoPara}`);
+          console.warn(`Error parsing programadoPara date for OS ${os.numero}: ${os.programadoPara}`, e);
         }
       }
       // Handle finalized date
@@ -103,8 +111,8 @@ export default function CalendarPage() {
 
     // Sort OS: Scheduled first, then by number
      const sortedDayOS = dayOS.sort((a, b) => {
-        const aIsScheduled = a.programadoPara && format(parseISO(a.programadoPara), 'yyyy-MM-dd') === dateStr;
-        const bIsScheduled = b.programadoPara && format(parseISO(b.programadoPara), 'yyyy-MM-dd') === dateStr;
+        const aIsScheduled = a.programadoPara && format(parseISO(a.programadoPara.split('T')[0]), 'yyyy-MM-dd') === dateStr;
+        const bIsScheduled = b.programadoPara && format(parseISO(b.programadoPara.split('T')[0]), 'yyyy-MM-dd') === dateStr;
         if (aIsScheduled && !bIsScheduled) return -1;
         if (!aIsScheduled && bIsScheduled) return 1;
         return parseInt(a.numero, 10) - parseInt(b.numero, 10);
@@ -121,12 +129,12 @@ export default function CalendarPage() {
            {/* OS List */}
             <div className="mt-3 small flex-grow-1 overflow-auto" style={{ fontSize: '0.7rem' }}> {/* Reduced font size, allow scroll */}
              {sortedDayOS.slice(0, 4).map(os => { // Limit displayed OS slightly more
-               const isScheduled = os.programadoPara && format(parseISO(os.programadoPara), 'yyyy-MM-dd') === dateStr;
+               const isScheduled = os.programadoPara && format(parseISO(os.programadoPara.split('T')[0]), 'yyyy-MM-dd') === dateStr;
                const isFinalized = os.dataFinalizacao && format(parseISO(os.dataFinalizacao), 'yyyy-MM-dd') === dateStr;
                const colorClass = getStatusColorClass(os.status);
 
                return (
-                   <Link key={os.id} href={`/os/${os.id}`} className={`d-block text-decoration-none mb-1 p-1 rounded border-start border-2 ${getStatusBorderColorClass(os.status)} bg-light-subtle shadow-sm`}>
+                   <Link key={os.id} href={`/os/${os.id}`} className={`d-block text-decoration-none mb-1 p-1 rounded border-start border-2 ${getStatusBorderColorClass(os.status)} bg-light-subtle shadow-sm transition-transform`}>
                      <div className={`d-flex align-items-center ${colorClass}`}>
                        {isFinalized ? <CheckCircle size={10} className="me-1 flex-shrink-0"/> : <Clock size={10} className="me-1 flex-shrink-0"/>}
                        <span className="text-truncate fw-medium" title={`${os.numero}: ${os.projeto}`}>
@@ -158,10 +166,12 @@ export default function CalendarPage() {
   if (!isHydrated) {
     return (
       <AuthenticatedLayout>
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
-          <div className="spinner-border text-primary" role="status">
+        {/* Improved Loading Spinner */}
+        <div className="d-flex flex-column justify-content-center align-items-center text-center" style={{ minHeight: '400px' }}>
+          <div className="spinner-border text-primary mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
             <span className="visually-hidden">Carregando calendário...</span>
           </div>
+          <p className="text-muted">Carregando calendário...</p>
         </div>
       </AuthenticatedLayout>
     );
@@ -178,7 +188,7 @@ export default function CalendarPage() {
 
       {/* Calendar takes full width within the container */}
       {/* Removed card wrapper */}
-      <div className="border rounded shadow-sm overflow-hidden"> {/* Add border/shadow directly */}
+      <div className="border rounded shadow-sm overflow-hidden transition-all"> {/* Add border/shadow directly */}
          <DayPicker
            mode="single" // Keep single selection for potential focus/highlight
            month={currentMonth}

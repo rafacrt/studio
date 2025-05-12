@@ -36,7 +36,10 @@ export default function RootLayout({
           </head>
           <body className="antialiased d-flex flex-column min-vh-100">
             <Providers>
-              {children}
+               {/* Wrap children in a div for potential page transition effects */}
+               <div className="page-transition-container">
+                 {children}
+               </div>
             </Providers>
             {/* Add Bootstrap JS Bundle CDN - place at the end of body */}
             <Script

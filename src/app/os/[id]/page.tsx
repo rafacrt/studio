@@ -19,19 +19,25 @@ export default function OSDetailsPage() {
   const id = typeof params.id === 'string' ? params.id : undefined;
 
   useEffect(() => {
-    if (id) {
-      const foundOS = getOSById(id);
-      setOs(foundOS || null);
-    } else {
-      setOs(null);
-    }
+    setOs(undefined); // Reset to loading state when ID changes
+    const timer = setTimeout(() => {
+        if (id) {
+            const foundOS = getOSById(id);
+            setOs(foundOS || null);
+        } else {
+            setOs(null);
+        }
+    }, 300); // Simulate short loading delay
+
+    return () => clearTimeout(timer);
   }, [id, getOSById]); // Dependency array includes getOSById now
 
   if (os === undefined) {
     return (
       <AuthenticatedLayout>
-        <div className="d-flex align-items-center justify-content-center" style={{ height: '20rem' }}>
-           <div className="spinner-border text-primary me-3" role="status" style={{ width: '2rem', height: '2rem' }}>
+        {/* Improved Loading Spinner */}
+        <div className="d-flex flex-column align-items-center justify-content-center text-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
+           <div className="spinner-border text-primary me-3 mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
              <span className="visually-hidden">Carregando...</span>
            </div>
           <p className="fs-5 text-muted mb-0">Carregando detalhes da OS...</p>
@@ -56,7 +62,10 @@ export default function OSDetailsPage() {
 
   return (
     <AuthenticatedLayout>
-      <OSDetailsView os={os} />
+      {/* Add transition wrapper */}
+      <div className="transition-opacity">
+         <OSDetailsView os={os} />
+      </div>
     </AuthenticatedLayout>
   );
 }

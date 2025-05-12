@@ -42,7 +42,7 @@ export default function DashboardControls({
   const statusFilterOptions: (OSStatus | 'all')[] = ['all', ...ALL_OS_STATUSES];
 
   return (
-    <div className="mb-4 p-3 border rounded bg-light shadow-sm">
+    <div className="mb-4 p-3 border rounded bg-light shadow-sm transition-all"> {/* Added transition */}
         {/* Status Filter Buttons */}
         <div className="mb-3">
             <label className="form-label form-label-sm fw-medium d-block mb-1">
@@ -53,7 +53,8 @@ export default function DashboardControls({
                     <button
                         key={statusValue}
                         type="button"
-                        className={`btn btn-sm ${filterStatus === statusValue ? 'btn-primary' : 'btn-outline-secondary'} m-1`} // Added margin
+                        // Added transition-colors class
+                        className={`btn btn-sm ${filterStatus === statusValue ? 'btn-primary' : 'btn-outline-secondary'} m-1 transition-colors`}
                         onClick={() => setFilterStatus(statusValue)}
                     >
                         {statusValue === 'all' ? 'Ver Todos' : statusValue}
@@ -126,7 +127,7 @@ export default function DashboardControls({
 
            {showCalendar && (
              <div
-               className="position-absolute bg-white border rounded shadow p-2 mt-1"
+               className="position-absolute bg-body border rounded shadow p-2 mt-1 transition-opacity" // Use bg-body, added transition
                style={{ zIndex: 1000, top: '100%', right: 0, minWidth: '280px' }}
                onMouseLeave={() => setShowCalendar(false)} // Optional: hide on mouse leave
              >
@@ -144,7 +145,7 @@ export default function DashboardControls({
                  classNames={{
                     caption_label: 'fs-6 fw-medium',
                     nav_button: 'btn btn-sm btn-outline-secondary border-0',
-                    day: 'btn btn-sm border-0 rounded-circle',
+                    day: 'btn btn-sm border-0 rounded-circle transition-colors', // Added transition
                     day_today: 'fw-bold text-primary',
                     day_selected: 'bg-primary text-white rounded-circle',
                     // ... other classes

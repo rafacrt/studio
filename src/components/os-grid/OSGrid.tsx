@@ -41,20 +41,15 @@ export default function OSGrid() {
        filtered = filtered.filter(os => {
           if (os.programadoPara) {
               try {
-                 return isSameDay(parseISO(os.programadoPara), selectedDate);
+                 // Ensure comparison uses the start of the day for both dates
+                 const programadoDate = parseISO(os.programadoPara.split('T')[0]); // Get YYYY-MM-DD part
+                 return isSameDay(programadoDate, selectedDate);
               } catch {
                  // Handle potential invalid date format in programadoPara
+                 console.warn(`Invalid programadoPara date format for OS ${os.numero}: ${os.programadoPara}`);
                  return false;
               }
           }
-          // Optional: Fallback to dataAbertura if programadoPara is not set
-          // else {
-          //    try {
-          //       return isSameDay(parseISO(os.dataAbertura), selectedDate);
-          //    } catch {
-          //        return false;
-          //    }
-          // }
           return false; // Only filter by programadoPara if set
        });
     }
@@ -98,40 +93,30 @@ export default function OSGrid() {
   }, [osList, filterStatus, sortBy, searchTerm, selectedDate]);
 
   if (!isHydrated) {
-    // Simplified loading state using placeholders
+    // Improved loading state using Bootstrap spinners and placeholders
     return (
       <div className="container-fluid mt-4">
         {/* Placeholder for controls */}
         <div className="mb-4 p-3 border rounded bg-light placeholder-glow">
+             <div className="mb-3">
+                 <span className="placeholder col-3 mb-2 d-block"></span>
+                 <span className="placeholder col-2 me-1"></span>
+                 <span className="placeholder col-2 me-1"></span>
+                 <span className="placeholder col-2 me-1"></span>
+                 <span className="placeholder col-2"></span>
+             </div>
             <div className="row g-2 align-items-end">
-                <div className="col-md-6 col-lg-3"><span className="placeholder col-12"></span></div>
-                <div className="col-md-6 col-lg-3"><span className="placeholder col-12"></span></div>
-                <div className="col-lg-4"><span className="placeholder col-12"></span></div>
-                <div className="col-lg-2"><span className="placeholder col-12"></span></div>
+                <div className="col-md-4 col-lg-3"><span className="placeholder col-12"></span></div>
+                <div className="col-md-4 col-lg-5"><span className="placeholder col-12"></span></div>
+                <div className="col-md-4 col-lg-4"><span className="placeholder col-12"></span></div>
             </div>
         </div>
-        {/* Placeholder for grid */}
-        <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
-          {[...Array(8)].map((_, i) => (
-            <div className="col" key={i}>
-              <div className="card placeholder-glow" aria-hidden="true" style={{ height: '250px' }}>
-                <div className="card-header placeholder-glow">
-                    <span className="placeholder col-4"></span>
-                </div>
-                <div className="card-body">
-                  <span className="placeholder col-6 d-block mb-2"></span>
-                  <span className="placeholder col-8 d-block mb-2"></span>
-                  <span className="placeholder col-7 d-block mb-2"></span>
-                  <span className="placeholder col-5 d-block mt-auto"></span>
-                </div>
-                 <div className="card-footer placeholder-glow">
-                    <span className="placeholder col-10 d-block mb-1"></span>
-                    <span className="placeholder col-10 d-block"></span>
-                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+         {/* Centered Spinner for grid loading */}
+          <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
+             <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                 <span className="visually-hidden">Carregando Ordens de Serviço...</span>
+             </div>
+         </div>
       </div>
     );
   }
@@ -177,10 +162,11 @@ export default function OSGrid() {
         </div>
       ) : (
          // Use Bootstrap grid: Updated for 4 columns on xl screens
-         // Drag and Drop functionality is complex and not implemented here.
-         <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3 pb-4 flex-grow-1"> {/* g-3 for slightly less gap */}
+         // Added os-grid-container for potential future container-based animations
+         // Added os-grid-item class to each column for card animation
+         <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3 pb-4 flex-grow-1 os-grid-container">
           {filteredAndSortedOS.map((os) => (
-            <div className="col" key={os.id}>
+            <div className="col os-grid-item" key={os.id}> {/* Apply animation class here */}
               <OSCard os={os} />
             </div>
           ))}
