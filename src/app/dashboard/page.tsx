@@ -1,37 +1,34 @@
 
-'use client';
+'use client'; // Make this a Client Component to manage state
 
 import { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout';
 import PostLoginAnimation from '@/components/layout/PostLoginAnimation';
-import OSGrid from '@/components/os-grid/OSGrid';
-// Removed Loader2, using Bootstrap spinner
+import OSGrid from '@/components/os-grid/OSGrid'; // Import OSGrid
+import { CreateOSDialog } from '@/components/os/CreateOSDialog'; // Keep dialog trigger here at top level
+
 
 // Session storage key
 const ANIMATION_PLAYED_KEY = 'freelaos_animation_played';
 
 export default function DashboardPage() {
   const [isClient, setIsClient] = useState(false);
-  // Default to false now that login screen is removed, animation plays first time only
   const [showAnimation, setShowAnimation] = useState(false);
 
   useEffect(() => {
-    // This effect runs only on the client after hydration
     setIsClient(true);
     try {
       const animationPlayed = sessionStorage.getItem(ANIMATION_PLAYED_KEY);
       if (animationPlayed !== 'true') {
-        // Play animation only if it hasn't been played
         setShowAnimation(true);
       } else {
         setShowAnimation(false);
       }
     } catch (error) {
       console.warn("Session storage not available or error accessing it:", error);
-      // Fallback: Don't show animation if session storage fails
       setShowAnimation(false);
     }
-  }, []); // Empty dependency array ensures this runs once on mount
+  }, []);
 
   const handleAnimationComplete = () => {
     setShowAnimation(false);
@@ -42,7 +39,7 @@ export default function DashboardPage() {
     }
   };
 
-  // Initial loading state until isClient is true.
+  // Loading state before client-side hydration
   if (!isClient) {
     return (
       <AuthenticatedLayout>
@@ -56,6 +53,7 @@ export default function DashboardPage() {
     );
   }
 
+  // Show animation if needed
   if (showAnimation) {
     return (
       <AuthenticatedLayout>
@@ -64,12 +62,15 @@ export default function DashboardPage() {
     );
   }
 
+  // Render the main dashboard content
   return (
     <AuthenticatedLayout>
-      {/* Use Bootstrap padding classes */}
-      <div className="p-2 p-sm-3 p-md-4">
-        <OSGrid />
+      <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <h1 className="h3 mb-0">Ordens de Serviço</h1>
+        <CreateOSDialog /> {/* Place the "Nova OS" button here */}
       </div>
+      {/* OSGrid now contains the filter/sort controls and the grid itself */}
+      <OSGrid />
     </AuthenticatedLayout>
   );
 }

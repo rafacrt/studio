@@ -1,17 +1,159 @@
 
-/* Remove Tailwind directives and ShadCN variables */
 
+/* Use system font stack */
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  /* Rely on Bootstrap CDN for base styles */
 }
-
-/* Remove all custom status classes and other Tailwind/ShadCN related styles */
-
 
 /* Basic hover lift effect for OSCard */
 .hover-lift:hover .card {
   transform: translateY(-4px);
-  box-shadow: 0 0.4rem 0.8rem rgba(0, 0, 0, 0.12) !important; /* Slightly enhance shadow */
+  box-shadow: 0 0.4rem 0.8rem rgba(0, 0, 0, 0.12) !important;
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+/* Dark Mode Adjustments */
+[data-bs-theme="dark"] {
+    /* Ensure background is dark */
+    body {
+      background-color: #212529; /* Bootstrap dark background color */
+      color: #dee2e6; /* Bootstrap dark text color */
+    }
+
+    /* Adjust card background and border in dark mode */
+    .card {
+        background-color: #343a40; /* Slightly lighter than body */
+        border-color: #495057 !important; /* Darker border */
+    }
+
+    /* Adjust card header/footer background */
+     .card-header, .card-footer {
+        background-color: #3a4147; /* Slightly different shade for header/footer */
+        border-color: #495057 !important;
+    }
+
+    /* Ensure text within cards is readable */
+    .card-body, .card-title, .card-subtitle, .card-text {
+       color: #dee2e6; /* Light text for dark background */
+    }
+    .text-muted {
+        color: #adb5bd !important; /* Lighter muted text */
+    }
+    .text-primary {
+        color: #6ea8fe !important; /* Adjust primary color for dark mode if needed */
+    }
+    .text-primary-emphasis { /* Ensure emphasis colors have contrast */
+         color: #8fbcff !important;
+    }
+     .text-secondary-emphasis {
+         color: #adb5bd !important;
+     }
+    .text-success-emphasis {
+         color: #75b798 !important;
+     }
+     .text-info-emphasis {
+         color: #6bceee !important;
+     }
+     .text-warning-emphasis {
+         color: #ffda6a !important;
+     }
+     .text-danger-emphasis {
+         color: #ff8f8f !important;
+     }
+
+
+    /* Adjust form controls for dark mode */
+    .form-control, .form-select {
+        background-color: #495057;
+        color: #dee2e6;
+        border-color: #6c757d;
+    }
+    .form-control::placeholder {
+        color: #adb5bd;
+    }
+     .form-control:focus, .form-select:focus {
+        background-color: #495057;
+        color: #dee2e6;
+        border-color: #80bdff; /* Bootstrap focus color */
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Bootstrap focus shadow */
+     }
+
+    /* Adjust buttons for dark mode */
+    .btn-outline-secondary {
+        color: #adb5bd;
+        border-color: #6c757d;
+    }
+    .btn-outline-secondary:hover {
+        color: #fff;
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+    .btn-light { /* Adjust light buttons */
+        background-color: #495057;
+        border-color: #495057;
+        color: #dee2e6;
+    }
+     .btn-light:hover {
+        background-color: #5a6268;
+        border-color: #5a6268;
+        color: #fff;
+     }
+
+
+    /* Improve hover effect shadow in dark mode */
+    .hover-lift:hover .card {
+        box-shadow: 0 0.4rem 0.8rem rgba(0, 0, 0, 0.3) !important; /* Darker shadow */
+    }
+
+    /* Adjust background for subtle variations */
+    .bg-light {
+      background-color: #343a40 !important; /* Override Bootstrap light */
+    }
+     .bg-light-subtle {
+        background-color: #3a4147 !important;
+     }
+
+    /* Fix DayPicker styles for dark mode */
+    .rdp {
+        --rdp-cell-size: 36px; /* Adjust size if needed */
+        --rdp-accent-color: #6ea8fe; /* Use a light blue */
+        --rdp-background-color: #495057; /* Darker background for selected */
+        --rdp-accent-color-dark: #6ea8fe;
+        --rdp-background-color-dark: #495057;
+        --rdp-outline: 2px solid var(--rdp-accent-color);
+        --rdp-outline-selected: 3px solid var(--rdp-accent-color);
+        --rdp-selected-color: #fff; /* Text color for selected day */
+        color: #dee2e6; /* Default text color */
+        border-color: #6c757d !important;
+        background-color: #343a40 !important; /* Background of the picker */
+    }
+    .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+      background-color: #495057; /* Darker hover */
+    }
+     .rdp-button:focus-visible:not([disabled]) {
+         border: none; /* Remove default border */
+         box-shadow: 0 0 0 2px var(--rdp-accent-color); /* Use box-shadow for focus */
+         z-index: 2; /* Ensure focus ring is visible */
+     }
+    .rdp-caption_label {
+        color: #dee2e6;
+    }
+     .rdp-head_cell {
+        color: #adb5bd; /* Lighter muted color for weekdays */
+     }
+     .rdp-caption_dropdowns { /* Style dropdowns */
+        background-color: #495057;
+     }
+     .rdp-dropdown {
+        background-color: #495057;
+        color: #dee2e6;
+        border: 1px solid #6c757d;
+        border-radius: .25rem; /* Match Bootstrap */
+     }
+      .rdp-dropdown:focus-visible {
+         border-color: #80bdff;
+         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+         outline: none;
+      }
+
 }
