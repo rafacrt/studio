@@ -6,7 +6,8 @@ import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout';
 import { useOSStore } from '@/store/os-store';
 import { OSStatus } from '@/lib/types';
 import Link from 'next/link';
-import { ArrowLeft, FileText as ReportIcon, CheckCircle2, Clock, SortAmountDown, SortAmountUp } from 'lucide-react';
+// Replaced SortAmountDown, SortAmountUp with ArrowDown, ArrowUp
+import { ArrowLeft, FileText as ReportIcon, CheckCircle2, Clock, ArrowDown, ArrowUp } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -85,9 +86,10 @@ export default function ReportsPage() {
     }
   };
 
+  // Updated to use ArrowUp and ArrowDown icons
   const renderSortIcon = (key: SortKey) => {
     if (sortBy !== key) return null;
-    return sortDirection === 'asc' ? <SortAmountUp size={14} className="ms-1" /> : <SortAmountDown size={14} className="ms-1" />;
+    return sortDirection === 'asc' ? <ArrowUp size={14} className="ms-1" /> : <ArrowDown size={14} className="ms-1" />;
   };
 
   if (!isHydrated) {
@@ -178,3 +180,4 @@ export default function ReportsPage() {
 function getSortValue<T, K extends keyof T>(obj: T | null | undefined, key: K): T[K] | null {
     return obj ? obj[key] : null;
 }
+

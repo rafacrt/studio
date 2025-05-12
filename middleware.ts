@@ -11,13 +11,8 @@ export function middleware(request: NextRequest) {
   }
   console.log(`[Middleware] Processing request for path: ${pathname}`);
 
-  // Redirect from / to /dashboard
-  if (pathname === '/') {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/dashboard';
-    console.log(`[Middleware] Redirecting from / to /dashboard.`);
-    return NextResponse.redirect(redirectUrl);
-  }
+  // Removed redirect from / to /dashboard.
+  // Requests to '/' will now be handled by src/app/page.tsx.
 
   console.log(`[Middleware] Allowing request to proceed for path: ${pathname}`);
   return NextResponse.next();
