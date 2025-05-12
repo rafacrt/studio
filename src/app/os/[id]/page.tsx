@@ -1,7 +1,7 @@
 'use client'; 
 
 import { useEffect, useState } from 'react';
-import { useParams }_from 'next/navigation'; // Removed useRouter as it's not used
+import { useParams } from 'next/navigation'; // Fixed syntax: _from -> from
 import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout';
 import OSDetailsView from '@/components/os/OSDetailsView';
 import { useOSStore } from '@/store/os-store';
