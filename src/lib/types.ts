@@ -37,7 +37,7 @@ export interface OS {
 export interface User {
   id: string;
   username: string;
-  // Add other user fields if needed, e.g., name
+  role?: 'admin' | 'client'; // Added role for workflow
 }
 
 // For CreateOSForm
@@ -60,3 +60,15 @@ export interface Client {
     // Add other client details as needed (e.g., contact, address)
 }
 
+// Interface for Workflow Artwork
+export interface Artwork {
+  id: string;
+  clientId: string; // ID of the client this artwork belongs to
+  clientName?: string; // Optional: denormalized client name for display
+  title: string;
+  imageUrl: string;
+  status: 'pending' | 'approved' | 'changes_requested';
+  feedback: string;
+  showFeedbackInput: boolean;
+  uploadedAt: string; // ISO date string when the artwork was uploaded/made available
+}
