@@ -9,6 +9,7 @@ import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOSStore } from '@/store/os-store';
 import { useTheme } from '@/hooks/useTheme'; // Import useTheme
+import React, { useMemo } from 'react'; // Import useMemo
 
 interface OSCardProps {
   os: OS;
