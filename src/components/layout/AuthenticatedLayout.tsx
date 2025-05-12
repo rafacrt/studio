@@ -1,15 +1,17 @@
 
 import type { ReactNode } from 'react';
 import Header from './Header';
-import { getCurrentUser } from '@/lib/auth-actions'; 
-import FooterContent from './FooterContent'; // New component for footer content
+import { getCurrentUser } from '@/lib/auth'; // Import remains the same
+import FooterContent from './FooterContent'; 
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
 }
 
 export default async function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
-  const user = await getCurrentUser();
+  // Calls the simplified getCurrentUser from lib/auth.ts directly.
+  // This function no longer uses cookies() but returns a mock user.
+  const user = await getCurrentUser(); 
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -23,4 +25,3 @@ export default async function AuthenticatedLayout({ children }: AuthenticatedLay
     </div>
   );
 }
-
