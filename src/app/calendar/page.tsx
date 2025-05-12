@@ -111,7 +111,7 @@ export default function CalendarPage() {
      });
 
     return (
-        <div className={`d-flex flex-column h-100 position-relative p-1 ${isSelected ? 'bg-primary-subtle' : ''}`} style={{ minHeight: '100px' }}> {/* Added minHeight */}
+        <div className={`d-flex flex-column h-100 position-relative p-1 ${isSelected ? 'bg-primary-subtle' : ''}`} style={{ minHeight: '120px' }}> {/* Increased minHeight */}
            {/* Day Number - Positioned top-right */}
             <span className={`position-absolute top-0 end-0 p-1 small ${isToday(props.date) ? 'bg-primary text-white rounded-circle lh-1 d-inline-flex justify-content-center align-items-center' : ''}`}
                   style={isToday(props.date) ? { width: '1.5rem', height: '1.5rem'} : {}}
@@ -120,7 +120,7 @@ export default function CalendarPage() {
             </span>
            {/* OS List */}
             <div className="mt-3 small flex-grow-1 overflow-auto" style={{ fontSize: '0.7rem' }}> {/* Reduced font size, allow scroll */}
-             {sortedDayOS.slice(0, 3).map(os => { // Limit displayed OS
+             {sortedDayOS.slice(0, 4).map(os => { // Limit displayed OS slightly more
                const isScheduled = os.programadoPara && format(parseISO(os.programadoPara), 'yyyy-MM-dd') === dateStr;
                const isFinalized = os.dataFinalizacao && format(parseISO(os.dataFinalizacao), 'yyyy-MM-dd') === dateStr;
                const colorClass = getStatusColorClass(os.status);
@@ -136,8 +136,8 @@ export default function CalendarPage() {
                    </Link>
                );
              })}
-             {sortedDayOS.length > 3 && (
-                 <div className="text-muted text-center mt-1">+{sortedDayOS.length - 3} mais</div>
+             {sortedDayOS.length > 4 && (
+                 <div className="text-muted text-center mt-1">+{sortedDayOS.length - 4} mais</div>
              )}
             </div>
         </div>
@@ -145,16 +145,13 @@ export default function CalendarPage() {
   };
 
   // --- Modifiers ---
-  // Minimal modifiers, styling mostly done in DayContent
   const modifiers: Modifiers = useMemo(() => ({
     scheduled: scheduledDates,
     finalized: finalizedDates,
   }), [scheduledDates, finalizedDates]);
 
   const modifiersStyles = {
-     // Add subtle indicators if needed, but DayContent handles most visual cues
-     // scheduled: { backgroundColor: 'rgba(var(--bs-info-rgb), 0.1)' },
-     // finalized: { backgroundColor: 'rgba(var(--bs-success-rgb), 0.1)' },
+     // Styling is mostly handled by DayContent now
   };
 
 
@@ -179,49 +176,47 @@ export default function CalendarPage() {
         </Link>
       </div>
 
-      {/* Calendar takes full width */}
-      <div className="card shadow-sm">
-        <div className="card-body p-0"> {/* Remove padding from card body */}
-            <DayPicker
-               mode="single" // Keep single selection for potential focus/highlight
-               // selected={selectedDate} // Manage selection if needed
-               // onSelect={setSelectedDate}
-               month={currentMonth}
-               onMonthChange={setCurrentMonth}
-               locale={ptBR}
-               showOutsideDays
-               fixedWeeks // Important for grid layout
-               modifiers={modifiers}
-               modifiersStyles={modifiersStyles}
-               components={{ DayContent }} // Use custom component
-               captionLayout="dropdown-buttons"
-               fromYear={2020}
-               toYear={new Date().getFullYear() + 2}
-               className="w-100 border-0" // Full width, remove default border
-               classNames={{
-                   root: 'p-3', // Add padding to the root container instead
-                   table: 'border-top border-start w-100', // Full width table with borders
-                   head_row: 'bg-light',
-                   head_cell: 'text-muted small fw-medium text-center border-end border-bottom py-2',
-                   row: '', // Rows don't need specific styles here
-                   cell: 'border-end border-bottom p-0 align-top', // Remove padding, align top, add borders
-                   day: 'd-block w-100 h-100', // Make day fill cell
-                   day_today: '', // Today styling handled in DayContent
-                   day_outside: 'text-muted opacity-50',
-                   day_selected: '', // Selection styling handled in DayContent
-                   caption_label: 'fs-5 fw-bold',
-                   nav_button: 'btn btn-outline-secondary border-0',
-                   // Add other classes as needed
-               }}
-           />
-        </div>
-        {/* Legend (optional, might be redundant with inline indicators) */}
-         <div className="card-footer text-muted small d-flex align-items-center justify-content-center gap-3">
+      {/* Calendar takes full width within the container */}
+      {/* Removed card wrapper */}
+      <div className="border rounded shadow-sm overflow-hidden"> {/* Add border/shadow directly */}
+         <DayPicker
+           mode="single" // Keep single selection for potential focus/highlight
+           month={currentMonth}
+           onMonthChange={setCurrentMonth}
+           locale={ptBR}
+           showOutsideDays
+           fixedWeeks // Important for grid layout
+           modifiers={modifiers}
+           modifiersStyles={modifiersStyles}
+           components={{ DayContent }} // Use custom component
+           captionLayout="dropdown-buttons"
+           fromYear={2020}
+           toYear={new Date().getFullYear() + 2}
+           className="w-100 border-0" // DayPicker is already w-100
+           classNames={{
+               root: 'p-3 bg-body', // Add padding and ensure background color
+               table: 'border-top border-start w-100 table-fixed', // Full width table with borders, table-fixed might help layout
+               head_row: 'bg-light',
+               head_cell: 'text-muted small fw-medium text-center border-end border-bottom py-2',
+               row: '', // Rows don't need specific styles here
+               cell: 'border-end border-bottom p-0 align-top', // Remove padding, align top, add borders
+               day: 'd-block w-100 h-100', // Make day fill cell
+               day_today: '', // Today styling handled in DayContent
+               day_outside: 'text-muted opacity-50',
+               day_selected: '', // Selection styling handled in DayContent
+               caption: 'px-3 pt-2', // Add padding to caption
+               caption_label: 'fs-5 fw-bold',
+               nav_button: 'btn btn-outline-secondary border-0',
+               // Add other classes as needed
+           }}
+       />
+         {/* Legend */}
+         <div className="p-2 border-top text-muted small d-flex align-items-center justify-content-center gap-3 bg-light">
              <span className="d-inline-flex align-items-center"><Clock size={12} className="me-1"/> Programada</span>
              <span className="d-inline-flex align-items-center"><CheckCircle size={12} className="me-1 text-success"/> Finalizada</span>
              {/* Add more legend items if needed */}
          </div>
-      </div>
+       </div>
     </AuthenticatedLayout>
   );
 }

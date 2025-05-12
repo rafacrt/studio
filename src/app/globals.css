@@ -22,14 +22,21 @@ body {
 .rdp-table {
   flex-grow: 1; /* Allow table to grow */
   border-collapse: collapse; /* Ensure borders combine correctly */
+  table-layout: fixed; /* Ensure columns have equal width */
 }
+
+/* Utility class for fixed table layout */
+.table-fixed {
+    table-layout: fixed;
+}
+
 
 .rdp-tbody {
     height: 100%; /* Allow body to take height */
 }
 
 .rdp-row {
-    height: calc(100% / 6); /* Distribute height among rows (assuming 6 weeks) */
+    /* Let height be determined by content and flexbox */
 }
 
 .rdp-cell {
@@ -159,6 +166,10 @@ body {
      .bg-light-subtle {
         background-color: #3a4147 !important;
      }
+     .bg-body {
+        background-color: #212529 !important; /* Ensure bg-body matches dark body */
+     }
+
 
     /* Fix DayPicker styles for dark mode */
     .rdp {
@@ -171,7 +182,7 @@ body {
         --rdp-outline-selected: 3px solid var(--rdp-accent-color);
         --rdp-selected-color: #fff; /* Text color for selected day */
         color: #dee2e6; /* Default text color */
-        background-color: transparent; /* Let card handle background */
+        background-color: transparent; /* Let container handle background */
     }
      .rdp-table {
         border-color: #495057 !important; /* Ensure table borders are visible */
