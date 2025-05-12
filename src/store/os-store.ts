@@ -1,22 +1,28 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { OS, CreateOSData } from '@/lib/types';
+import type { OS, CreateOSData, Client } from '@/lib/types'; // Import Client type
 import { OSStatus } from '@/lib/types';
 // Removed toast import
 
 interface OSState {
   osList: OS[];
   nextOsNumber: number;
-  partners: string[]; // Added list of unique partners
+  partners: string[]; // Derived list of unique partners from OS
+  clients: Client[]; // Added list of clients
   addOS: (data: CreateOSData) => OS;
   updateOS: (updatedOS: OS) => void;
   updateOSStatus: (osId: string, newStatus: OSStatus) => void;
   getOSById: (osId: string) => OS | undefined;
-  setInitialData: (data: OS[], nextNumber: number, partners: string[]) => void; // Updated signature
+  setInitialData: (data: OS[], nextNumber: number, partners: string[], clients: Client[]) => void; // Updated signature
   duplicateOS: (osId: string) => void;
   toggleUrgent: (osId: string) => void;
-  addPartner: (partnerName: string) => void; // Added action to add a new partner
+  addPartner: (partnerName: string) => void; // Adds partner to derived list if new OS uses it
+  // Client Actions
+  addClient: (clientData: Omit<Client, 'id'>) => Client;
+  updateClient: (updatedClient: Client) => void;
+  deleteClient: (clientId: string) => void;
+  getClientById: (clientId: string) => Client | undefined;
 }
 
 const generateOSNumero = (num: number): string => String(num).padStart(6, '0');
@@ -39,12 +45,20 @@ const getDatePlusDays = (days: number): string => {
     return date.toISOString().split('T')[0]; // Return only YYYY-MM-DD
 }
 
+// Initial mock clients
+const initialMockClients: Client[] = [
+    { id: 'client-1', name: 'Soluções Tech Ltda.' },
+    { id: 'client-2', name: 'Café Aconchego' },
+    { id: 'client-3', name: 'Logística Global Express' },
+    { id: 'client-4', name: 'Eco Verde Sustentável' },
+];
+
 // Initial mock data - Added 'programadoPara'
 const initialMockOS: OS[] = [
   {
     id: '1',
     numero: generateOSNumero(1),
-    cliente: 'Soluções Tech Ltda.',
+    cliente: 'Soluções Tech Ltda.', // Matches name in initialMockClients
     parceiro: 'Design Criativo Co.',
     projeto: 'Redesenho do Website',
     tarefa: 'Coleta de requisitos e briefing inicial com o cliente.',
@@ -58,7 +72,7 @@ const initialMockOS: OS[] = [
   {
     id: '2',
     numero: generateOSNumero(2),
-    cliente: 'Café Aconchego',
+    cliente: 'Café Aconchego', // Matches name in initialMockClients
     projeto: 'Desenvolvimento App Mobile',
     tarefa: 'Fase 1: Mockups de UI/UX.',
     observacoes: 'Fase 1: Mockups de design UI/UX. Foco em interface amigável.',
@@ -71,7 +85,7 @@ const initialMockOS: OS[] = [
   {
     id: '3',
     numero: generateOSNumero(3),
-    cliente: 'Logística Global Express',
+    cliente: 'Logística Global Express', // Matches name in initialMockClients
     parceiro: 'Integra Sys',
     projeto: 'Integração CRM',
     tarefa: 'Aguardar chaves de API e documentação do parceiro.',
@@ -84,7 +98,7 @@ const initialMockOS: OS[] = [
   {
     id: '4',
     numero: generateOSNumero(4),
-    cliente: 'Eco Verde Sustentável',
+    cliente: 'Eco Verde Sustentável', // Matches name in initialMockClients
     projeto: 'Pacote de Branding',
     tarefa: 'Entrega final do manual da marca e aprovação.',
     observacoes: 'Guia completo de branding entregue e aprovado pelo cliente.',
@@ -97,7 +111,7 @@ const initialMockOS: OS[] = [
   {
     id: '5',
     numero: generateOSNumero(5),
-    cliente: 'Soluções Tech Ltda.',
+    cliente: 'Soluções Tech Ltda.', // Matches name in initialMockClients
     parceiro: 'Marketing Experts',
     projeto: 'Campanha de Marketing Digital',
     tarefa: 'Planejamento da estratégia de mídia social para Q1.',
@@ -114,9 +128,15 @@ export const useOSStore = create<OSState>()(
     (set, get) => ({
       osList: initialMockOS,
       nextOsNumber: initialMockOS.length + 1,
-      partners: getUniquePartners(initialMockOS), // Initialize partners list
+      partners: getUniquePartners(initialMockOS), // Initialize derived partners list
+      clients: initialMockClients, // Initialize clients list
 
-      setInitialData: (data, nextNumber, partners) => set({ osList: data, nextOsNumber: nextNumber, partners: partners }),
+      setInitialData: (data, nextNumber, partners, clients) => set({
+          osList: data,
+          nextOsNumber: nextNumber,
+          partners: partners,
+          clients: clients // Set initial clients
+      }),
 
       addOS: (data) => {
         const currentOsNumber = get().nextOsNumber;
@@ -131,17 +151,23 @@ export const useOSStore = create<OSState>()(
           tempoTrabalhado: data.tempoTrabalhado,
           status: data.status || OSStatus.NA_FILA, // Default to NA_FILA
           dataAbertura: new Date().toISOString(),
-          programadoPara: data.programadoPara || undefined, // Add programadoPara
+          // Ensure programadoPara is stored as YYYY-MM-DD string or undefined
+          programadoPara: data.programadoPara ? data.programadoPara.split('T')[0] : undefined,
           isUrgent: data.isUrgent || false,
         };
         set((state) => ({
           osList: [...state.osList, newOS],
           nextOsNumber: currentOsNumber + 1,
-          // Update partners if a new one was added
+          // Update derived partners if a new one was used in the OS
           partners: data.parceiro && !state.partners.includes(data.parceiro)
                       ? [...state.partners, data.parceiro].sort()
                       : state.partners,
         }));
+        // Add client to client list if it doesn't exist (simple name check for now)
+        const clientExists = get().clients.some(c => c.name.toLowerCase() === data.cliente.toLowerCase());
+        if (!clientExists) {
+             get().addClient({ name: data.cliente });
+        }
         return newOS;
       },
 
@@ -149,8 +175,13 @@ export const useOSStore = create<OSState>()(
         set((state) => {
              // Check if the partner was updated and is new
              const partnerIsNew = updatedOS.parceiro && !state.partners.includes(updatedOS.parceiro);
+             // Ensure programadoPara is stored correctly
+             const finalUpdatedOS = {
+                 ...updatedOS,
+                 programadoPara: updatedOS.programadoPara ? updatedOS.programadoPara.split('T')[0] : undefined,
+             };
              return {
-                 osList: state.osList.map((os) => (os.id === updatedOS.id ? updatedOS : os)),
+                 osList: state.osList.map((os) => (os.id === finalUpdatedOS.id ? finalUpdatedOS : os)),
                  partners: partnerIsNew
                              ? [...state.partners, updatedOS.parceiro!].sort()
                              : state.partners,
@@ -203,6 +234,7 @@ export const useOSStore = create<OSState>()(
       },
 
       addPartner: (partnerName: string) => {
+          // This action is primarily for ensuring consistency if a partner is added via OS creation/update
           set((state) => {
               if (partnerName && !state.partners.includes(partnerName)) { // Ensure partnerName is not empty
                   return { partners: [...state.partners, partnerName].sort() };
@@ -210,9 +242,47 @@ export const useOSStore = create<OSState>()(
               return {}; // No change if partner already exists or is empty
           });
       },
+
+      // --- Client Actions ---
+       getClientById: (clientId) => get().clients.find(c => c.id === clientId),
+
+      addClient: (clientData) => {
+        const newClient: Client = {
+          id: crypto.randomUUID(),
+          name: clientData.name.trim(),
+        };
+        set((state) => ({
+          clients: [...state.clients, newClient].sort((a, b) => a.name.localeCompare(b.name)),
+        }));
+        console.log(`Cliente "${newClient.name}" adicionado.`);
+        return newClient;
+      },
+
+      updateClient: (updatedClient) => {
+         set((state) => ({
+          clients: state.clients.map((client) =>
+            client.id === updatedClient.id ? { ...client, name: updatedClient.name.trim() } : client
+          ).sort((a, b) => a.name.localeCompare(b.name)),
+        }));
+        console.log(`Cliente "${updatedClient.name}" atualizado.`);
+      },
+
+      deleteClient: (clientId) => {
+        const clientToDelete = get().getClientById(clientId);
+        if (clientToDelete) {
+            set((state) => ({
+                clients: state.clients.filter((client) => client.id !== clientId),
+            }));
+            console.log(`Cliente "${clientToDelete.name}" removido.`);
+            // Note: This doesn't check if the client is used in existing OS.
+            // You might want to add a check or prevent deletion if used.
+        }
+      },
+
+
     }),
     {
-      name: 'freelaos-storage-v4-schedule', // Updated storage key name for potential migration
+      name: 'freelaos-storage-v5-calendar-entities', // Updated storage key name
       storage: createJSONStorage(() => localStorage),
        // Define parts of state to include/exclude if needed
        // partialize: (state) => ({ osList: state.osList, nextOsNumber: state.nextOsNumber, partners: state.partners }),
@@ -222,4 +292,3 @@ export const useOSStore = create<OSState>()(
     }
   )
 );
-

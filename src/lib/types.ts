@@ -1,3 +1,4 @@
+
 export enum OSStatus {
   NA_FILA = "Na Fila",
   AGUARDANDO_CLIENTE = "Aguardando Cliente",
@@ -17,7 +18,7 @@ export const ALL_OS_STATUSES: OSStatus[] = [
 export interface OS {
   id: string;
   numero: string; // 6-digit sequential number
-  cliente: string;
+  cliente: string; // Keep as string for now, link conceptually to Client list
   parceiro?: string;
   projeto: string;
   tarefa: string; // New field
@@ -26,7 +27,7 @@ export interface OS {
   status: OSStatus;
   dataAbertura: string; // ISO Date string (includes time)
   dataFinalizacao?: string; // ISO Date string
-  programadoPara?: string; // ISO Date string (optional) - NEW
+  programadoPara?: string; // ISO Date string (optional, YYYY-MM-DD format expected from input) - NEW
   isUrgent: boolean;
 }
 
@@ -45,6 +46,13 @@ export interface CreateOSData {
   observacoes: string;
   tempoTrabalhado?: string;
   status: OSStatus; // Should default to NA_FILA
-  programadoPara?: string; // NEW
+  programadoPara?: string; // NEW, expects YYYY-MM-DD
   isUrgent: boolean;
+}
+
+// Interface for managing Clients separately
+export interface Client {
+    id: string;
+    name: string;
+    // Add other client details as needed (e.g., contact, address)
 }
