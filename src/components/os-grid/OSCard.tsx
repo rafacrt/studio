@@ -1,14 +1,10 @@
+
 'use client';
 
 import Link from 'next/link';
 import type { OS } from '@/lib/types';
 import { OSStatus, ALL_OS_STATUSES } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import { Eye, CalendarClock, Flag, Copy, AlertTriangle, Edit3, CheckCircle2, Clock, Server, Users, FileText, User } from 'lucide-react'; // Added User icon here
+import { CalendarClock, Flag, Copy, AlertTriangle, CheckCircle2, Clock, Server, Users, FileText, User } from 'lucide-react'; // Using lucide-react icons
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOSStore } from '@/store/os-store';
@@ -18,36 +14,35 @@ interface OSCardProps {
   os: OS;
 }
 
-const getStatusColorClass = (status: OSStatus, type: 'text' | 'bg' | 'border' = 'border') => {
-  // These class names should match those in globals.css
-  // Assuming enum values are like "Na Fila", "Aguardando Cliente", etc.
-  // The CSS variables are named without spaces or special characters.
-  // Example: OSStatus.AGUARDANDO_CLIENTE -> "status-aguardando-cliente"
-  const statusSlug = status.toLowerCase().replace(/\s+/g, '-');
+// Helper to get Bootstrap text/border color classes based on status
+const getStatusClass = (status: OSStatus, isUrgent: boolean): string => {
+  if (isUrgent) return 'border-danger text-danger'; // Urgent takes precedence
+
   switch (status) {
-    case OSStatus.NA_FILA:
-      return `${type}-muted-foreground`; // Or a specific color for "Na Fila"
-    case OSStatus.AGUARDANDO_CLIENTE:
-      return `${type}-status-aguardando-cliente`;
-    case OSStatus.EM_PRODUCAO:
-      return `${type}-status-em-producao`;
-    case OSStatus.AGUARDANDO_PARCEIRO:
-      return `${type}-status-aguardando-parceiro`;
-    case OSStatus.FINALIZADO:
-      return `${type}-status-finalizado`;
-    default:
-      return `${type}-muted-foreground`;
+    case OSStatus.NA_FILA: return 'border-secondary text-secondary';
+    case OSStatus.AGUARDANDO_CLIENTE: return 'border-warning text-warning-emphasis';
+    case OSStatus.EM_PRODUCAO: return 'border-info text-info-emphasis';
+    case OSStatus.AGUARDANDO_PARCEIRO: return 'border-primary text-primary-emphasis'; // Example: using primary for partner
+    case OSStatus.FINALIZADO: return 'border-success text-success-emphasis';
+    default: return 'border-secondary text-secondary';
   }
 };
 
+// Helper for background color for urgent badge
+const getUrgentBgClass = (isUrgent: boolean): string => {
+    return isUrgent ? 'bg-danger-subtle' : '';
+};
+
 const getStatusIcon = (status: OSStatus) => {
+    // Using Bootstrap Icons class names potentially, or keeping Lucide
+    // Using Lucide for consistency for now
   switch (status) {
-    case OSStatus.NA_FILA: return <Clock className="h-3 w-3 mr-1" />;
-    case OSStatus.AGUARDANDO_CLIENTE: return <User className="h-3 w-3 mr-1" />; // User icon is now defined
-    case OSStatus.EM_PRODUCAO: return <Server className="h-3 w-3 mr-1" />;
-    case OSStatus.AGUARDANDO_PARCEIRO: return <Users className="h-3 w-3 mr-1" />;
-    case OSStatus.FINALIZADO: return <CheckCircle2 className="h-3 w-3 mr-1" />;
-    default: return <FileText className="h-3 w-3 mr-1" />;
+    case OSStatus.NA_FILA: return <Clock size={14} className="me-1" />;
+    case OSStatus.AGUARDANDO_CLIENTE: return <User size={14} className="me-1" />;
+    case OSStatus.EM_PRODUCAO: return <Server size={14} className="me-1" />;
+    case OSStatus.AGUARDANDO_PARCEIRO: return <Users size={14} className="me-1" />;
+    case OSStatus.FINALIZADO: return <CheckCircle2 size={14} className="me-1" />;
+    default: return <FileText size={14} className="me-1" />;
   }
 };
 
@@ -56,108 +51,103 @@ export default function OSCard({ os }: OSCardProps) {
   const { updateOSStatus, toggleUrgent, duplicateOS } = useOSStore();
   const { toast } = useToast();
 
-  const cardClasses = cn(
-    "shadow-lg hover:shadow-xl transition-shadow duration-200 flex flex-col h-full",
-    getStatusColorClass(os.status, 'border'),
-    "border-l-4", 
-    os.isUrgent && "urgent-highlight bg-red-500/5 dark:bg-red-500/10"
-  );
+  const statusClass = getStatusClass(os.status, os.isUrgent);
+  const urgentBgClass = getUrgentBgClass(os.isUrgent);
 
-  const handleStatusChange = (newStatus: string) => {
-    updateOSStatus(os.id, newStatus as OSStatus);
+  const cardClasses = `card h-100 shadow-sm hover-shadow transition-shadow duration-200 border-start border-4 ${statusClass} ${urgentBgClass}`;
+
+  const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newStatus = event.target.value as OSStatus;
+    updateOSStatus(os.id, newStatus);
     toast({
       title: 'Status Atualizado',
       description: `OS "${os.projeto}" movida para ${newStatus}.`,
     });
   };
 
-  const handleToggleUrgent = () => {
+  const handleToggleUrgent = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent link navigation when clicking the button
+    e.stopPropagation();
     toggleUrgent(os.id);
-    // Toast is handled in the store action
   };
 
-  const handleDuplicateOS = () => {
+  const handleDuplicateOS = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent link navigation
+    e.stopPropagation();
     duplicateOS(os.id);
-    // Toast is handled in the store action
   };
-  
+
   return (
-    <Card className={cardClasses}>
-      <CardHeader className="p-4 pb-2">
-        <div className="flex justify-between items-start mb-1">
-          <CardTitle className="text-sm font-semibold leading-tight text-primary">
-            OS: {os.numero}
-          </CardTitle>
-           {os.isUrgent && (
-            <Badge variant="destructive" className="bg-status-urgente text-status-urgente text-xs h-5 px-1.5 py-0.5">
-              <AlertTriangle className="h-2.5 w-2.5 mr-1"/> Urgente
-            </Badge>
-          )}
-        </div>
-        <div className="flex justify-between items-baseline">
-            <p className="text-base font-medium text-foreground truncate" title={os.cliente}>{os.cliente}</p>
-            <p className="text-xs text-muted-foreground ml-2 truncate flex-shrink-0" title={os.projeto}>{os.projeto}</p>
-        </div>
-         {os.parceiro && (
-          <CardDescription className="text-xs text-muted-foreground pt-0.5">
-            Parceiro: {os.parceiro}
-          </CardDescription>
-        )}
-      </CardHeader>
-      <CardContent className="p-4 pt-2 pb-2 flex-grow">
-        <div className="text-xs text-muted-foreground flex items-center mb-2">
-          <CalendarClock className="h-3 w-3 mr-1.5" />
-          Abertura: {format(parseISO(os.dataAbertura), "dd/MM/yy HH:mm", { locale: ptBR })}
-        </div>
-        
-        <div className="mb-3">
-            <Select value={os.status} onValueChange={handleStatusChange}>
-            <SelectTrigger className={cn("h-8 text-xs w-full", getStatusColorClass(os.status, 'text'), getStatusColorClass(os.status, 'border'))}>
-                <div className="flex items-center">
-                    {getStatusIcon(os.status)}
-                    <SelectValue placeholder="Mudar status" />
-                </div>
-            </SelectTrigger>
-            <SelectContent>
-                {ALL_OS_STATUSES.map(s => (
-                <SelectItem key={s} value={s} className="text-xs">
-                    <div className="flex items-center">
-                        {getStatusIcon(s)}
-                        {s}
+    // Wrap the entire card content in a Link
+    <Link href={`/os/${os.id}`} passHref legacyBehavior>
+        <a className="text-decoration-none text-reset d-block h-100">
+            <div className={cardClasses}>
+                <div className="card-header p-3 pb-2">
+                    <div className="d-flex justify-content-between align-items-start mb-1">
+                        <span className="fw-semibold text-primary small">OS: {os.numero}</span>
+                        {os.isUrgent && (
+                        <span className="badge bg-danger text-white px-1 py-0 small d-flex align-items-center">
+                            <AlertTriangle size={12} className="me-1" /> Urgente
+                        </span>
+                        )}
                     </div>
-                </SelectItem>
-                ))}
-            </SelectContent>
-            </Select>
-        </div>
-        <p className="text-xs text-foreground line-clamp-2 mb-1" title={os.tarefa}>
-          <strong>Tarefa:</strong> {os.tarefa}
-        </p>
-         {os.tempoTrabalhado && (
-          <p className="text-xs text-muted-foreground line-clamp-1" title={os.tempoTrabalhado}>
-            <strong>Tempo:</strong> {os.tempoTrabalhado}
-          </p>
-        )}
+                    <div className="d-flex justify-content-between align-items-baseline">
+                        <p className="card-title fs-6 fw-medium mb-0 text-truncate" title={os.cliente}>{os.cliente}</p>
+                        <p className="text-muted small ms-2 text-truncate flex-shrink-0" title={os.projeto}>{os.projeto}</p>
+                    </div>
+                    {os.parceiro && (
+                        <p className="card-subtitle small text-muted mt-1 mb-0">Parceiro: {os.parceiro}</p>
+                    )}
+                </div>
+                <div className="card-body p-3 pt-2 pb-2 d-flex flex-column">
+                    <div className="text-muted small d-flex align-items-center mb-2">
+                         <CalendarClock size={14} className="me-1 flex-shrink-0" />
+                         <span className="text-truncate">
+                            Abertura: {format(parseISO(os.dataAbertura), "dd/MM/yy HH:mm", { locale: ptBR })}
+                         </span>
+                    </div>
 
-
-      </CardContent>
-      <CardFooter className="p-3 border-t mt-auto">
-        <div className="flex justify-between items-center w-full gap-2">
-            <Button variant={os.isUrgent ? "destructive" : "outline"} size="sm" onClick={handleToggleUrgent} className="text-xs flex-1 h-7 px-2 py-1">
-              <Flag className="h-3 w-3 mr-1" /> {os.isUrgent ? "Urgente!" : "Marcar Urgente"}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleDuplicateOS} className="text-xs flex-1 h-7 px-2 py-1">
-              <Copy className="h-3 w-3 mr-1" /> Duplicar
-            </Button>
-        </div>
-      </CardFooter>
-       <div className="p-3 border-t">
-         <Link href={`/os/${os.id}`} prefetch={false} className="w-full">
-          <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 w-full text-xs h-7">
-            <Eye className="h-3.5 w-3.5 mr-1.5" /> Ver Detalhes
-          </Button>
-        </Link>
-       </div>
-    </Card>
+                    <div className="mb-3">
+                         <select
+                            className={`form-select form-select-sm ${statusClass.replace('text-', 'border-')}`} // Use border color for select
+                            value={os.status}
+                            onChange={handleStatusChange}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} // Prevent link navigation
+                            aria-label="Mudar status da OS"
+                            style={{ fontSize: '0.75rem' }} // smaller text
+                        >
+                            {ALL_OS_STATUSES.map(s => (
+                            <option key={s} value={s}>
+                                {/* Icon text is tricky in option, maybe skip or use unicode */}
+                                {s}
+                            </option>
+                            ))}
+                        </select>
+                    </div>
+                    {/* Moved Buttons to Footer */}
+                </div>
+                 <div className="card-footer p-2 border-top bg-light">
+                    <div className="d-flex flex-column gap-1">
+                         {/* Buttons */}
+                        <button
+                            className={`btn ${os.isUrgent ? 'btn-danger' : 'btn-outline-danger'} btn-sm w-100 d-flex align-items-center justify-content-center`}
+                            onClick={handleToggleUrgent}
+                            style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }} // smaller button
+                        >
+                            <Flag size={14} className="me-1" /> {os.isUrgent ? "Urgente!" : "Marcar Urgente"}
+                        </button>
+                         <button
+                            className="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center"
+                            onClick={handleDuplicateOS}
+                            style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }} // smaller button
+                        >
+                            <Copy size={14} className="me-1" /> Duplicar
+                        </button>
+                         {/* Removed View Details Button */}
+                    </div>
+                </div>
+            </div>
+        </a>
+    </Link>
   );
 }

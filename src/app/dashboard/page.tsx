@@ -1,35 +1,35 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout';
 import PostLoginAnimation from '@/components/layout/PostLoginAnimation';
 import OSGrid from '@/components/os-grid/OSGrid';
-import { Loader2 } from 'lucide-react';
+// Removed Loader2, using Bootstrap spinner
 
 // Session storage key
 const ANIMATION_PLAYED_KEY = 'freelaos_animation_played';
 
 export default function DashboardPage() {
   const [isClient, setIsClient] = useState(false);
-  const [showAnimation, setShowAnimation] = useState(true); // Default to true to play animation first time
+  // Default to false now that login screen is removed, animation plays first time only
+  const [showAnimation, setShowAnimation] = useState(false);
 
   useEffect(() => {
     // This effect runs only on the client after hydration
     setIsClient(true);
     try {
       const animationPlayed = sessionStorage.getItem(ANIMATION_PLAYED_KEY);
-      if (animationPlayed === 'true') {
-        setShowAnimation(false);
-      } else {
-        // If not played or key doesn't exist, ensure animation is set to play.
-        // This also handles cases where sessionStorage might have been cleared.
+      if (animationPlayed !== 'true') {
+        // Play animation only if it hasn't been played
         setShowAnimation(true);
+      } else {
+        setShowAnimation(false);
       }
     } catch (error) {
       console.warn("Session storage not available or error accessing it:", error);
-      // Fallback if session storage is not available (e.g. SSR or incognito quirks)
-      // We still want the animation to play if we can't determine if it has played before.
-      setShowAnimation(true); 
+      // Fallback: Don't show animation if session storage fails
+      setShowAnimation(false);
     }
   }, []); // Empty dependency array ensures this runs once on mount
 
@@ -43,13 +43,14 @@ export default function DashboardPage() {
   };
 
   // Initial loading state until isClient is true.
-  // This helps prevent hydration mismatches if server renders nothing for this client component body.
   if (!isClient) {
     return (
       <AuthenticatedLayout>
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center p-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="mt-4 text-lg text-muted-foreground">Carregando painel...</p>
+        <div className="d-flex flex-column align-items-center justify-content-center text-center p-4" style={{ minHeight: 'calc(100vh - 200px)' }}>
+           <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                <span className="visually-hidden">Loading...</span>
+           </div>
+          <p className="mt-3 text-muted fs-5">Carregando painel...</p>
         </div>
       </AuthenticatedLayout>
     );
@@ -65,7 +66,8 @@ export default function DashboardPage() {
 
   return (
     <AuthenticatedLayout>
-      <div className="p-2 sm:p-4 md:p-6"> {/* Added padding for consistency */}
+      {/* Use Bootstrap padding classes */}
+      <div className="p-2 p-sm-3 p-md-4">
         <OSGrid />
       </div>
     </AuthenticatedLayout>

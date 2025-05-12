@@ -12,12 +12,13 @@ export default function FooterContent() {
 
   if (currentYear === null) {
     // Render a placeholder or nothing until the year is set on the client
-    return <div className="h-5"></div>; // Placeholder to maintain layout consistency
+    return <div style={{ height: '1.5rem' }}></div>; // Placeholder to maintain layout consistency
   }
 
   return (
-    <>
+    // Use standard Bootstrap text classes
+    <span className="text-muted small">
       © {currentYear} FreelaOS Minimal. Todos os direitos reservados.
-    </>
+    </span>
   );
 }

@@ -1,6 +1,4 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
+// Removed cn function as it's related to Tailwind CSS utility merging.
+// Add any Bootstrap-specific utility functions here if needed in the future.
+

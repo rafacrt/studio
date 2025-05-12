@@ -1,30 +1,32 @@
 
-// import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout'; // Temporarily removed
-import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+
 import Link from 'next/link';
+// import { Loader2 } from 'lucide-react'; // Using Bootstrap spinner
 
 export default function HomePage() {
   return (
-    // <AuthenticatedLayout> // Temporarily removed
-      <div className="flex flex-col items-center justify-center min-h-screen flex-1 py-10 text-center p-4">
-        <h1 className="text-3xl font-bold mb-4">Página Inicial de Teste (Simplificada)</h1>
-        <p className="text-lg text-muted-foreground mb-6">
-          Se você está vendo esta mensagem, a rota principal (/) está funcionando.
-        </p>
-        <p className="text-sm text-muted-foreground mb-8">
-          Clique no botão abaixo para tentar acessar o painel de controle.
-        </p>
-        
-        <Link href="/dashboard" passHref>
-          <Button size="lg">
-            Ir para o Painel de Controle
-          </Button>
-        </Link>
+    // Use Bootstrap classes for centering and layout
+    <div className="d-flex flex-column align-items-center justify-content-center min-vh-100 flex-grow-1 py-5 text-center p-4">
+      <h1 className="h2 fw-bold mb-3">Página Inicial de Teste (Simplificada)</h1>
+      <p className="fs-5 text-muted mb-4">
+        Se você está vendo esta mensagem, a rota principal (/) está funcionando.
+      </p>
+      <p className="small text-muted mb-5">
+        Clique no botão abaixo para tentar acessar o painel de controle.
+      </p>
 
-        <Loader2 className="mt-12 h-10 w-10 animate-spin text-primary" />
-        <p className="mt-4 text-sm text-muted-foreground">Simulando carregamento da página inicial...</p>
-      </div>
-    // </AuthenticatedLayout> // Temporarily removed
+      <Link href="/dashboard" passHref legacyBehavior>
+        <a className="btn btn-primary btn-lg"> {/* Bootstrap button */}
+          Ir para o Painel de Controle
+        </a>
+      </Link>
+
+       <div className="mt-5 pt-4 d-flex flex-column align-items-center">
+           <div className="spinner-border text-primary mb-3" role="status" style={{width: '2rem', height: '2rem'}}>
+             <span className="visually-hidden">Loading...</span>
+           </div>
+           <p className="small text-muted">Simulando carregamento da página inicial...</p>
+       </div>
+    </div>
   );
 }

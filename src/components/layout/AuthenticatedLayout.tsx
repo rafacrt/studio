@@ -1,27 +1,28 @@
 
-'use client'; // Add 'use client' because Header and FooterContent are client components
+'use client';
 
 import type { ReactNode } from 'react';
 import Header from './Header';
-import { getCurrentUser } from '@/lib/auth'; // Import remains the same
-import type { User } from '@/lib/types'; // Ensure User is imported as a type
-import FooterContent from './FooterContent'; 
+import { getCurrentUser } from '@/lib/auth';
+import type { User } from '@/lib/types';
+import FooterContent from './FooterContent';
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
 }
 
 export default function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
-  // getCurrentUser is synchronous, call it directly. Explicitly type the user variable.
-  const user: User | null = getCurrentUser(); 
+  const user: User | null = getCurrentUser();
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header user={user} /> {/* Pass the user object */}
-      <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div className="d-flex flex-column min-vh-100">
+      <Header user={user} />
+      {/* Use Bootstrap container for main content */}
+      <main className="container flex-grow-1 py-4 py-lg-5">
         {children}
       </main>
-      <footer className="py-6 text-center text-sm text-muted-foreground border-t">
+      {/* Use Bootstrap footer classes */}
+      <footer className="py-3 mt-auto text-center text-body-secondary border-top bg-light">
         <FooterContent />
       </footer>
     </div>

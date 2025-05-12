@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { OS, CreateOSData } from '@/lib/types';
@@ -7,76 +8,91 @@ import { toast } from '@/hooks/use-toast';
 interface OSState {
   osList: OS[];
   nextOsNumber: number;
+  partners: string[]; // Added list of unique partners
   addOS: (data: CreateOSData) => OS;
   updateOS: (updatedOS: OS) => void;
   updateOSStatus: (osId: string, newStatus: OSStatus) => void;
   getOSById: (osId: string) => OS | undefined;
-  setInitialData: (data: OS[], nextNumber: number) => void;
+  setInitialData: (data: OS[], nextNumber: number, partners: string[]) => void; // Updated signature
   duplicateOS: (osId: string) => void;
   toggleUrgent: (osId: string) => void;
+  addPartner: (partnerName: string) => void; // Added action to add a new partner
 }
 
 const generateOSNumero = (num: number): string => String(num).padStart(6, '0');
 
+// Function to extract unique partners from OS list
+const getUniquePartners = (osList: OS[]): string[] => {
+  const partnerSet = new Set<string>();
+  osList.forEach(os => {
+    if (os.parceiro) {
+      partnerSet.add(os.parceiro);
+    }
+  });
+  return Array.from(partnerSet).sort(); // Sort alphabetically
+};
+
 // Initial mock data
 const initialMockOS: OS[] = [
-  { 
-    id: '1', 
-    numero: generateOSNumero(1), 
-    cliente: 'Soluções Tech Ltda.', 
+  {
+    id: '1',
+    numero: generateOSNumero(1),
+    cliente: 'Soluções Tech Ltda.',
     parceiro: 'Design Criativo Co.',
-    projeto: 'Redesenho do Website', 
+    projeto: 'Redesenho do Website',
     tarefa: 'Coleta de requisitos e briefing inicial com o cliente.',
     observacoes: 'Consulta inicial e levantamento de requisitos. Cliente precisa de um visual moderno.',
     tempoTrabalhado: '2h reunião, 1h documentação',
-    status: OSStatus.AGUARDANDO_CLIENTE, 
-    dataAbertura: new Date(2023, 10, 15, 10, 30).toISOString(), 
-    isUrgent: false 
+    status: OSStatus.AGUARDANDO_CLIENTE,
+    dataAbertura: new Date(2023, 10, 15, 10, 30).toISOString(),
+    isUrgent: false
   },
-  { 
-    id: '2', 
-    numero: generateOSNumero(2), 
-    cliente: 'Café Aconchego', 
-    projeto: 'Desenvolvimento App Mobile', 
+  {
+    id: '2',
+    numero: generateOSNumero(2),
+    cliente: 'Café Aconchego',
+    projeto: 'Desenvolvimento App Mobile',
     tarefa: 'Fase 1: Mockups de UI/UX.',
     observacoes: 'Fase 1: Mockups de design UI/UX. Foco em interface amigável.',
     tempoTrabalhado: '16h design',
-    status: OSStatus.EM_PRODUCAO, 
-    dataAbertura: new Date(2023, 11, 1, 14, 0).toISOString(), 
+    status: OSStatus.EM_PRODUCAO,
+    dataAbertura: new Date(2023, 11, 1, 14, 0).toISOString(),
     isUrgent: true
   },
-  { 
-    id: '3', 
-    numero: generateOSNumero(3), 
-    cliente: 'Logística Global Express', 
-    projeto: 'Integração CRM', 
+  {
+    id: '3',
+    numero: generateOSNumero(3),
+    cliente: 'Logística Global Express',
+    parceiro: 'Integra Sys',
+    projeto: 'Integração CRM',
     tarefa: 'Aguardar chaves de API e documentação do parceiro.',
     observacoes: 'Aguardando chaves de API e documentação da empresa parceira.',
-    status: OSStatus.AGUARDANDO_PARCEIRO, 
+    status: OSStatus.AGUARDANDO_PARCEIRO,
     dataAbertura: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
     isUrgent: false
   },
-  { 
-    id: '4', 
-    numero: generateOSNumero(4), 
-    cliente: 'Eco Verde Sustentável', 
-    projeto: 'Pacote de Branding', 
+  {
+    id: '4',
+    numero: generateOSNumero(4),
+    cliente: 'Eco Verde Sustentável',
+    projeto: 'Pacote de Branding',
     tarefa: 'Entrega final do manual da marca e aprovação.',
     observacoes: 'Guia completo de branding entregue e aprovado pelo cliente.',
-    status: OSStatus.FINALIZADO, 
-    dataAbertura: new Date(2023, 9, 5, 9, 0).toISOString(), 
+    status: OSStatus.FINALIZADO,
+    dataAbertura: new Date(2023, 9, 5, 9, 0).toISOString(),
     dataFinalizacao: new Date(2023, 9, 25, 17, 30).toISOString(),
-    isUrgent: false 
+    isUrgent: false
   },
-  { 
-    id: '5', 
-    numero: generateOSNumero(5), 
-    cliente: 'Soluções Tech Ltda.', 
-    projeto: 'Campanha de Marketing Digital', 
+  {
+    id: '5',
+    numero: generateOSNumero(5),
+    cliente: 'Soluções Tech Ltda.',
+    parceiro: 'Marketing Experts',
+    projeto: 'Campanha de Marketing Digital',
     tarefa: 'Planejamento da estratégia de mídia social para Q1.',
     observacoes: 'Planejando estratégia de mídia social para o primeiro trimestre. Prazo urgente.',
-    status: OSStatus.NA_FILA, 
-    dataAbertura: new Date().toISOString(), 
+    status: OSStatus.NA_FILA,
+    dataAbertura: new Date().toISOString(),
     isUrgent: true
   },
 ];
@@ -84,10 +100,11 @@ const initialMockOS: OS[] = [
 export const useOSStore = create<OSState>()(
   persist(
     (set, get) => ({
-      osList: initialMockOS, 
+      osList: initialMockOS,
       nextOsNumber: initialMockOS.length + 1,
-      
-      setInitialData: (data, nextNumber) => set({ osList: data, nextOsNumber: nextNumber }),
+      partners: getUniquePartners(initialMockOS), // Initialize partners list
+
+      setInitialData: (data, nextNumber, partners) => set({ osList: data, nextOsNumber: nextNumber, partners: partners }),
 
       addOS: (data) => {
         const currentOsNumber = get().nextOsNumber;
@@ -107,15 +124,26 @@ export const useOSStore = create<OSState>()(
         set((state) => ({
           osList: [...state.osList, newOS],
           nextOsNumber: currentOsNumber + 1,
+          // Update partners if a new one was added
+          partners: data.parceiro && !state.partners.includes(data.parceiro)
+                      ? [...state.partners, data.parceiro].sort()
+                      : state.partners,
         }));
         return newOS;
       },
 
       updateOS: (updatedOS) =>
-        set((state) => ({
-          osList: state.osList.map((os) => (os.id === updatedOS.id ? updatedOS : os)),
-        })),
-      
+        set((state) => {
+             // Check if the partner was updated and is new
+             const partnerIsNew = updatedOS.parceiro && !state.partners.includes(updatedOS.parceiro);
+             return {
+                 osList: state.osList.map((os) => (os.id === updatedOS.id ? updatedOS : os)),
+                 partners: partnerIsNew
+                             ? [...state.partners, updatedOS.parceiro!].sort()
+                             : state.partners,
+             };
+        }),
+
       updateOSStatus: (osId, newStatus) =>
         set((state) => ({
           osList: state.osList.map((os) =>
@@ -136,11 +164,11 @@ export const useOSStore = create<OSState>()(
             dataAbertura: new Date().toISOString(),
             status: OSStatus.NA_FILA, // Duplicates start in NA_FILA
             dataFinalizacao: undefined, // Clear finalization date
-            // isUrgent can be copied or reset, let's copy for now
           };
           set((state) => ({
             osList: [...state.osList, duplicatedOS],
             nextOsNumber: currentOsNumber + 1,
+            // Partner list remains unchanged on duplication
           }));
           toast({
             title: "OS Duplicada",
@@ -163,10 +191,24 @@ export const useOSStore = create<OSState>()(
           });
         }
       },
+
+      addPartner: (partnerName: string) => {
+          set((state) => {
+              if (!state.partners.includes(partnerName)) {
+                  return { partners: [...state.partners, partnerName].sort() };
+              }
+              return {}; // No change if partner already exists
+          });
+      },
     }),
     {
-      name: 'freelaos-storage-v2', // Changed name to avoid conflicts with old structure if any
+      name: 'freelaos-storage-v3-bootstrap', // Updated storage key name
       storage: createJSONStorage(() => localStorage),
+       // Define parts of state to include/exclude if needed
+       // partialize: (state) => ({ osList: state.osList, nextOsNumber: state.nextOsNumber, partners: state.partners }),
+       // Versioning can be added here if schema changes significantly
+       // version: 1,
+       // migrate: (persistedState, version) => { ... migration logic ... },
     }
   )
 );
