@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -27,9 +28,12 @@ interface OSDetailsViewProps {
 
 export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   const updateOS = useOSStore((state) => state.updateOS);
+  // updateOSStatus is still used by handleFinalizeOS for a direct status change.
+  // If we want to consolidate, handleFinalizeOS could also call updateOS with just status change.
   const updateOSStatus = useOSStore((state) => state.updateOSStatus);
   const partners = useOSStore((state) => state.partners);
-  const addPartner = useOSStore((state) => state.addPartner);
+  // addPartner is not directly used here but good to keep if future enhancements require it.
+  // const addPartner = useOSStore((state) => state.addPartner); 
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -39,15 +43,21 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   const partnerInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const formattedInitialOs = {
+    // Format initialOs for the form, especially programadoPara
+    const formattedDate = initialOs.programadoPara
+        ? initialOs.programadoPara.split('T')[0] // Take YYYY-MM-DD part
+        : ''; // Default to empty string if undefined
+
+    const currentFormData = {
       ...initialOs,
-      programadoPara: initialOs.programadoPara ? initialOs.programadoPara.split('T')[0] : '',
+      programadoPara: formattedDate,
     };
-    setFormData(formattedInitialOs);
+    setFormData(currentFormData);
     setPartnerInput(initialOs.parceiro || '');
-    setIsEditing(false);
-    setShowPartnerSuggestions(false);
+    setIsEditing(false); // Reset editing state when OS changes
+    setShowPartnerSuggestions(false); // Reset suggestions visibility
   }, [initialOs]);
+
 
   const filteredPartners = useMemo(() => {
     if (!partnerInput) return [];
@@ -62,16 +72,18 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
       const newValue = value;
       setPartnerInput(newValue);
       setShowPartnerSuggestions(!!newValue && filteredPartners.length > 0 && document.activeElement === partnerInputRef.current);
-      setFormData(prev => ({ ...prev, parceiro: newValue }));
+      // Update formData directly for partner as well, as it's part of the OS object
+      setFormData(prev => ({ ...prev, parceiro: newValue || undefined }));
     } else if (type === 'checkbox') {
       setFormData(prev => ({
         ...prev,
         [name]: (e.target as HTMLInputElement).checked,
       }));
     } else if (type === 'date' && name === 'programadoPara') {
+      // Ensure undefined is stored if date is cleared, otherwise store YYYY-MM-DD
       setFormData(prev => ({
         ...prev,
-        [name]: value || undefined
+        [name]: value || undefined 
       }));
     } else {
       setFormData(prev => ({
@@ -91,12 +103,13 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Prepare data for saving, ensuring `parceiro` and `programadoPara` are correctly formatted
       const dataToSave: OS = {
         ...formData,
-        parceiro: partnerInput || undefined,
-        programadoPara: formData.programadoPara || undefined,
+        parceiro: partnerInput.trim() || undefined, // Store undefined if empty after trim
+        // programadoPara is already in YYYY-MM-DD or undefined in formData
       };
-      updateOS(dataToSave);
+      updateOS(dataToSave); // This will now handle status transitions correctly in the store
       console.log(`OS Atualizada: ${dataToSave.numero}`);
       setIsEditing(false);
     } catch (error) {
@@ -108,7 +121,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   };
 
   const handleCancel = () => {
-    const formattedInitialOs = {
+     const formattedInitialOs = {
       ...initialOs,
       programadoPara: initialOs.programadoPara ? initialOs.programadoPara.split('T')[0] : '',
     };
@@ -120,9 +133,20 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
 
   const handleFinalizeOS = () => {
     if (formData.status !== OSStatus.FINALIZADO) {
+        // Call updateOSStatus for a direct, quick finalization
         updateOSStatus(formData.id, OSStatus.FINALIZADO);
-        setFormData(prev => ({...prev, status: OSStatus.FINALIZADO, dataFinalizacao: new Date().toISOString()})); // Optimistic update
+        // Optimistically update local form data to reflect the change immediately
+        setFormData(prev => ({
+            ...prev,
+            status: OSStatus.FINALIZADO,
+            // dataFinalizacao and tempoProducaoMinutos will be set by the store logic triggered by updateOSStatus
+            // but we can optimistically set dataFinalizacao here if needed for UI responsiveness.
+            // The store is the source of truth for calculated values.
+            dataFinalizacao: prev.dataFinalizacao || new Date().toISOString() 
+        }));
         console.log(`OS ${formData.numero} finalizada.`);
+        // Optionally, turn off editing mode if OS is finalized
+        // setIsEditing(false); 
     }
   };
 
@@ -150,21 +174,28 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
     label: string;
     value?: string | null | boolean;
     icon?: React.ReactNode;
-    name?: keyof OS;
-    isEditableField: boolean; // Differentiates if the field itself is designed to be editable
+    name?: keyof OS; // Ensure name is a key of OS for type safety
+    isEditableField: boolean; 
     children?: React.ReactNode;
     className?: string;
   }) => {
     let displayValue: string | React.ReactNode = value;
     if ((name === 'programadoPara' || name === 'dataAbertura' || name === 'dataFinalizacao') && typeof value === 'string' && value) {
       try {
-        const date = parseISO(value);
+        const date = parseISO(value); // parseISO handles both 'YYYY-MM-DD' and full ISO strings
         if (isValid(date)) {
+          // For 'programadoPara' which is YYYY-MM-DD, we only need date part
+          // For others, include time.
           const formatString = name === 'programadoPara' ? "dd/MM/yyyy" : "dd/MM/yyyy 'às' HH:mm";
           displayValue = format(date, formatString, { locale: ptBR });
+        } else {
+          // If value is 'YYYY-MM-DD' but parseISO fails (e.g. invalid date like 2023-13-01)
+          // or if it's some other non-ISO string, keep original or mark as invalid.
+          // For now, just display the original value if parseISO fails.
+          displayValue = value;
         }
       } catch {
-        displayValue = value;
+        displayValue = value; // Fallback to original value on error
       }
     } else if (typeof value === 'boolean') {
       displayValue = value ? 'Sim' : 'Não';
@@ -173,11 +204,11 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
     return (
       <div className={`row py-2 ${className || ''}`}>
         <dt className="col-sm-3 text-muted d-flex align-items-center small fw-medium">{icon}{label}</dt>
-        <dd className="col-sm-9 mb-0"> {/* Added mb-0 to dd for better alignment */}
+        <dd className="col-sm-9 mb-0">
           {isEditing && isEditableField ? (
             children
           ) : (
-            <span className={`text-break ${!isEditableField || !isEditing ? 'form-control-plaintext p-0' : ''}`}> {/* Use form-control-plaintext for non-editable display */}
+            <span className={`text-break form-control-plaintext p-0`}> {/* Use form-control-plaintext for consistent styling */}
                 {displayValue || <span className="text-muted fst-italic">N/A</span>}
             </span>
           )}
@@ -187,6 +218,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   };
 
   return (
+    // Apply os-details-urgent to this container, CSS will target .card within it
     <div className={`container-fluid os-details-print-container ${formData.isUrgent ? 'os-details-urgent' : ''}`}>
       <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2 no-print">
         <Link href="/dashboard" className="btn btn-outline-secondary btn-sm">
@@ -198,7 +230,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
               <button className="btn btn-outline-secondary btn-sm" onClick={handleCancel} disabled={isSaving}>
                 Cancelar
               </button>
-              <button className="btn btn-success btn-sm" onClick={handleSave} disabled={isSaving}>
+              <button className="btn btn-success btn-sm" onClick={handleSave} disabled={isSaving || !formData.cliente || !formData.projeto || !formData.tarefa}>
                 {isSaving ? <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> : <Save size={16} className="me-1" />}
                 Salvar Alterações
               </button>
@@ -220,8 +252,11 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
         </div>
       </div>
 
-      <div className={`card shadow-lg mb-4 ${formData.isUrgent && !isEditing ? 'border-danger' : ''}`}>
-        <div className={`card-header p-3 border-bottom d-flex justify-content-between align-items-start ${formData.isUrgent && !isEditing ? 'bg-danger-subtle text-danger-emphasis' : 'bg-light'}`}>
+      {/* The .card element will now pick up the urgent styling from .os-details-urgent .card CSS rule */}
+      <div className={`card shadow-lg mb-4`}>
+        <div className={`card-header p-3 border-bottom d-flex justify-content-between align-items-start ${!isEditing && formData.isUrgent ? '' : 'bg-light'}`}>
+          {/* If not editing and urgent, card-header will get styles from .os-details-urgent .card-header */}
+          {/* Otherwise, it's bg-light */}
           <div>
             {isEditing ? (
               <input
@@ -232,6 +267,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
                 onChange={handleInputChange}
                 placeholder="Nome do Projeto"
                 style={{ fontSize: '1.25rem' }}
+                required
               />
             ) : (
               <h1 className="card-title h4 mb-1 fw-bold">{formData.projeto}</h1>
@@ -256,6 +292,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
                 value={formData.cliente}
                 onChange={handleInputChange}
                 disabled={!isEditing}
+                required
               />
             </DetailItem>
 
@@ -266,15 +303,15 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
                   type="text"
                   className="form-control form-control-sm"
                   name="parceiro"
-                  value={partnerInput}
-                  onChange={handleInputChange}
+                  value={partnerInput} // Controlled by partnerInput state
+                  onChange={handleInputChange} // This updates partnerInput and formData.parceiro
                   onFocus={() => setShowPartnerSuggestions(!!partnerInput && filteredPartners.length > 0)}
                   onBlur={() => setTimeout(() => setShowPartnerSuggestions(false), 150)}
                   autoComplete="off"
                   placeholder="Digite ou selecione um parceiro"
                   disabled={!isEditing}
                 />
-                {showPartnerSuggestions && filteredPartners.length > 0 && (
+                {isEditing && showPartnerSuggestions && filteredPartners.length > 0 && (
                   <div className="list-group position-absolute w-100 mt-1" style={{ zIndex: 10, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}>
                     {filteredPartners.map(p => (
                       <button
@@ -311,17 +348,18 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
                 type="date"
                 className="form-control form-control-sm"
                 name="programadoPara"
-                value={formData.programadoPara || ''}
+                value={formData.programadoPara || ''} // Ensure value is empty string if undefined for date input
                 onChange={handleInputChange}
                 disabled={!isEditing}
               />
             </DetailItem>
 
-            {initialOs.dataFinalizacao && (
-              <DetailItem label="Data de Finalização" value={initialOs.dataFinalizacao} icon={<CheckCircle2 size={16} className="me-2 text-success" />} name="dataFinalizacao" isEditableField={false} />
+            {/* Display finalization date if OS is finalized or was finalized */}
+            {(formData.status === OSStatus.FINALIZADO || initialOs.dataFinalizacao) && (
+              <DetailItem label="Data de Finalização" value={formData.dataFinalizacao || initialOs.dataFinalizacao} icon={<CheckCircle2 size={16} className="me-2 text-success" />} name="dataFinalizacao" isEditableField={false} />
             )}
-             {formData.status === OSStatus.FINALIZADO && initialOs.tempoProducaoMinutos !== undefined && (
-                <DetailItem label="Tempo de Produção" value={`${Math.floor(initialOs.tempoProducaoMinutos / 60)}h ${initialOs.tempoProducaoMinutos % 60}m`} icon={<Clock3 size={16} className="me-2 text-success" />} name="tempoProducaoMinutos" isEditableField={false} />
+             {formData.status === OSStatus.FINALIZADO && (formData.tempoProducaoMinutos !== undefined && formData.tempoProducaoMinutos >= 0) && (
+                <DetailItem label="Tempo de Produção" value={`${Math.floor(formData.tempoProducaoMinutos / 60)}h ${formData.tempoProducaoMinutos % 60}m`} icon={<Clock3 size={16} className="me-2 text-success" />} name="tempoProducaoMinutos" isEditableField={false} />
             )}
 
 
@@ -333,6 +371,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
                 value={formData.tarefa}
                 onChange={handleInputChange}
                 disabled={!isEditing}
+                required
               />
             </DetailItem>
 

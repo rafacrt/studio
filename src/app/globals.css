@@ -110,16 +110,14 @@ body {
 }
 
 /* Urgent OS Details Styling */
-.os-details-urgent {
-  background-color: var(--bs-danger-bg-subtle, #f8d7da) !important;
-}
-
-.os-details-urgent .card { /* Style the card within an urgent page */
-    border-color: var(--bs-danger, #dc3545) !important;
+/* Remove global background from .os-details-urgent container */
+.os-details-urgent .card {
+  border-color: var(--bs-danger, #dc3545) !important;
+  background-color: var(--bs-danger-bg-subtle, #f8d7da); /* Apply subtle red bg to the card itself */
 }
 
 .os-details-urgent .card-header {
-  background-color: var(--bs-danger-bg-subtle, #f8d7da) !important; /* Match page background or slightly darker */
+  background-color: var(--bs-danger-bg-subtle, #f8d7da) !important; /* Ensure header matches or is slightly different */
   border-bottom-color: var(--bs-danger-border-subtle, #f5c2c7) !important;
   color: var(--bs-danger-text-emphasis, #842029) !important;
 }
@@ -129,7 +127,8 @@ body {
 }
 
 .os-details-urgent .card-body {
-   /* The card itself will have border-danger, so body doesn't need full red bg unless desired */
+   /* Card body will inherit background from .card or can be styled explicitly if needed */
+   /* background-color: var(--bs-danger-bg-subtle, #f8d7da); */ /* Already on .card */
 }
 
 .os-details-urgent .text-primary { /* Override typical primary colors to danger emphasis */
@@ -185,6 +184,7 @@ body {
     max-width: 100% !important;
     margin: 0 auto !important;
     page-break-inside: avoid; /* Try to keep card content on one page */
+    background-color: #fff !important; /* Ensure card background is white for print */
   }
   .os-details-print-container .card-body,
   .os-details-print-container .card-header {
@@ -217,6 +217,7 @@ body {
   /* Urgent styling for print - make it less intrusive */
   .os-details-urgent.os-details-print-container .card {
      border-color: #666 !important; /* Darker border for urgent on print */
+     background-color: #fff !important; /* Keep urgent card background white for print */
   }
   .os-details-urgent.os-details-print-container .card-header {
     background-color: #eee !important; /* Light grey header for urgent print */
@@ -407,20 +408,19 @@ body {
       }
 
     /* Dark mode for urgent OS details page */
-    [data-bs-theme="dark"] .os-details-urgent {
-        background-color: var(--bs-danger-bg-subtle, #3A2426) !important; /* Darker red subtle background */
-    }
+    /* Remove global background from [data-bs-theme="dark"] .os-details-urgent */
     [data-bs-theme="dark"] .os-details-urgent .card {
         border-color: var(--bs-danger, #842029) !important;
+        background-color: var(--bs-danger-bg-subtle, #3A2426) !important; /* Darker red subtle background for the card */
     }
     [data-bs-theme="dark"] .os-details-urgent .card-header {
-        background-color: var(--bs-danger-bg-subtle, #3A2426) !important;
+        background-color: var(--bs-danger-bg-subtle, #3A2426) !important; /* Match card or slightly different */
         border-bottom-color: var(--bs-danger-border-subtle, #a33a42) !important;
         color: var(--bs-danger-text-emphasis, #ff8f8f) !important;
     }
     [data-bs-theme="dark"] .os-details-urgent .card-header .card-title,
     [data-bs-theme="dark"] .os-details-urgent .card-header .card-subtitle,
-    [data-bs-theme="dark"] .os-details-urgent .text-primary {
+    [data-bs-theme="dark"] .os-details-urgent .text-primary { /* text-primary within urgent card */
         color: var(--bs-danger-text-emphasis, #ff8f8f) !important;
     }
     [data-bs-theme="dark"] .os-details-urgent .text-muted {

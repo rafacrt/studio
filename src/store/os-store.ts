@@ -205,24 +205,67 @@ export const useOSStore = create<OSState>()(
         return newOS;
       },
 
-      updateOS: (updatedOS) =>
+      updateOS: (updatedOSData) =>
         set((state) => {
-             // Add partner if it's new
-             if (updatedOS.parceiro) {
-                 const partnerExists = state.partners.some(p => p.name.toLowerCase() === updatedOS.parceiro!.toLowerCase());
-                 if (!partnerExists) {
-                    get().addPartner({ name: updatedOS.parceiro }); // Call addPartner action
-                 }
-             }
-             // Ensure programadoPara is stored correctly
-             const finalUpdatedOS = {
-                 ...updatedOS,
-                 programadoPara: updatedOS.programadoPara ? updatedOS.programadoPara.split('T')[0] : undefined,
-             };
-             return {
-                 osList: state.osList.map((os) => (os.id === finalUpdatedOS.id ? finalUpdatedOS : os)),
-                 // partners list is managed by addPartner now
-             };
+          const osList = state.osList.map((os) => {
+            if (os.id !== updatedOSData.id) return os;
+
+            // Create a mutable copy for updates
+            let finalUpdatedOS: OS = {
+              ...os, // Start with the current OS state
+              ...updatedOSData, // Apply incoming changes
+              programadoPara: updatedOSData.programadoPara ? updatedOSData.programadoPara.split('T')[0] : undefined,
+            };
+
+            // Add partner if it's new and doesn't exist
+            if (finalUpdatedOS.parceiro) {
+              const partnerExists = state.partners.some(p => p.name.toLowerCase() === finalUpdatedOS.parceiro!.toLowerCase());
+              if (!partnerExists) {
+                // This needs to be handled carefully, as set is synchronous
+                // For simplicity, we assume addPartner is called elsewhere or handled by UI flow
+                // Or, we can update the partners list here, but it complicates things.
+                // For now, the UI should ensure partner exists or is added before updateOS.
+                // To keep it transactional within this update, we'd need to also update state.partners
+                // get().addPartner({ name: finalUpdatedOS.parceiro }); // Avoid calling get() inside set if possible
+              }
+            }
+            
+            // Handle status change side effects
+            if (os.status !== finalUpdatedOS.status) {
+              const now = new Date().toISOString();
+              if (finalUpdatedOS.status === OSStatus.EM_PRODUCAO && !finalUpdatedOS.dataInicioProducao) {
+                finalUpdatedOS.dataInicioProducao = now;
+              }
+              if (finalUpdatedOS.status === OSStatus.FINALIZADO) {
+                if (!finalUpdatedOS.dataFinalizacao) {
+                  finalUpdatedOS.dataFinalizacao = now;
+                }
+                if (finalUpdatedOS.dataInicioProducao && !finalUpdatedOS.tempoProducaoMinutos) {
+                  try {
+                    const finalizationDateToUse = finalUpdatedOS.dataFinalizacao || now;
+                    finalUpdatedOS.tempoProducaoMinutos = differenceInMinutes(
+                      parseISO(finalizationDateToUse),
+                      parseISO(finalUpdatedOS.dataInicioProducao)
+                    );
+                  } catch (error) {
+                    console.error("Error calculating production time during updateOS:", finalUpdatedOS.numero, error);
+                    finalUpdatedOS.tempoProducaoMinutos = -1; // Indicate error or invalid dates
+                  }
+                }
+              }
+            }
+            return finalUpdatedOS;
+          });
+          // Update partner list separately if a new partner was effectively added by name
+          const newPartnerName = updatedOSData.parceiro;
+          let updatedPartners = state.partners;
+          if (newPartnerName && !state.partners.some(p => p.name.toLowerCase() === newPartnerName.toLowerCase())) {
+              const newPartner: Partner = { id: crypto.randomUUID(), name: newPartnerName.trim() };
+              updatedPartners = [...state.partners, newPartner].sort((a,b) => a.name.localeCompare(b.name));
+              console.log(`Partner "${newPartner.name}" implicitly added during OS update.`);
+          }
+
+          return { osList, partners: updatedPartners };
         }),
 
       updateOSStatus: (osId, newStatus) =>
@@ -246,7 +289,6 @@ export const useOSStore = create<OSState>()(
               // Calculate duration only if started and not already calculated
               if (os.dataInicioProducao && !os.tempoProducaoMinutos) {
                 try {
-                    // Use the finalization date that's being set now, or the existing one if somehow it was already set
                     const finalizationDate = updates.dataFinalizacao || os.dataFinalizacao || now;
                     updates.tempoProducaoMinutos = differenceInMinutes(
                         parseISO(finalizationDate),
@@ -285,7 +327,6 @@ export const useOSStore = create<OSState>()(
             nextOsNumber: currentOsNumber + 1,
             // Partner list remains unchanged on duplication
           }));
-          // Removed duplicate toast
           console.log(`OS "${duplicatedOS.projeto}" duplicada com sucesso. Novo número: ${duplicatedOS.numero}.`);
         }
       },
@@ -298,7 +339,6 @@ export const useOSStore = create<OSState>()(
         }));
         const updatedOS = get().osList.find(os => os.id === osId);
         if (updatedOS) {
-           // Removed toggle urgent toast
            console.log(`A OS "${updatedOS.projeto}" foi ${updatedOS.isUrgent ? "marcada como urgente" : "desmarcada como urgente"}.`);
         }
       },
@@ -342,8 +382,6 @@ export const useOSStore = create<OSState>()(
                 partners: state.partners.filter((partner) => partner.id !== partnerId),
             }));
             console.log(`Partner "${partnerToDelete.name}" removido.`);
-            // Note: This doesn't check if the partner is used in existing OS.
-            // Might need adjustments if deleting used partners should be prevented or handled differently.
         }
       },
 
@@ -351,11 +389,9 @@ export const useOSStore = create<OSState>()(
        getClientById: (clientId) => get().clients.find(c => c.id === clientId),
 
       addClient: (clientData) => {
-        // Prevent adding duplicates by name (case-insensitive)
         const clientExists = get().clients.some(c => c.name.toLowerCase() === clientData.name.trim().toLowerCase());
         if (clientExists) {
             console.warn(`Client "${clientData.name}" already exists.`);
-            // Optionally return the existing client
             return get().clients.find(c => c.name.toLowerCase() === clientData.name.trim().toLowerCase())!;
         }
 
@@ -386,35 +422,15 @@ export const useOSStore = create<OSState>()(
                 clients: state.clients.filter((client) => client.id !== clientId),
             }));
             console.log(`Cliente "${clientToDelete.name}" removido.`);
-            // Note: This doesn't check if the client is used in existing OS.
-            // You might want to add a check or prevent deletion if used.
         }
       },
 
 
     }),
     {
-      name: 'freelaos-storage-v7-time-tracking', // Updated storage key name for potential migration
+      name: 'freelaos-storage-v7-time-tracking', 
       storage: createJSONStorage(() => localStorage),
-       // Define parts of state to include/exclude if needed
-       // partialize: (state) => ({ osList: state.osList, nextOsNumber: state.nextOsNumber, partners: state.partners, clients: state.clients }),
-       // Versioning can be added here if schema changes significantly
-       version: 7, // Increment version
-       // migrate: (persistedState, version) => { ... migration logic ... },
+       version: 7, 
     }
   )
 );
-
-// --- Migration logic example (if needed in the future) ---
-// migrate: (persistedState: any, version: number) => {
-//   if (version < 7) {
-//     // Add new fields with default values if migrating from a version before time tracking
-//     persistedState.osList = persistedState.osList.map((os: any) => ({
-//       ...os,
-//       dataInicioProducao: os.dataInicioProducao ?? undefined,
-//       tempoProducaoMinutos: os.tempoProducaoMinutos ?? undefined,
-//     }));
-//   }
-//   // Add more migration steps if needed
-//   return persistedState as OSState;
-// },
