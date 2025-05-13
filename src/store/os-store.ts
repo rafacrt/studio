@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { OS, CreateOSData, Client } from '@/lib/types'; // Import Client type
@@ -34,6 +33,7 @@ interface OSState {
   updateClient: (updatedClient: Client) => void;
   deleteClient: (clientId: string) => void;
   getClientById: (clientId: string) => Client | undefined;
+  getClientByName: (clientName: string) => Client | undefined; // Helper
 }
 
 const generateOSNumero = (num: number): string => String(num).padStart(6, '0');
@@ -168,69 +168,83 @@ export const useOSStore = create<OSState>()(
         const newOS: OS = {
           id: crypto.randomUUID(),
           numero: generateOSNumero(currentOsNumber),
-          cliente: data.cliente,
-          parceiro: data.parceiro,
+          cliente: data.cliente.trim(), // Trim client name
+          parceiro: data.parceiro?.trim(), // Trim partner name
           projeto: data.projeto,
           tarefa: data.tarefa,
           observacoes: data.observacoes,
           tempoTrabalhado: data.tempoTrabalhado,
           status: data.status || OSStatus.NA_FILA, // Default to NA_FILA
           dataAbertura: new Date().toISOString(),
-          // Ensure programadoPara is stored as YYYY-MM-DD string or undefined
           programadoPara: data.programadoPara ? data.programadoPara.split('T')[0] : undefined,
           isUrgent: data.isUrgent || false,
-          // Initialize time tracking fields
           dataInicioProducao: data.status === OSStatus.EM_PRODUCAO ? new Date().toISOString() : undefined,
           tempoProducaoMinutos: undefined,
         };
-        set((state) => ({
-          osList: [...state.osList, newOS],
-          nextOsNumber: currentOsNumber + 1,
-          // Partner list update is handled separately by addPartner if needed
-        }));
-
-        // Add partner to managed list if it's new
-        if (data.parceiro) {
-            const partnerExists = get().partners.some(p => p.name.toLowerCase() === data.parceiro!.toLowerCase());
-            if (!partnerExists) {
-                 get().addPartner({ name: data.parceiro });
+        
+        let finalPartners = get().partners;
+        if (newOS.parceiro) {
+            const partnerName = newOS.parceiro;
+            if (!finalPartners.some(p => p.name.toLowerCase() === partnerName.toLowerCase())) {
+                 const newPartnerEntry = { id: crypto.randomUUID(), name: partnerName };
+                 finalPartners = [...finalPartners, newPartnerEntry].sort((a,b) => a.name.localeCompare(b.name));
+                 console.log(`Partner "${newPartnerEntry.name}" implicitly added during OS creation.`);
             }
         }
 
-        // Add client to client list if it doesn't exist (simple name check for now)
-        const clientExists = get().clients.some(c => c.name.toLowerCase() === data.cliente.toLowerCase());
-        if (!clientExists) {
-             get().addClient({ name: data.cliente });
+        let finalClients = get().clients;
+        const clientName = newOS.cliente; // cliente is mandatory and trimmed
+        if (!finalClients.some(c => c.name.toLowerCase() === clientName.toLowerCase())) {
+            const newClientEntry = { id: crypto.randomUUID(), name: clientName };
+            finalClients = [...finalClients, newClientEntry].sort((a,b) => a.name.localeCompare(b.name));
+            console.log(`Client "${newClientEntry.name}" implicitly added during OS creation.`);
         }
+
+        set((state) => ({
+          osList: [...state.osList, newOS],
+          nextOsNumber: currentOsNumber + 1,
+          partners: finalPartners,
+          clients: finalClients,
+        }));
         return newOS;
       },
 
       updateOS: (updatedOSData) =>
         set((state) => {
+          let newPartnerAdded = false;
+          let newClientAdded = false;
+          let newPartnerEntry: Partner | undefined = undefined;
+          let newClientEntry: Client | undefined = undefined;
+
+          const trimmedClientName = updatedOSData.cliente.trim();
+          const trimmedPartnerName = updatedOSData.parceiro?.trim();
+
+          // Check and prepare new partner
+          if (trimmedPartnerName) {
+            if (!state.partners.some(p => p.name.toLowerCase() === trimmedPartnerName.toLowerCase())) {
+              newPartnerEntry = { id: crypto.randomUUID(), name: trimmedPartnerName };
+              newPartnerAdded = true;
+            }
+          }
+          // Check and prepare new client
+          if (trimmedClientName) { // cliente is mandatory
+            if (!state.clients.some(c => c.name.toLowerCase() === trimmedClientName.toLowerCase())) {
+              newClientEntry = { id: crypto.randomUUID(), name: trimmedClientName };
+              newClientAdded = true;
+            }
+          }
+          
           const osList = state.osList.map((os) => {
             if (os.id !== updatedOSData.id) return os;
 
-            // Create a mutable copy for updates
             let finalUpdatedOS: OS = {
-              ...os, // Start with the current OS state
-              ...updatedOSData, // Apply incoming changes
+              ...os,
+              ...updatedOSData,
+              cliente: trimmedClientName, // Use trimmed name
+              parceiro: trimmedPartnerName || undefined, // Use trimmed name or undefined
               programadoPara: updatedOSData.programadoPara ? updatedOSData.programadoPara.split('T')[0] : undefined,
             };
-
-            // Add partner if it's new and doesn't exist
-            if (finalUpdatedOS.parceiro) {
-              const partnerExists = state.partners.some(p => p.name.toLowerCase() === finalUpdatedOS.parceiro!.toLowerCase());
-              if (!partnerExists) {
-                // This needs to be handled carefully, as set is synchronous
-                // For simplicity, we assume addPartner is called elsewhere or handled by UI flow
-                // Or, we can update the partners list here, but it complicates things.
-                // For now, the UI should ensure partner exists or is added before updateOS.
-                // To keep it transactional within this update, we'd need to also update state.partners
-                // get().addPartner({ name: finalUpdatedOS.parceiro }); // Avoid calling get() inside set if possible
-              }
-            }
             
-            // Handle status change side effects
             if (os.status !== finalUpdatedOS.status) {
               const now = new Date().toISOString();
               if (finalUpdatedOS.status === OSStatus.EM_PRODUCAO && !finalUpdatedOS.dataInicioProducao) {
@@ -249,23 +263,26 @@ export const useOSStore = create<OSState>()(
                     );
                   } catch (error) {
                     console.error("Error calculating production time during updateOS:", finalUpdatedOS.numero, error);
-                    finalUpdatedOS.tempoProducaoMinutos = -1; // Indicate error or invalid dates
+                    finalUpdatedOS.tempoProducaoMinutos = -1;
                   }
                 }
               }
             }
             return finalUpdatedOS;
           });
-          // Update partner list separately if a new partner was effectively added by name
-          const newPartnerName = updatedOSData.parceiro;
-          let updatedPartners = state.partners;
-          if (newPartnerName && !state.partners.some(p => p.name.toLowerCase() === newPartnerName.toLowerCase())) {
-              const newPartner: Partner = { id: crypto.randomUUID(), name: newPartnerName.trim() };
-              updatedPartners = [...state.partners, newPartner].sort((a,b) => a.name.localeCompare(b.name));
-              console.log(`Partner "${newPartner.name}" implicitly added during OS update.`);
+
+          let finalPartners = state.partners;
+          if (newPartnerAdded && newPartnerEntry) {
+            finalPartners = [...state.partners, newPartnerEntry].sort((a, b) => a.name.localeCompare(b.name));
+            console.log(`Partner "${newPartnerEntry.name}" implicitly added during OS update.`);
+          }
+          let finalClients = state.clients;
+          if (newClientAdded && newClientEntry) {
+            finalClients = [...state.clients, newClientEntry].sort((a, b) => a.name.localeCompare(b.name));
+            console.log(`Client "${newClientEntry.name}" implicitly added during OS update.`);
           }
 
-          return { osList, partners: updatedPartners };
+          return { osList, partners: finalPartners, clients: finalClients };
         }),
 
       updateOSStatus: (osId, newStatus) =>
@@ -276,17 +293,14 @@ export const useOSStore = create<OSState>()(
             const now = new Date().toISOString();
             let updates: Partial<OS> = { status: newStatus };
 
-            // Set start production date
             if (newStatus === OSStatus.EM_PRODUCAO && !os.dataInicioProducao) {
               updates.dataInicioProducao = now;
             }
 
-            // Set finalization date and calculate production time
             if (newStatus === OSStatus.FINALIZADO) {
               if (!os.dataFinalizacao) {
                  updates.dataFinalizacao = now;
               }
-              // Calculate duration only if started and not already calculated
               if (os.dataInicioProducao && !os.tempoProducaoMinutos) {
                 try {
                     const finalizationDate = updates.dataFinalizacao || os.dataFinalizacao || now;
@@ -296,11 +310,10 @@ export const useOSStore = create<OSState>()(
                     );
                 } catch (error) {
                      console.error("Error calculating production time for OS:", os.numero, error);
-                     updates.tempoProducaoMinutos = -1; // Indicate error or invalid dates
+                     updates.tempoProducaoMinutos = -1;
                 }
               }
             }
-
             return { ...os, ...updates };
           }),
         })),
@@ -316,16 +329,15 @@ export const useOSStore = create<OSState>()(
             id: crypto.randomUUID(),
             numero: generateOSNumero(currentOsNumber),
             dataAbertura: new Date().toISOString(),
-            status: OSStatus.NA_FILA, // Duplicates start in NA_FILA
-            dataFinalizacao: undefined, // Clear finalization date
-            programadoPara: undefined, // Clear programmed date on duplication
-            dataInicioProducao: undefined, // Clear time tracking fields
-            tempoProducaoMinutos: undefined, // Clear time tracking fields
+            status: OSStatus.NA_FILA,
+            dataFinalizacao: undefined,
+            programadoPara: undefined,
+            dataInicioProducao: undefined,
+            tempoProducaoMinutos: undefined,
           };
           set((state) => ({
             osList: [...state.osList, duplicatedOS],
             nextOsNumber: currentOsNumber + 1,
-            // Partner list remains unchanged on duplication
           }));
           console.log(`OS "${duplicatedOS.projeto}" duplicada com sucesso. Novo número: ${duplicatedOS.numero}.`);
         }
@@ -343,29 +355,22 @@ export const useOSStore = create<OSState>()(
         }
       },
 
-      // --- Partner Actions ---
       getPartnerById: (partnerId) => get().partners.find(p => p.id === partnerId),
-
       getPartnerByName: (partnerName) => get().partners.find(p => p.name.toLowerCase() === partnerName.toLowerCase()),
-
       addPartner: (partnerData) => {
-        // Prevent adding duplicates by name (case-insensitive)
-         const existingPartner = get().getPartnerByName(partnerData.name);
+         const trimmedName = partnerData.name.trim();
+         const existingPartner = get().getPartnerByName(trimmedName);
          if (existingPartner) {
-            console.warn(`Partner "${partnerData.name}" already exists.`);
+            console.warn(`Partner "${trimmedName}" already exists.`);
             return existingPartner;
          }
-        const newPartner: Partner = {
-          id: crypto.randomUUID(),
-          name: partnerData.name.trim(),
-        };
+        const newPartner: Partner = { id: crypto.randomUUID(), name: trimmedName };
         set((state) => ({
           partners: [...state.partners, newPartner].sort((a, b) => a.name.localeCompare(b.name)),
         }));
         console.log(`Partner "${newPartner.name}" adicionado.`);
         return newPartner;
       },
-
       updatePartner: (updatedPartner) => {
          set((state) => ({
           partners: state.partners.map((partner) =>
@@ -374,7 +379,6 @@ export const useOSStore = create<OSState>()(
         }));
         console.log(`Partner "${updatedPartner.name}" atualizado.`);
       },
-
       deletePartner: (partnerId) => {
         const partnerToDelete = get().getPartnerById(partnerId);
         if (partnerToDelete) {
@@ -385,27 +389,22 @@ export const useOSStore = create<OSState>()(
         }
       },
 
-      // --- Client Actions ---
-       getClientById: (clientId) => get().clients.find(c => c.id === clientId),
-
+      getClientById: (clientId) => get().clients.find(c => c.id === clientId),
+      getClientByName: (clientName) => get().clients.find(c => c.name.toLowerCase() === clientName.toLowerCase()),
       addClient: (clientData) => {
-        const clientExists = get().clients.some(c => c.name.toLowerCase() === clientData.name.trim().toLowerCase());
-        if (clientExists) {
-            console.warn(`Client "${clientData.name}" already exists.`);
-            return get().clients.find(c => c.name.toLowerCase() === clientData.name.trim().toLowerCase())!;
+        const trimmedName = clientData.name.trim();
+        const existingClient = get().getClientByName(trimmedName);
+        if (existingClient) {
+            console.warn(`Client "${trimmedName}" already exists.`);
+            return existingClient;
         }
-
-        const newClient: Client = {
-          id: crypto.randomUUID(),
-          name: clientData.name.trim(),
-        };
+        const newClient: Client = { id: crypto.randomUUID(), name: trimmedName };
         set((state) => ({
           clients: [...state.clients, newClient].sort((a, b) => a.name.localeCompare(b.name)),
         }));
         console.log(`Cliente "${newClient.name}" adicionado.`);
         return newClient;
       },
-
       updateClient: (updatedClient) => {
          set((state) => ({
           clients: state.clients.map((client) =>
@@ -414,7 +413,6 @@ export const useOSStore = create<OSState>()(
         }));
         console.log(`Cliente "${updatedClient.name}" atualizado.`);
       },
-
       deleteClient: (clientId) => {
         const clientToDelete = get().getClientById(clientId);
         if (clientToDelete) {
@@ -424,13 +422,11 @@ export const useOSStore = create<OSState>()(
             console.log(`Cliente "${clientToDelete.name}" removido.`);
         }
       },
-
-
     }),
     {
-      name: 'freelaos-storage-v7-time-tracking', 
+      name: 'freelaos-storage-v7-time-tracking',
       storage: createJSONStorage(() => localStorage),
-       version: 7, 
+      version: 7,
     }
   )
 );

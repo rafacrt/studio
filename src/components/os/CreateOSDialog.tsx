@@ -1,26 +1,24 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { PlusCircle, Loader2 } from 'lucide-react'; // Keep lucide icons
+import { PlusCircle } from 'lucide-react'; // Loader2 removed as not directly used for submission state
 
-// Removed useToast import
 import { useOSStore } from '@/store/os-store';
-import type { Partner } from '@/store/os-store'; // Import Partner type
+import type { Partner } from '@/store/os-store';
+import type { Client } from '@/lib/types';
 import { OSStatus, ALL_OS_STATUSES, type CreateOSData } from '@/lib/types';
 
-// Use Bootstrap's form validation approach alongside react-hook-form
 const formSchema = z.object({
   cliente: z.string().min(1, { message: 'Nome do cliente é obrigatório.' }),
-  parceiro: z.string().optional(), // Partner name as string
+  parceiro: z.string().optional(),
   projeto: z.string().min(1, { message: 'Nome do projeto é obrigatório.' }),
   tarefa: z.string().min(1, { message: 'A descrição da tarefa é obrigatória.' }),
   observacoes: z.string().optional(),
-  tempoTrabalhado: z.string().optional(),
-  programadoPara: z.string().optional(), // Added: Accept string date (YYYY-MM-DD)
+  tempoTrabalhado: z.string().optional(), // Keeping as string for now
+  programadoPara: z.string().optional(),
   status: z.nativeEnum(OSStatus).default(OSStatus.NA_FILA),
   isUrgent: z.boolean().default(false),
 });
@@ -29,50 +27,44 @@ type CreateOSFormValues = z.infer<typeof formSchema>;
 
 export function CreateOSDialog() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Removed toast related code
-  const { addOS, partners, addPartner } = useOSStore((state) => ({
+  const { addOS, partners, clients } = useOSStore((state) => ({
       addOS: state.addOS,
-      partners: state.partners, // Now Partner[] type
-      addPartner: state.addPartner,
+      partners: state.partners,
+      clients: state.clients, // Get clients from store
+      // addPartner and addClient are implicitly called by addOS if names are new
   }));
   const modalRef = useRef<HTMLDivElement>(null);
-  const [bootstrapModal, setBootstrapModal] = useState<any>(null); // Store Bootstrap modal instance
+  const [bootstrapModal, setBootstrapModal] = useState<any>(null);
+
+  // States for input suggestions
+  const [clientInput, setClientInput] = useState('');
+  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
+  const clientInputRef = useRef<HTMLInputElement>(null);
+
   const [partnerInput, setPartnerInput] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showPartnerSuggestions, setShowPartnerSuggestions] = useState(false);
   const partnerInputRef = useRef<HTMLInputElement>(null);
 
 
   useEffect(() => {
-    // Initialize Bootstrap modal instance when the component mounts
-    // Ensure window is defined (runs only on client)
     if (typeof window !== 'undefined' && modalRef.current) {
-      // Dynamically import Bootstrap modal to ensure it runs client-side
       import('bootstrap/js/dist/modal').then((ModalModule) => {
           const Modal = ModalModule.default;
-          // Check ref again inside the promise resolution
           if (modalRef.current && !bootstrapModal) {
              setBootstrapModal(new Modal(modalRef.current));
           }
       }).catch(err => console.error("Failed to load Bootstrap modal:", err));
     }
-
-    // Cleanup function to destroy modal instance
     return () => {
-      // Check if modal instance exists and has dispose method
       if (bootstrapModal && typeof bootstrapModal.dispose === 'function') {
         try {
-            // Avoid errors if already hidden/disposed
-            if ((bootstrapModal as any)._isShown) {
-                bootstrapModal.hide();
-            }
+            if ((bootstrapModal as any)._isShown) bootstrapModal.hide();
             bootstrapModal.dispose();
-        } catch (error) {
-            console.warn("Error disposing Bootstrap modal:", error);
-        }
+        } catch (error) { console.warn("Error disposing Bootstrap modal:", error); }
       }
-       setBootstrapModal(null); // Clear instance state on unmount
+      setBootstrapModal(null);
     };
-  }, []); // Run only once on mount
+  }, []);
 
 
   const form = useForm<CreateOSFormValues>({
@@ -84,42 +76,48 @@ export function CreateOSDialog() {
       tarefa: '',
       observacoes: '',
       tempoTrabalhado: '',
-      programadoPara: '', // Default to empty string
+      programadoPara: '',
       status: OSStatus.NA_FILA,
       isUrgent: false,
     },
-    mode: 'onChange', // Validate on change for Bootstrap styles
+    mode: 'onChange',
   });
 
-  // Memoize filtered partners
+  // Filtered suggestions
+  const filteredClients = useMemo(() => {
+    if (!clientInput) return [];
+    const lowerInput = clientInput.toLowerCase();
+    return clients.filter(c => c.name.toLowerCase().includes(lowerInput));
+  }, [clientInput, clients]);
+
   const filteredPartners = useMemo(() => {
     if (!partnerInput) return [];
     const lowerInput = partnerInput.toLowerCase();
     return partners.filter(p => p.name.toLowerCase().includes(lowerInput));
   }, [partnerInput, partners]);
 
-  // Update partnerInput state when form value changes and control suggestions
+  // Sync form values with local input states for suggestions
   useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === 'parceiro') {
-        const currentPartnerValue = value.parceiro ?? '';
-        // Only update local input state if it differs from form, prevents loops
-        if (currentPartnerValue !== partnerInput) {
-           setPartnerInput(currentPartnerValue);
-        }
-        // Show suggestions only if input is not empty and there are filtered partners
-        setShowSuggestions(!!currentPartnerValue && filteredPartners.length > 0 && document.activeElement === partnerInputRef.current);
-      }
+    const subscription = form.watch((value) => {
+      setClientInput(value.cliente ?? '');
+      setPartnerInput(value.parceiro ?? '');
     });
     return () => subscription.unsubscribe();
-  }, [form.watch, partnerInput, filteredPartners]); // Added dependencies
+  }, [form.watch]);
 
+
+  const handleClientSelect = (clientName: string) => {
+    form.setValue('cliente', clientName, { shouldValidate: true });
+    setClientInput(clientName);
+    setShowClientSuggestions(false);
+    clientInputRef.current?.focus();
+  };
 
   const handlePartnerSelect = (partnerName: string) => {
     form.setValue('parceiro', partnerName, { shouldValidate: true });
-    setPartnerInput(partnerName); // Sync local state
-    setShowSuggestions(false);
-    partnerInputRef.current?.focus(); // Keep focus
+    setPartnerInput(partnerName);
+    setShowPartnerSuggestions(false);
+    partnerInputRef.current?.focus();
   };
 
   async function onSubmit(values: CreateOSFormValues) {
@@ -127,66 +125,66 @@ export function CreateOSDialog() {
     try {
       const dataToSubmit: CreateOSData = {
         ...values,
-        parceiro: values.parceiro || undefined,
+        // Ensure client and partner names from the input fields (which might have been selected) are used.
+        cliente: clientInput.trim(), 
+        parceiro: partnerInput.trim() || undefined,
         observacoes: values.observacoes || '',
         tempoTrabalhado: values.tempoTrabalhado || '',
-        programadoPara: values.programadoPara || undefined, // Ensure undefined if empty
+        programadoPara: values.programadoPara || undefined,
       };
 
-      // addOS action now handles adding partner if needed
-      addOS(dataToSubmit);
+      addOS(dataToSubmit); // Store handles adding new client/partner implicitly
 
-      // Removed success toast
-      console.log(`OS Criada: ${values.cliente} - ${values.projeto}`);
+      console.log(`OS Criada: ${dataToSubmit.cliente} - ${dataToSubmit.projeto}`);
       form.reset();
-      setPartnerInput(''); // Reset partner input state
-       if (bootstrapModal && typeof bootstrapModal.hide === 'function') {
-            bootstrapModal.hide(); // Use Bootstrap API to hide modal
-       }
+      setClientInput(''); 
+      setPartnerInput('');
+      if (bootstrapModal && typeof bootstrapModal.hide === 'function') {
+            bootstrapModal.hide();
+      }
     } catch (error) {
       console.error("Failed to create OS:", error);
-      // Removed error toast
-      alert('Falha ao criar OS. Por favor, tente novamente.'); // Basic alert fallback
+      alert('Falha ao criar OS. Por favor, tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
   }
 
   const handleModalClose = () => {
-      form.reset(); // Reset form on cancel/close
+      form.reset();
+      setClientInput('');
       setPartnerInput('');
-      setShowSuggestions(false);
-      // No need to manually set isOpen to false, Bootstrap handles it
+      setShowClientSuggestions(false);
+      setShowPartnerSuggestions(false);
   };
 
   // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (partnerInputRef.current && !partnerInputRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false);
-      }
-    };
-    // Check if document is defined (client-side)
-     if (typeof document !== 'undefined') {
-        document.addEventListener('mousedown', handleClickOutside);
-     }
-    return () => {
-      if (typeof document !== 'undefined') {
-        document.removeEventListener('mousedown', handleClickOutside);
-      }
-    };
-  }, []);
+   const setupClickListener = (ref: React.RefObject<HTMLInputElement>, setShowSuggestionsFn: React.Dispatch<React.SetStateAction<boolean>>) => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (ref.current && !ref.current.parentElement?.contains(event.target as Node)) {
+          setShowSuggestionsFn(false);
+        }
+      };
+       if (typeof document !== 'undefined') {
+          document.addEventListener('mousedown', handleClickOutside);
+       }
+      return () => {
+        if (typeof document !== 'undefined') {
+          document.removeEventListener('mousedown', handleClickOutside);
+        }
+      };
+  };
+  useEffect(() => setupClickListener(clientInputRef, setShowClientSuggestions), [clientInputRef, setShowClientSuggestions]);
+  useEffect(() => setupClickListener(partnerInputRef, setShowPartnerSuggestions), [partnerInputRef, setShowPartnerSuggestions]);
+
 
   return (
     <>
-      {/* Button to trigger the modal */}
       <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOSModal">
         <PlusCircle className="me-2" size={18} /> Nova OS
       </button>
 
-      {/* Bootstrap Modal */}
       <div className="modal fade" id="createOSModal" tabIndex={-1} aria-labelledby="createOSModalLabel" aria-hidden="true" ref={modalRef}>
-        {/* Add modal-dialog-scrollable and potentially size class like modal-lg */}
         <div className="modal-dialog modal-dialog-scrollable modal-lg">
           <div className="modal-content">
             <div className="modal-header">
@@ -196,56 +194,69 @@ export function CreateOSDialog() {
             <div className="modal-body">
               <p className="text-muted mb-4">Preencha os detalhes abaixo para criar uma nova OS. Clique em salvar quando terminar.</p>
               <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-                 <div className="row"> {/* Using Bootstrap grid for layout */}
+                 <div className="row">
                     <div className="col-md-6">
-                        {/* Cliente */}
-                        <div className="mb-3">
+                        <div className="mb-3 position-relative">
                           <label htmlFor="cliente" className="form-label">Nome do Cliente *</label>
                           <input
+                            ref={clientInputRef}
                             type="text"
                             id="cliente"
                             placeholder="Ex: Empresa Acme"
                             className={`form-control ${form.formState.errors.cliente ? 'is-invalid' : ''}`}
                             {...form.register('cliente')}
+                            value={clientInput} // Controlled by clientInput state
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setClientInput(val);
+                                form.setValue('cliente', val, { shouldValidate: true });
+                                setShowClientSuggestions(!!val && clients.filter(c => c.name.toLowerCase().includes(val.toLowerCase())).length > 0);
+                            }}
+                            onFocus={() => setShowClientSuggestions(!!clientInput && filteredClients.length > 0)}
+                             onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)} // Delay
+                            autoComplete="off"
                           />
+                          {showClientSuggestions && filteredClients.length > 0 && (
+                            <div className="list-group position-absolute w-100" style={{ zIndex: 10, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}>
+                              {filteredClients.map(c => (
+                                <button type="button" key={c.id} className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
+                                  onMouseDown={(e) => e.preventDefault()} onClick={() => handleClientSelect(c.name)}>
+                                  {c.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                           {form.formState.errors.cliente && (
                             <div className="invalid-feedback">{form.formState.errors.cliente.message}</div>
                           )}
                         </div>
                     </div>
                     <div className="col-md-6">
-                         {/* Parceiro with suggestions */}
                         <div className="mb-3 position-relative">
                           <label htmlFor="parceiro" className="form-label">Parceiro (opcional)</label>
                           <input
-                            ref={partnerInputRef} // Assign ref
+                            ref={partnerInputRef}
                             type="text"
                             id="parceiro"
                             placeholder="Ex: Agência XYZ"
                             className={`form-control ${form.formState.errors.parceiro ? 'is-invalid' : ''}`}
                             {...form.register('parceiro')}
-                            value={partnerInput} // Bind directly to state for suggestions
+                            value={partnerInput} // Controlled by partnerInput state
                             onChange={(e) => {
-                                const newValue = e.target.value;
-                                form.setValue('parceiro', newValue, { shouldValidate: true }); // Update form state
-                                setPartnerInput(newValue); // Update local state for suggestions
-                                // Update suggestion visibility based on new value and filtered partners
-                                setShowSuggestions(!!newValue && filteredPartners.length > 0);
+                                const val = e.target.value;
+                                setPartnerInput(val);
+                                form.setValue('parceiro', val, { shouldValidate: true });
+                                setShowPartnerSuggestions(!!val && partners.filter(p => p.name.toLowerCase().includes(val.toLowerCase())).length > 0);
                             }}
-                            onFocus={() => setShowSuggestions(!!partnerInput && filteredPartners.length > 0)}
-                            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)} // Hide suggestions on blur with delay
+                            onFocus={() => setShowPartnerSuggestions(!!partnerInput && filteredPartners.length > 0)}
+                            onBlur={() => setTimeout(() => setShowPartnerSuggestions(false), 200)} // Delay
                             autoComplete="off"
                           />
-                          {showSuggestions && filteredPartners.length > 0 && (
+                          {showPartnerSuggestions && filteredPartners.length > 0 && (
                             <div className="list-group position-absolute w-100" style={{ zIndex: 10, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}>
                               {filteredPartners.map(p => (
-                                <button
-                                  type="button"
-                                  key={p.id} // Use partner ID as key
-                                  className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
-                                  onMouseDown={(e) => e.preventDefault()} // Prevent blur before click
-                                  onClick={() => handlePartnerSelect(p.name)} // Select partner name
-                                >
+                                <button type="button" key={p.id} className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
+                                  onMouseDown={(e) => e.preventDefault()} onClick={() => handlePartnerSelect(p.name)}>
                                   {p.name}
                                 </button>
                               ))}
@@ -258,8 +269,6 @@ export function CreateOSDialog() {
                     </div>
                  </div>
 
-
-                {/* Projeto */}
                 <div className="mb-3">
                   <label htmlFor="projeto" className="form-label">Nome do Projeto *</label>
                   <input
@@ -274,7 +283,6 @@ export function CreateOSDialog() {
                   )}
                 </div>
 
-                {/* Tarefa */}
                 <div className="mb-3">
                   <label htmlFor="tarefa" className="form-label">Tarefa Principal *</label>
                   <textarea
@@ -289,7 +297,6 @@ export function CreateOSDialog() {
                   )}
                 </div>
 
-                {/* Observacoes */}
                 <div className="mb-3">
                   <label htmlFor="observacoes" className="form-label">Observações</label>
                   <textarea
@@ -304,7 +311,6 @@ export function CreateOSDialog() {
                   )}
                 </div>
 
-                {/* Tempo Trabalhado */}
                  <div className="mb-3">
                   <label htmlFor="tempoTrabalhado" className="form-label">Tempo Trabalhado (inicial)</label>
                   <input
@@ -324,7 +330,6 @@ export function CreateOSDialog() {
 
                 <div className="row">
                     <div className="col-md-6">
-                         {/* Status */}
                         <div className="mb-3">
                           <label htmlFor="status" className="form-label">Status</label>
                           <select
@@ -345,11 +350,10 @@ export function CreateOSDialog() {
                         </div>
                     </div>
                      <div className="col-md-6">
-                        {/* Programado Para */}
                         <div className="mb-3">
                             <label htmlFor="programadoPara" className="form-label">Programado Para (opcional)</label>
                             <input
-                                type="date" // Use HTML5 date input
+                                type="date"
                                 id="programadoPara"
                                 className={`form-control ${form.formState.errors.programadoPara ? 'is-invalid' : ''}`}
                                 {...form.register('programadoPara')}
@@ -364,8 +368,6 @@ export function CreateOSDialog() {
                     </div>
                 </div>
 
-
-                 {/* Urgente */}
                 <div className="mb-3 form-check border p-3 rounded shadow-sm">
                     <input
                         type="checkbox"
@@ -376,17 +378,16 @@ export function CreateOSDialog() {
                     <label className="form-check-label" htmlFor="isUrgent">
                         Marcar como Urgente
                     </label>
-                     <p className="text-muted small mt-1 mb-0"> {/* Added mb-0 */}
+                     <p className="text-muted small mt-1 mb-0">
                         Tarefas urgentes serão destacadas e priorizadas na visualização.
                      </p>
                 </div>
 
-                 {/* Submit Buttons - Moved inside form */}
-                <div className="modal-footer mt-4 pt-3 border-top"> {/* Added border-top */}
+                <div className="modal-footer mt-4 pt-3 border-top">
                     <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal" onClick={handleModalClose} disabled={isSubmitting}>
                         Cancelar
                     </button>
-                    <button type="submit" className="btn btn-primary" disabled={!form.formState.isValid || isSubmitting}> {/* Disable if form invalid */}
+                    <button type="submit" className="btn btn-primary" disabled={!form.formState.isValid || isSubmitting || !clientInput.trim()}>
                         {isSubmitting ? (
                             <>
                                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
