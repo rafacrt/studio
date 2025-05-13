@@ -109,6 +109,131 @@ body {
   opacity: 0.5;
 }
 
+/* Urgent OS Details Styling */
+.os-details-urgent {
+  background-color: var(--bs-danger-bg-subtle, #f8d7da) !important;
+}
+
+.os-details-urgent .card { /* Style the card within an urgent page */
+    border-color: var(--bs-danger, #dc3545) !important;
+}
+
+.os-details-urgent .card-header {
+  background-color: var(--bs-danger-bg-subtle, #f8d7da) !important; /* Match page background or slightly darker */
+  border-bottom-color: var(--bs-danger-border-subtle, #f5c2c7) !important;
+  color: var(--bs-danger-text-emphasis, #842029) !important;
+}
+.os-details-urgent .card-header .card-title,
+.os-details-urgent .card-header .card-subtitle {
+  color: var(--bs-danger-text-emphasis, #842029) !important;
+}
+
+.os-details-urgent .card-body {
+   /* The card itself will have border-danger, so body doesn't need full red bg unless desired */
+}
+
+.os-details-urgent .text-primary { /* Override typical primary colors to danger emphasis */
+  color: var(--bs-danger-text-emphasis, #842029) !important;
+}
+.os-details-urgent .text-muted {
+  color: var(--bs-danger-text-emphasis, #721c24) !important; /* Darker red for muted text */
+  opacity: 0.85;
+}
+.os-details-urgent .form-control,
+.os-details-urgent .form-select {
+    border-color: var(--bs-danger, #dc3545);
+    background-color: var(--bs-white); /* Keep form fields somewhat standard for readability */
+}
+.os-details-urgent .form-control:focus,
+.os-details-urgent .form-select:focus {
+    border-color: var(--bs-danger, #dc3545);
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+
+/* Print Styles */
+@media print {
+  body, .container, .container-fluid {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #fff !important; /* Ensure white background for printing */
+    color: #000 !important; /* Ensure black text */
+    -webkit-print-color-adjust: exact !important; /* Chrome, Safari */
+    color-adjust: exact !important; /* Firefox, Edge */
+
+  }
+
+  .page-transition-container > footer,
+  .page-transition-container > header,
+  .btn, /* Hide all buttons */
+  .os-grid-container, /* Hide dashboard grid */
+  .dashboard-controls-container, /* Hide dashboard controls */
+  .navbar, /* Hide header */
+  .footer-content-container, /* Hide footer */
+  .no-print { /* Utility class to hide specific elements */
+    display: none !important;
+  }
+
+  .os-details-print-container {
+      padding: 0 !important;
+      margin: 0 !important;
+  }
+
+  .os-details-print-container .card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    page-break-inside: avoid; /* Try to keep card content on one page */
+  }
+  .os-details-print-container .card-body,
+  .os-details-print-container .card-header {
+    padding: 0.75rem !important;
+    background-color: #fff !important; /* White background for card sections */
+  }
+
+  .os-details-print-container h1,
+  .os-details-print-container h4,
+  .os-details-print-container p,
+  .os-details-print-container dt,
+  .os-details-print-container dd,
+  .os-details-print-container span,
+  .os-details-print-container div {
+    color: #000 !important; /* Black text on white paper */
+    background-color: transparent !important;
+  }
+
+  .os-details-print-container .text-muted,
+  .os-details-print-container .card-subtitle {
+      color: #333 !important;
+  }
+   .os-details-print-container .form-control-plaintext {
+      border: none !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+   }
+
+
+  /* Urgent styling for print - make it less intrusive */
+  .os-details-urgent.os-details-print-container .card {
+     border-color: #666 !important; /* Darker border for urgent on print */
+  }
+  .os-details-urgent.os-details-print-container .card-header {
+    background-color: #eee !important; /* Light grey header for urgent print */
+    border-bottom: 1px solid #ccc !important;
+  }
+  .os-details-urgent.os-details-print-container .badge.bg-danger {
+      background-color: #ddd !important; /* Grey badge for urgent print */
+      color: #000 !important;
+      border: 1px solid #999 !important;
+  }
+   .os-details-urgent.os-details-print-container .text-primary,
+   .os-details-urgent.os-details-print-container .text-danger-emphasis {
+       color: #000 !important; /* Black for emphasis text in urgent print */
+   }
+}
+
+
 /* Dark Mode Adjustments */
 [data-bs-theme="dark"] {
     /* Ensure background is dark */
@@ -174,6 +299,10 @@ body {
         border-color: #80bdff; /* Bootstrap focus color */
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Bootstrap focus shadow */
      }
+     .form-control-plaintext { /* Plaintext for dark mode */
+        color: #dee2e6;
+     }
+
 
     /* Adjust buttons for dark mode */
     .btn-outline-secondary {
@@ -277,4 +406,36 @@ body {
          outline: none;
       }
 
+    /* Dark mode for urgent OS details page */
+    [data-bs-theme="dark"] .os-details-urgent {
+        background-color: var(--bs-danger-bg-subtle, #3A2426) !important; /* Darker red subtle background */
+    }
+    [data-bs-theme="dark"] .os-details-urgent .card {
+        border-color: var(--bs-danger, #842029) !important;
+    }
+    [data-bs-theme="dark"] .os-details-urgent .card-header {
+        background-color: var(--bs-danger-bg-subtle, #3A2426) !important;
+        border-bottom-color: var(--bs-danger-border-subtle, #a33a42) !important;
+        color: var(--bs-danger-text-emphasis, #ff8f8f) !important;
+    }
+    [data-bs-theme="dark"] .os-details-urgent .card-header .card-title,
+    [data-bs-theme="dark"] .os-details-urgent .card-header .card-subtitle,
+    [data-bs-theme="dark"] .os-details-urgent .text-primary {
+        color: var(--bs-danger-text-emphasis, #ff8f8f) !important;
+    }
+    [data-bs-theme="dark"] .os-details-urgent .text-muted {
+        color: var(--bs-danger-text-emphasis, #e67c73) !important;
+        opacity: 0.85;
+    }
+     [data-bs-theme="dark"] .os-details-urgent .form-control,
+     [data-bs-theme="dark"] .os-details-urgent .form-select {
+        border-color: var(--bs-danger, #842029);
+        background-color: #495057; /* Keep consistent with other dark form controls */
+        color: #dee2e6;
+    }
+    [data-bs-theme="dark"] .os-details-urgent .form-control:focus,
+    [data-bs-theme="dark"] .os-details-urgent .form-select:focus {
+        border-color: var(--bs-danger, #842029);
+        box-shadow: 0 0 0 0.25rem rgba(132, 32, 41, 0.35); /* Darker red shadow */
+    }
 }
