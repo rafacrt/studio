@@ -11,6 +11,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/api/') ||
     pathname.includes('.') // Assume files with extensions are static assets
    ) {
+    // console.log(`[Middleware] Ignoring static/API asset: ${pathname}`);
     return NextResponse.next();
   }
 
@@ -18,28 +19,17 @@ export function middleware(request: NextRequest) {
 
   // Allow access to the root path (landing page) explicitly
   if (pathname === '/') {
-    console.log(`[Middleware] Allowing request to proceed for path: ${pathname}`);
+    console.log(`[Middleware] Allowing request to proceed for root path: ${pathname}`);
     return NextResponse.next();
   }
 
-  // Redirect root path logic (currently commented out for landing page)
-  /*
-  if (pathname === '/') {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/dashboard';
-    console.log(`[Middleware] Redirecting from / to /dashboard.`);
-    return NextResponse.redirect(redirectUrl);
-  }
-  */
-
-  // For any other path, allow it to proceed (assuming it's handled by other routes like /dashboard, /os/[id], etc.)
-  // This will now handle /dashboard and other OS management routes directly.
+  // For any other path, allow it to proceed.
+  // This is important for /dashboard, /os/[id], etc.
   console.log(`[Middleware] Allowing request to proceed for path: ${pathname}`);
   return NextResponse.next();
 }
 
 export const config = {
-  // Adjust matcher to exclude API routes as well
+  // Matcher ensures middleware runs for relevant paths
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
-
