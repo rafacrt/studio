@@ -1,8 +1,8 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import type { OS, CreateOSData, Client } from '@/lib/types'; // Import Client type
+// Removed: import { persist, createJSONStorage } from 'zustand/middleware';
+import type { OS, CreateOSData, Client } from '@/lib/types';
 import { OSStatus } from '@/lib/types';
-import { parseISO, differenceInMinutes } from 'date-fns'; // Import date-fns functions
+// Removed: import { parseISO, differenceInMinutes } from 'date-fns';
 
 // Define Partner type explicitly for managed state
 export interface Partner {
@@ -11,422 +11,139 @@ export interface Partner {
 }
 
 interface OSState {
-  osList: OS[];
-  nextOsNumber: number;
-  partners: Partner[]; // Changed from string[] to Partner[] - MANAGED state now
-  clients: Client[];
-  addOS: (data: CreateOSData) => OS;
-  updateOS: (updatedOS: OS) => void;
-  updateOSStatus: (osId: string, newStatus: OSStatus) => void;
-  getOSById: (osId: string) => OS | undefined;
-  setInitialData: (data: OS[], nextNumber: number, partners: Partner[], clients: Client[]) => void; // Updated signature
-  duplicateOS: (osId: string) => void;
-  toggleUrgent: (osId: string) => void;
-  // Partner Actions (now operate on managed Partner[] list)
-  addPartner: (partnerData: Omit<Partner, 'id'>) => Partner;
-  updatePartner: (updatedPartner: Partner) => void;
-  deletePartner: (partnerId: string) => void;
-  getPartnerById: (partnerId: string) => Partner | undefined;
-  getPartnerByName: (partnerName: string) => Partner | undefined; // Helper
-  // Client Actions
-  addClient: (clientData: Omit<Client, 'id'>) => Client;
-  updateClient: (updatedClient: Client) => void;
-  deleteClient: (clientId: string) => void;
-  getClientById: (clientId: string) => Client | undefined;
-  getClientByName: (clientName: string) => Client | undefined; // Helper
+  osList: OS[]; // Will be populated by fetching from DB
+  nextOsNumber: number; // This logic will need to change (e.g., query MAX(numero) from DB)
+  partners: Partner[]; // Will be populated by fetching from DB
+  clients: Client[]; // Will be populated by fetching from DB
+
+  // These functions will need to be re-implemented to call Server Actions
+  // which will interact with the database.
+  // The local state updates here will likely be removed or changed
+  // to reflect optimistic updates or cache invalidation.
+
+  setOsList: (osList: OS[]) => void; // For loading data from DB
+  setPartners: (partners: Partner[]) => void; // For loading data from DB
+  setClients: (clients: Client[]) => void; // For loading data from DB
+  setNextOsNumber: (num: number) => void; // For setting after DB query
+
+  addOS: (data: CreateOSData) => Promise<OS | null>; // Now async, returns Promise
+  updateOS: (updatedOS: OS) => Promise<void>; // Now async
+  updateOSStatus: (osId: string, newStatus: OSStatus) => Promise<void>; // Now async
+  getOSById: (osId: string) => OS | undefined; // Might become async or rely on fetched list
+  duplicateOS: (osId: string) => Promise<OS | null>; // Now async
+  toggleUrgent: (osId: string) => Promise<void>; // Now async
+
+  addPartner: (partnerData: Omit<Partner, 'id'>) => Promise<Partner | null>; // Now async
+  updatePartner: (updatedPartner: Partner) => Promise<void>; // Now async
+  deletePartner: (partnerId: string) => Promise<void>; // Now async
+  getPartnerById: (partnerId: string) => Partner | undefined; // Might rely on fetched list
+  getPartnerByName: (partnerName: string) => Partner | undefined; // Might rely on fetched list
+
+  addClient: (clientData: Omit<Client, 'id'>) => Promise<Client | null>; // Now async
+  updateClient: (updatedClient: Client) => Promise<void>; // Now async
+  deleteClient: (clientId: string) => Promise<void>; // Now async
+  getClientById: (clientId: string) => Client | undefined; // Might rely on fetched list
+  getClientByName: (clientName: string) => Client | undefined; // Might rely on fetched list
 }
 
-const generateOSNumero = (num: number): string => String(num).padStart(6, '0');
+// const generateOSNumero = (num: number): string => String(num).padStart(6, '0');
 
-// Helper to get date string for 'programadoPara' N days from now
-const getDatePlusDays = (days: number): string => {
-    const date = new Date();
-    date.setDate(date.getDate() + days);
-    return date.toISOString().split('T')[0]; // Return only YYYY-MM-DD
-}
 
-// Initial mock clients
-const initialMockClients: Client[] = [
-    { id: 'client-1', name: 'Soluções Tech Ltda.' },
-    { id: 'client-2', name: 'Café Aconchego' },
-    { id: 'client-3', name: 'Logística Global Express' },
-    { id: 'client-4', name: 'Eco Verde Sustentável' },
-];
-
-// Initial mock data - Added 'programadoPara' and time tracking fields
-const initialMockOS: OS[] = [
-  {
-    id: '1',
-    numero: generateOSNumero(1),
-    cliente: 'Soluções Tech Ltda.', // Matches name in initialMockClients
-    parceiro: 'Design Criativo Co.',
-    projeto: 'Redesenho do Website',
-    tarefa: 'Coleta de requisitos e briefing inicial com o cliente.',
-    observacoes: 'Consulta inicial e levantamento de requisitos. Cliente precisa de um visual moderno.',
-    tempoTrabalhado: '2h reunião, 1h documentação',
-    status: OSStatus.AGUARDANDO_CLIENTE,
-    dataAbertura: new Date(2023, 10, 15, 10, 30).toISOString(),
-    programadoPara: getDatePlusDays(7), // Programmed for 7 days from now
-    isUrgent: false,
-    dataInicioProducao: undefined,
-    tempoProducaoMinutos: undefined,
-  },
-  {
-    id: '2',
-    numero: generateOSNumero(2),
-    cliente: 'Café Aconchego', // Matches name in initialMockClients
-    projeto: 'Desenvolvimento App Mobile',
-    tarefa: 'Fase 1: Mockups de UI/UX.',
-    observacoes: 'Fase 1: Mockups de design UI/UX. Foco em interface amigável.',
-    tempoTrabalhado: '16h design',
-    status: OSStatus.EM_PRODUCAO,
-    dataAbertura: new Date(2023, 11, 1, 14, 0).toISOString(),
-    dataInicioProducao: new Date(2023, 11, 2, 9, 0).toISOString(), // Started production later
-    programadoPara: getDatePlusDays(3), // Programmed for 3 days from now
-    isUrgent: true,
-    tempoProducaoMinutos: undefined,
-  },
-  {
-    id: '3',
-    numero: generateOSNumero(3),
-    cliente: 'Logística Global Express', // Matches name in initialMockClients
-    parceiro: 'Integra Sys',
-    projeto: 'Integração CRM',
-    tarefa: 'Aguardar chaves de API e documentação do parceiro.',
-    observacoes: 'Aguardando chaves de API e documentação da empresa parceira.',
-    status: OSStatus.AGUARDANDO_PARCEIRO,
-    dataAbertura: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    programadoPara: undefined, // Not programmed yet
-    isUrgent: false,
-    dataInicioProducao: undefined,
-    tempoProducaoMinutos: undefined,
-  },
-  {
-    id: '4',
-    numero: generateOSNumero(4),
-    cliente: 'Eco Verde Sustentável', // Matches name in initialMockClients
-    projeto: 'Pacote de Branding',
-    tarefa: 'Entrega final do manual da marca e aprovação.',
-    observacoes: 'Guia completo de branding entregue e aprovado pelo cliente.',
-    status: OSStatus.FINALIZADO,
-    dataAbertura: new Date(2023, 9, 5, 9, 0).toISOString(),
-    dataInicioProducao: new Date(2023, 9, 10, 11, 0).toISOString(),
-    dataFinalizacao: new Date(2023, 9, 25, 17, 30).toISOString(),
-    programadoPara: new Date(2023, 9, 24).toISOString().split('T')[0], // Was programmed for this date
-    isUrgent: false,
-    tempoProducaoMinutos: differenceInMinutes(new Date(2023, 9, 25, 17, 30), new Date(2023, 9, 10, 11, 0)), // Example calculation
-  },
-  {
-    id: '5',
-    numero: generateOSNumero(5),
-    cliente: 'Soluções Tech Ltda.', // Matches name in initialMockClients
-    parceiro: 'Marketing Experts',
-    projeto: 'Campanha de Marketing Digital',
-    tarefa: 'Planejamento da estratégia de mídia social para Q1.',
-    observacoes: 'Planejando estratégia de mídia social para o primeiro trimestre. Prazo urgente.',
-    status: OSStatus.NA_FILA,
-    dataAbertura: new Date().toISOString(),
-    programadoPara: getDatePlusDays(14), // Programmed for 14 days from now
-    isUrgent: true,
-    dataInicioProducao: undefined,
-    tempoProducaoMinutos: undefined,
-  },
-];
-
-// Derive initial partners from mock OS data
-const getInitialPartners = (osList: OS[]): Partner[] => {
-  const partnerMap = new Map<string, Partner>();
-  osList.forEach(os => {
-    if (os.parceiro && !partnerMap.has(os.parceiro.toLowerCase())) {
-        const newPartner = { id: crypto.randomUUID(), name: os.parceiro };
-        partnerMap.set(os.parceiro.toLowerCase(), newPartner);
-    }
-  });
-  return Array.from(partnerMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-};
-
-const initialMockPartners = getInitialPartners(initialMockOS);
-
+// The store is now much simpler. Data fetching and mutations
+// will be handled by server components/actions.
+// This store might be used for temporary client-side state or removed
+// if data is directly managed by components via server action calls.
 
 export const useOSStore = create<OSState>()(
-  persist(
     (set, get) => ({
-      osList: initialMockOS,
-      nextOsNumber: initialMockOS.length + 1,
-      partners: initialMockPartners, // Initialize with derived partners
-      clients: initialMockClients, // Initialize clients list
+      osList: [],
+      nextOsNumber: 1,
+      partners: [],
+      clients: [],
 
-      setInitialData: (data, nextNumber, partners, clients) => set({
-          osList: data,
-          nextOsNumber: nextNumber,
-          partners: partners, // Set initial partners
-          clients: clients // Set initial clients
-      }),
+      setOsList: (osList) => set({ osList }),
+      setPartners: (partners) => set({ partners }),
+      setClients: (clients) => set({ clients }),
+      setNextOsNumber: (num) => set({ nextOsNumber: num }),
 
-      addOS: (data) => {
-        const currentOsNumber = get().nextOsNumber;
-        const newOS: OS = {
-          id: crypto.randomUUID(),
-          numero: generateOSNumero(currentOsNumber),
-          cliente: data.cliente.trim(), // Trim client name
-          parceiro: data.parceiro?.trim(), // Trim partner name
-          projeto: data.projeto,
-          tarefa: data.tarefa,
-          observacoes: data.observacoes,
-          tempoTrabalhado: data.tempoTrabalhado,
-          status: data.status || OSStatus.NA_FILA, // Default to NA_FILA
-          dataAbertura: new Date().toISOString(),
-          programadoPara: data.programadoPara ? data.programadoPara.split('T')[0] : undefined,
-          isUrgent: data.isUrgent || false,
-          dataInicioProducao: data.status === OSStatus.EM_PRODUCAO ? new Date().toISOString() : undefined,
-          tempoProducaoMinutos: undefined,
-        };
-        
-        let finalPartners = get().partners;
-        if (newOS.parceiro) {
-            const partnerName = newOS.parceiro;
-            if (!finalPartners.some(p => p.name.toLowerCase() === partnerName.toLowerCase())) {
-                 const newPartnerEntry = { id: crypto.randomUUID(), name: partnerName };
-                 finalPartners = [...finalPartners, newPartnerEntry].sort((a,b) => a.name.localeCompare(b.name));
-                 console.log(`Partner "${newPartnerEntry.name}" implicitly added during OS creation.`);
-            }
-        }
+      // TODO: Re-implement all mutation and fetch functions below to use Server Actions + Database
+      // For now, they are placeholders or operate on local state for basic structure.
 
-        let finalClients = get().clients;
-        const clientName = newOS.cliente; // cliente is mandatory and trimmed
-        if (!finalClients.some(c => c.name.toLowerCase() === clientName.toLowerCase())) {
-            const newClientEntry = { id: crypto.randomUUID(), name: clientName };
-            finalClients = [...finalClients, newClientEntry].sort((a,b) => a.name.localeCompare(b.name));
-            console.log(`Client "${newClientEntry.name}" implicitly added during OS creation.`);
-        }
-
-        set((state) => ({
-          osList: [...state.osList, newOS],
-          nextOsNumber: currentOsNumber + 1,
-          partners: finalPartners,
-          clients: finalClients,
-        }));
-        return newOS;
+      addOS: async (data) => {
+        console.warn('addOS: DB implementation pending. Called with:', data);
+        // This would typically call a server action.
+        // For now, returning null or a mock.
+        return null;
       },
 
-      updateOS: (updatedOSData) =>
-        set((state) => {
-          let newPartnerAdded = false;
-          let newClientAdded = false;
-          let newPartnerEntry: Partner | undefined = undefined;
-          let newClientEntry: Client | undefined = undefined;
-
-          const trimmedClientName = updatedOSData.cliente.trim();
-          const trimmedPartnerName = updatedOSData.parceiro?.trim();
-
-          // Check and prepare new partner
-          if (trimmedPartnerName) {
-            if (!state.partners.some(p => p.name.toLowerCase() === trimmedPartnerName.toLowerCase())) {
-              newPartnerEntry = { id: crypto.randomUUID(), name: trimmedPartnerName };
-              newPartnerAdded = true;
-            }
-          }
-          // Check and prepare new client
-          if (trimmedClientName) { // cliente is mandatory
-            if (!state.clients.some(c => c.name.toLowerCase() === trimmedClientName.toLowerCase())) {
-              newClientEntry = { id: crypto.randomUUID(), name: trimmedClientName };
-              newClientAdded = true;
-            }
-          }
-          
-          const osList = state.osList.map((os) => {
-            if (os.id !== updatedOSData.id) return os;
-
-            let finalUpdatedOS: OS = {
-              ...os,
-              ...updatedOSData,
-              cliente: trimmedClientName, // Use trimmed name
-              parceiro: trimmedPartnerName || undefined, // Use trimmed name or undefined
-              programadoPara: updatedOSData.programadoPara ? updatedOSData.programadoPara.split('T')[0] : undefined,
-            };
-            
-            if (os.status !== finalUpdatedOS.status) {
-              const now = new Date().toISOString();
-              if (finalUpdatedOS.status === OSStatus.EM_PRODUCAO && !finalUpdatedOS.dataInicioProducao) {
-                finalUpdatedOS.dataInicioProducao = now;
-              }
-              if (finalUpdatedOS.status === OSStatus.FINALIZADO) {
-                if (!finalUpdatedOS.dataFinalizacao) {
-                  finalUpdatedOS.dataFinalizacao = now;
-                }
-                if (finalUpdatedOS.dataInicioProducao && !finalUpdatedOS.tempoProducaoMinutos) {
-                  try {
-                    const finalizationDateToUse = finalUpdatedOS.dataFinalizacao || now;
-                    finalUpdatedOS.tempoProducaoMinutos = differenceInMinutes(
-                      parseISO(finalizationDateToUse),
-                      parseISO(finalUpdatedOS.dataInicioProducao)
-                    );
-                  } catch (error) {
-                    console.error("Error calculating production time during updateOS:", finalUpdatedOS.numero, error);
-                    finalUpdatedOS.tempoProducaoMinutos = -1;
-                  }
-                }
-              }
-            }
-            return finalUpdatedOS;
-          });
-
-          let finalPartners = state.partners;
-          if (newPartnerAdded && newPartnerEntry) {
-            finalPartners = [...state.partners, newPartnerEntry].sort((a, b) => a.name.localeCompare(b.name));
-            console.log(`Partner "${newPartnerEntry.name}" implicitly added during OS update.`);
-          }
-          let finalClients = state.clients;
-          if (newClientAdded && newClientEntry) {
-            finalClients = [...state.clients, newClientEntry].sort((a, b) => a.name.localeCompare(b.name));
-            console.log(`Client "${newClientEntry.name}" implicitly added during OS update.`);
-          }
-
-          return { osList, partners: finalPartners, clients: finalClients };
-        }),
-
-      updateOSStatus: (osId, newStatus) =>
-        set((state) => ({
-          osList: state.osList.map((os) => {
-            if (os.id !== osId) return os;
-
-            const now = new Date().toISOString();
-            let updates: Partial<OS> = { status: newStatus };
-
-            if (newStatus === OSStatus.EM_PRODUCAO && !os.dataInicioProducao) {
-              updates.dataInicioProducao = now;
-            }
-
-            if (newStatus === OSStatus.FINALIZADO) {
-              if (!os.dataFinalizacao) {
-                 updates.dataFinalizacao = now;
-              }
-              if (os.dataInicioProducao && !os.tempoProducaoMinutos) {
-                try {
-                    const finalizationDate = updates.dataFinalizacao || os.dataFinalizacao || now;
-                    updates.tempoProducaoMinutos = differenceInMinutes(
-                        parseISO(finalizationDate),
-                        parseISO(os.dataInicioProducao)
-                    );
-                } catch (error) {
-                     console.error("Error calculating production time for OS:", os.numero, error);
-                     updates.tempoProducaoMinutos = -1;
-                }
-              }
-            }
-            return { ...os, ...updates };
-          }),
-        })),
-
-      getOSById: (osId) => get().osList.find((os) => os.id === osId),
-
-      duplicateOS: (osId: string) => {
-        const osToDuplicate = get().osList.find(os => os.id === osId);
-        if (osToDuplicate) {
-          const currentOsNumber = get().nextOsNumber;
-          const duplicatedOS: OS = {
-            ...osToDuplicate,
-            id: crypto.randomUUID(),
-            numero: generateOSNumero(currentOsNumber),
-            dataAbertura: new Date().toISOString(),
-            status: OSStatus.NA_FILA,
-            dataFinalizacao: undefined,
-            programadoPara: undefined,
-            dataInicioProducao: undefined,
-            tempoProducaoMinutos: undefined,
-          };
-          set((state) => ({
-            osList: [...state.osList, duplicatedOS],
-            nextOsNumber: currentOsNumber + 1,
-          }));
-          console.log(`OS "${duplicatedOS.projeto}" duplicada com sucesso. Novo número: ${duplicatedOS.numero}.`);
-        }
+      updateOS: async (updatedOSData) => {
+        console.warn('updateOS: DB implementation pending. Called with:', updatedOSData);
+        // set((state) => ({
+        //   osList: state.osList.map((os) =>
+        //     os.id === updatedOSData.id ? { ...os, ...updatedOSData } : os
+        //   ),
+        // }));
       },
 
-      toggleUrgent: (osId: string) => {
-        set((state) => ({
-          osList: state.osList.map((os) =>
-            os.id === osId ? { ...os, isUrgent: !os.isUrgent } : os
-          ),
-        }));
-        const updatedOS = get().osList.find(os => os.id === osId);
-        if (updatedOS) {
-           console.log(`A OS "${updatedOS.projeto}" foi ${updatedOS.isUrgent ? "marcada como urgente" : "desmarcada como urgente"}.`);
-        }
+      updateOSStatus: async (osId, newStatus) => {
+        console.warn('updateOSStatus: DB implementation pending. Called for OS ID:', osId, 'New Status:', newStatus);
+        // set((state) => ({
+        //   osList: state.osList.map((os) =>
+        //     os.id === osId ? { ...os, status: newStatus } : os
+        //   ),
+        // }));
+      },
+
+      getOSById: (osId) => {
+        // This will likely fetch from the current client-side list,
+        // which should be populated from the DB initially.
+        return get().osList.find((os) => os.id === osId);
+      },
+
+      duplicateOS: async (osId: string) => {
+        console.warn('duplicateOS: DB implementation pending. Called for OS ID:', osId);
+        return null;
+      },
+
+      toggleUrgent: async (osId: string) => {
+        console.warn('toggleUrgent: DB implementation pending. Called for OS ID:', osId);
+        // set((state) => ({
+        //   osList: state.osList.map((os) =>
+        //     os.id === osId ? { ...os, isUrgent: !os.isUrgent } : os
+        //   ),
+        // }));
       },
 
       getPartnerById: (partnerId) => get().partners.find(p => p.id === partnerId),
       getPartnerByName: (partnerName) => get().partners.find(p => p.name.toLowerCase() === partnerName.toLowerCase()),
-      addPartner: (partnerData) => {
-         const trimmedName = partnerData.name.trim();
-         const existingPartner = get().getPartnerByName(trimmedName);
-         if (existingPartner) {
-            console.warn(`Partner "${trimmedName}" already exists.`);
-            return existingPartner;
-         }
-        const newPartner: Partner = { id: crypto.randomUUID(), name: trimmedName };
-        set((state) => ({
-          partners: [...state.partners, newPartner].sort((a, b) => a.name.localeCompare(b.name)),
-        }));
-        console.log(`Partner "${newPartner.name}" adicionado.`);
-        return newPartner;
+      addPartner: async (partnerData) => {
+        console.warn('addPartner: DB implementation pending. Called with:', partnerData);
+        return null;
       },
-      updatePartner: (updatedPartner) => {
-         set((state) => ({
-          partners: state.partners.map((partner) =>
-            partner.id === updatedPartner.id ? { ...partner, name: updatedPartner.name.trim() } : partner
-          ).sort((a, b) => a.name.localeCompare(b.name)),
-        }));
-        console.log(`Partner "${updatedPartner.name}" atualizado.`);
+      updatePartner: async (updatedPartner) => {
+        console.warn('updatePartner: DB implementation pending. Called with:', updatedPartner);
       },
-      deletePartner: (partnerId) => {
-        const partnerToDelete = get().getPartnerById(partnerId);
-        if (partnerToDelete) {
-            set((state) => ({
-                partners: state.partners.filter((partner) => partner.id !== partnerId),
-            }));
-            console.log(`Partner "${partnerToDelete.name}" removido.`);
-        }
+      deletePartner: async (partnerId) => {
+        console.warn('deletePartner: DB implementation pending. Called for ID:', partnerId);
       },
 
       getClientById: (clientId) => get().clients.find(c => c.id === clientId),
       getClientByName: (clientName) => get().clients.find(c => c.name.toLowerCase() === clientName.toLowerCase()),
-      addClient: (clientData) => {
-        const trimmedName = clientData.name.trim();
-        const existingClient = get().getClientByName(trimmedName);
-        if (existingClient) {
-            console.warn(`Client "${trimmedName}" already exists.`);
-            return existingClient;
-        }
-        const newClient: Client = { id: crypto.randomUUID(), name: trimmedName };
-        set((state) => ({
-          clients: [...state.clients, newClient].sort((a, b) => a.name.localeCompare(b.name)),
-        }));
-        console.log(`Cliente "${newClient.name}" adicionado.`);
-        return newClient;
+      addClient: async (clientData) => {
+        console.warn('addClient: DB implementation pending. Called with:', clientData);
+        return null;
       },
-      updateClient: (updatedClient) => {
-         set((state) => ({
-          clients: state.clients.map((client) =>
-            client.id === updatedClient.id ? { ...client, name: updatedClient.name.trim() } : client
-          ).sort((a, b) => a.name.localeCompare(b.name)),
-        }));
-        console.log(`Cliente "${updatedClient.name}" atualizado.`);
+      updateClient: async (updatedClient) => {
+        console.warn('updateClient: DB implementation pending. Called with:', updatedClient);
       },
-      deleteClient: (clientId) => {
-        const clientToDelete = get().getClientById(clientId);
-        if (clientToDelete) {
-            set((state) => ({
-                clients: state.clients.filter((client) => client.id !== clientId),
-            }));
-            console.log(`Cliente "${clientToDelete.name}" removido.`);
-        }
+      deleteClient: async (clientId) => {
+        console.warn('deleteClient: DB implementation pending. Called for ID:', clientId);
       },
-    }),
-    {
-      name: 'freelaos-storage-v7-time-tracking',
-      storage: createJSONStorage(() => localStorage),
-      version: 7,
-    }
-  )
+    })
+  // Removed persist middleware
+  // {
+  //   name: 'freelaos-storage-v7-time-tracking',
+  //   storage: createJSONStorage(() => localStorage),
+  //   version: 7, // Increment version if schema changes significantly, though now it's mostly a cache
+  // }
 );
