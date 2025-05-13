@@ -16,8 +16,8 @@ export function middleware(request: NextRequest) {
 
   console.log(`[Middleware] Processing request for path: ${pathname}`);
 
-  // Allow access to the root path (landing page) and the workflow page explicitly
-  if (pathname === '/' || pathname.startsWith('/workflow')) {
+  // Allow access to the root path (landing page) explicitly
+  if (pathname === '/') {
     console.log(`[Middleware] Allowing request to proceed for path: ${pathname}`);
     return NextResponse.next();
   }
@@ -33,6 +33,7 @@ export function middleware(request: NextRequest) {
   */
 
   // For any other path, allow it to proceed (assuming it's handled by other routes like /dashboard, /os/[id], etc.)
+  // This will now handle /dashboard and other OS management routes directly.
   console.log(`[Middleware] Allowing request to proceed for path: ${pathname}`);
   return NextResponse.next();
 }
@@ -41,3 +42,4 @@ export const config = {
   // Adjust matcher to exclude API routes as well
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
+
