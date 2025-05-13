@@ -14,20 +14,21 @@ const ANIMATION_PLAYED_KEY = 'freelaos_animation_played';
 
 export default function DashboardPage() {
   const [isClient, setIsClient] = useState(false);
-  const [showAnimation, setShowAnimation] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(false); // Default to false
 
   useEffect(() => {
     setIsClient(true);
+    // Access sessionStorage only on the client side after mount
     try {
       const animationPlayed = sessionStorage.getItem(ANIMATION_PLAYED_KEY);
       if (animationPlayed !== 'true') {
         setShowAnimation(true);
       } else {
-        setShowAnimation(false);
+        setShowAnimation(false); // Explicitly set to false if already played
       }
     } catch (error) {
       console.warn("Session storage not available or error accessing it:", error);
-      setShowAnimation(false);
+      setShowAnimation(false); // Fallback to not showing animation
     }
   }, []);
 
@@ -86,3 +87,4 @@ export default function DashboardPage() {
     </AuthenticatedLayout>
   );
 }
+
