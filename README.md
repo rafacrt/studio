@@ -1,35 +1,12 @@
 # Alugo Project
 
-This project consists of two main parts:
+This project consists of a Next.js (React/TypeScript) web application for administrators to manage listings, users, and view analytics, and a user-facing application.
 
-1.  **Alugo Mobile App**: A Flutter application for users to find and book university student accommodations.
-2.  **Alugo Admin Panel**: A Next.js (React/TypeScript) web application for administrators to manage listings, users, and view analytics.
+## Next.js Admin Panel & User Application
 
-## Flutter Mobile App
+The administrative panel and user-facing application are part of a Next.js web application.
 
-The user-facing mobile application is built with Flutter.
-
-### Getting Started with Flutter App
-
-1.  **Ensure Flutter is installed:** Follow the [official Flutter installation guide](https://docs.flutter.dev/get-started/install).
-2.  **Navigate to the Flutter project directory:** (Assuming the Flutter project is at the root or in a `alugo_flutter` sub-directory - adjust as per your structure).
-    ```bash
-    # cd alugo_flutter # If in a subdirectory
-    ```
-3.  **Get dependencies:**
-    ```bash
-    flutter pub get
-    ```
-4.  **Run the app:**
-    ```bash
-    flutter run
-    ```
-
-## Next.js Admin Panel
-
-The administrative panel is a Next.js web application.
-
-### Getting Started with Next.js Admin Panel
+### Getting Started with Next.js Application
 
 1.  **Navigate to the Next.js project directory** (this is likely the root of the current project).
 2.  **Install dependencies:**
@@ -37,17 +14,17 @@ The administrative panel is a Next.js web application.
     npm install
     ```
 3.  **Set up environment variables:**
-    Create a `.env.local` file in the root of the Next.js project (if not already present from previous steps for map keys, etc.). Add any necessary environment variables for the admin panel or Genkit.
+    Create a `.env.local` file in the root of the Next.js project. Add any necessary environment variables.
     Example:
     ```
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY_IF_NEEDED
     # Other Genkit/Firebase related keys if applicable
     ```
-4.  **Run the development server for the admin panel:**
+4.  **Run the development server:**
     ```bash
     npm run dev
     ```
-    This will typically start the admin panel on `http://localhost:9002`.
+    This will typically start the application on `http://localhost:9002`.
 
 5.  **(Optional) Genkit Development Server:**
     If you are working with Genkit flows:
@@ -57,6 +34,7 @@ The administrative panel is a Next.js web application.
     npm run genkit:watch
     ```
 
-### Accessing the Admin Panel
+### Accessing the Application
 
-Once the Next.js development server is running, you can usually access the admin panel by navigating to `/admin/dashboard` (e.g., `http://localhost:9002/admin/dashboard`). Login with admin credentials.
+- **User Application:** Once the Next.js development server is running, you can access the user application by navigating to the root path or specific user routes (e.g., `http://localhost:9002/explore`).
+- **Admin Panel:** You can usually access the admin panel by navigating to `/admin/dashboard` (e.g., `http://localhost:9002/admin/dashboard`). Login with admin credentials.
