@@ -7,8 +7,7 @@ import { ArrowLeft, CalendarClock, CheckCircle2, Clock, FileText, Flag, Server, 
 import { format, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOSStore } from '@/store/os-store';
-import type { Partner } from '@/store/os-store'; 
-import type { Client } from '@/lib/types';
+// Client and Partner types are imported by useOSStore or OS type
 import { OSStatus, ALL_OS_STATUSES } from '@/lib/types';
 
 const getStatusIcon = (status: OSStatus) => {
@@ -21,6 +20,53 @@ const getStatusIcon = (status: OSStatus) => {
     default: return <FileText size={16} className="me-2" />;
   }
 };
+
+interface DetailItemProps {
+  label: string;
+  value?: string | null | boolean;
+  icon?: React.ReactNode;
+  name?: keyof OS; 
+  isEditableField: boolean; 
+  children?: React.ReactNode; 
+  className?: string;
+  isEditingMode: boolean; 
+}
+
+const DetailItem = ({ label, value, icon, name, isEditableField, children, className, isEditingMode }: DetailItemProps) => {
+  let displayValue: string | React.ReactNode = value;
+  if ((name === 'programadoPara' || name === 'dataAbertura' || name === 'dataFinalizacao') && typeof value === 'string' && value) {
+    try {
+      const dateStr = value.includes('T') ? value : `${value}T00:00:00Z`;
+      const date = parseISO(dateStr);
+      if (isValid(date)) {
+        const formatString = (name === 'programadoPara' && value.length === 10) ? "dd/MM/yyyy" : "dd/MM/yyyy 'às' HH:mm";
+        displayValue = format(date, formatString, { locale: ptBR });
+      } else {
+        displayValue = value;
+      }
+    } catch {
+      displayValue = value;
+    }
+  } else if (typeof value === 'boolean') {
+    displayValue = value ? 'Sim' : 'Não';
+  }
+
+  return (
+    <div className={`row py-2 ${className || ''}`}>
+      <dt className="col-sm-3 text-muted d-flex align-items-center small fw-medium">{icon}{label}</dt>
+      <dd className="col-sm-9 mb-0">
+        {isEditingMode && isEditableField ? (
+          children
+        ) : (
+          <span className={`text-break form-control-plaintext p-0`}>
+              {displayValue || <span className="text-muted fst-italic">N/A</span>}
+          </span>
+        )}
+      </dd>
+    </div>
+  );
+};
+
 
 interface OSDetailsViewProps {
   os: OS;
@@ -36,6 +82,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   const [isSaving, setIsSaving] = useState(false);
   
   const initialProgramadoPara = initialOs.programadoPara ? initialOs.programadoPara.split('T')[0] : '';
+  // Initialize formData based on initialOs, especially for controlled inputs.
   const [formData, setFormData] = useState<OS>({ ...initialOs, programadoPara: initialProgramadoPara });
 
   const [clientInput, setClientInput] = useState(initialOs.cliente || '');
@@ -50,18 +97,10 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   useEffect(() => {
     const currentProgramadoPara = initialOs.programadoPara ? initialOs.programadoPara.split('T')[0] : '';
 
-    if (initialOs.id !== formData.id) { 
+    if (initialOs.id !== formData.id || !isEditing) { 
       setFormData({ ...initialOs, programadoPara: currentProgramadoPara });
       setClientInput(initialOs.cliente || '');
       setPartnerInput(initialOs.parceiro || '');
-      setShowClientSuggestions(false);
-      setShowPartnerSuggestions(false);
-    } else if (!isEditing) { 
-      setFormData({ ...initialOs, programadoPara: currentProgramadoPara });
-      setClientInput(initialOs.cliente || '');
-      setPartnerInput(initialOs.parceiro || '');
-      setShowClientSuggestions(false);
-      setShowPartnerSuggestions(false);
     }
   }, [initialOs, isEditing, formData.id]);
 
@@ -112,14 +151,12 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
     setFormData(prev => ({ ...prev, cliente: clientName }));
     setClientInput(clientName); 
     setShowClientSuggestions(false);
-    // clientInputRef.current?.focus(); // Focus can be managed by user or further refined if needed
   };
 
   const handlePartnerSelect = (partnerName: string) => {
     setFormData(prev => ({ ...prev, parceiro: partnerName }));
     setPartnerInput(partnerName); 
     setShowPartnerSuggestions(false);
-    // partnerInputRef.current?.focus(); // Focus can be managed by user
   };
 
   const handleSave = async () => {
@@ -130,7 +167,6 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
         cliente: formData.cliente.trim(), 
         parceiro: formData.parceiro?.trim() || undefined,
         programadoPara: formData.programadoPara || undefined, 
-        // Ensure tarefa and observacoes are saved as empty strings if null/undefined, though type implies string
         tarefa: formData.tarefa || '',
         observacoes: formData.observacoes || '',
       };
@@ -146,12 +182,26 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   };
 
   const handleCancel = () => {
+    // Reset formData to initialOs values when canceling edit
+    const currentProgramadoPara = initialOs.programadoPara ? initialOs.programadoPara.split('T')[0] : '';
+    setFormData({ ...initialOs, programadoPara: currentProgramadoPara });
+    setClientInput(initialOs.cliente || '');
+    setPartnerInput(initialOs.parceiro || '');
+    setShowClientSuggestions(false);
+    setShowPartnerSuggestions(false);
     setIsEditing(false); 
   };
 
   const handleFinalizeOS = () => {
     if (formData.status !== OSStatus.FINALIZADO) {
         updateOSStatus(formData.id, OSStatus.FINALIZADO);
+        // Update local formData as well to reflect the change immediately
+        setFormData(prev => ({
+          ...prev,
+          status: OSStatus.FINALIZADO,
+          dataFinalizacao: prev.dataFinalizacao || new Date().toISOString(),
+          // Recalculate tempoProducaoMinutos if needed, or let store logic handle it
+        }));
         console.log(`OS ${formData.numero} finalizada.`);
     }
   };
@@ -178,49 +228,6 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   useEffect(() => setupClickListener(clientInputRef, setShowClientSuggestions), [clientInputRef]);
   useEffect(() => setupClickListener(partnerInputRef, setShowPartnerSuggestions), [partnerInputRef]);
 
-
-  const DetailItem = ({ label, value, icon, name, isEditableField, children, className }: {
-    label: string;
-    value?: string | null | boolean;
-    icon?: React.ReactNode;
-    name?: keyof OS;
-    isEditableField: boolean;
-    children?: React.ReactNode;
-    className?: string;
-  }) => {
-    let displayValue: string | React.ReactNode = value;
-    if ((name === 'programadoPara' || name === 'dataAbertura' || name === 'dataFinalizacao') && typeof value === 'string' && value) {
-      try {
-        const dateStr = value.includes('T') ? value : `${value}T00:00:00Z`; 
-        const date = parseISO(dateStr);
-        if (isValid(date)) {
-          const formatString = (name === 'programadoPara' && value.length === 10) ? "dd/MM/yyyy" : "dd/MM/yyyy 'às' HH:mm";
-          displayValue = format(date, formatString, { locale: ptBR });
-        } else {
-          displayValue = value; 
-        }
-      } catch {
-        displayValue = value; 
-      }
-    } else if (typeof value === 'boolean') {
-      displayValue = value ? 'Sim' : 'Não';
-    }
-
-    return (
-      <div className={`row py-2 ${className || ''}`}>
-        <dt className="col-sm-3 text-muted d-flex align-items-center small fw-medium">{icon}{label}</dt>
-        <dd className="col-sm-9 mb-0">
-          {isEditing && isEditableField ? (
-            children
-          ) : (
-            <span className={`text-break form-control-plaintext p-0`}>
-                {displayValue || <span className="text-muted fst-italic">N/A</span>}
-            </span>
-          )}
-        </dd>
-      </div>
-    );
-  };
 
   return (
     <div className={`container-fluid os-details-print-container ${formData.isUrgent && !isEditing ? 'os-details-urgent' : ''}`}>
@@ -286,15 +293,22 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
         </div>
         <div className="card-body p-4">
           <dl className="mb-0">
-            <DetailItem label="Cliente" icon={<UserIcon size={16} className="me-2 text-primary" />} name="cliente" isEditableField={true} value={formData.cliente}>
+            <DetailItem 
+              label="Cliente" 
+              icon={<UserIcon size={16} className="me-2 text-primary" />} 
+              name="cliente" 
+              isEditableField={true} 
+              value={formData.cliente}
+              isEditingMode={isEditing}
+            >
               <div className="position-relative">
                 <input
                   ref={clientInputRef}
                   type="text"
                   className="form-control form-control-sm"
                   name="cliente"
-                  value={clientInput} // Use clientInput for display and typing
-                  onChange={handleInputChange} // This updates clientInput AND formData.cliente
+                  value={clientInput} 
+                  onChange={handleInputChange} 
                   onFocus={() => setShowClientSuggestions(!!clientInput && filteredClients.length > 0)}
                   onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)} 
                   autoComplete="off"
@@ -315,15 +329,22 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
               </div>
             </DetailItem>
 
-            <DetailItem label="Parceiro" icon={<Users size={16} className="me-2 text-primary" />} name="parceiro" isEditableField={true} value={formData.parceiro}>
+            <DetailItem 
+              label="Parceiro" 
+              icon={<Users size={16} className="me-2 text-primary" />} 
+              name="parceiro" 
+              isEditableField={true} 
+              value={formData.parceiro}
+              isEditingMode={isEditing}
+            >
               <div className="position-relative">
                 <input
                   ref={partnerInputRef}
                   type="text"
                   className="form-control form-control-sm"
                   name="parceiro"
-                  value={partnerInput} // Use partnerInput for display and typing
-                  onChange={handleInputChange} // This updates partnerInput AND formData.parceiro
+                  value={partnerInput} 
+                  onChange={handleInputChange} 
                   onFocus={() => setShowPartnerSuggestions(!!partnerInput && filteredPartners.length > 0)}
                   onBlur={() => setTimeout(() => setShowPartnerSuggestions(false), 200)} 
                   autoComplete="off"
@@ -343,7 +364,14 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
               </div>
             </DetailItem>
 
-            <DetailItem label="Status" value={formData.status} icon={getStatusIcon(formData.status)} name="status" isEditableField={true}>
+            <DetailItem 
+              label="Status" 
+              value={formData.status} 
+              icon={getStatusIcon(formData.status)} 
+              name="status" 
+              isEditableField={true}
+              isEditingMode={isEditing}
+            >
               <select
                 className="form-select form-select-sm"
                 name="status"
@@ -355,9 +383,23 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
               </select>
             </DetailItem>
 
-            <DetailItem label="Data de Abertura" value={initialOs.dataAbertura} icon={<CalendarClock size={16} className="me-2 text-secondary" />} name="dataAbertura" isEditableField={false} />
+            <DetailItem 
+              label="Data de Abertura" 
+              value={initialOs.dataAbertura} 
+              icon={<CalendarClock size={16} className="me-2 text-secondary" />} 
+              name="dataAbertura" 
+              isEditableField={false} 
+              isEditingMode={isEditing}
+            />
 
-            <DetailItem label="Programado Para" value={formData.programadoPara} icon={<CalendarIcon size={16} className="me-2 text-info" />} name="programadoPara" isEditableField={true}>
+            <DetailItem 
+              label="Programado Para" 
+              value={formData.programadoPara} 
+              icon={<CalendarIcon size={16} className="me-2 text-info" />} 
+              name="programadoPara" 
+              isEditableField={true}
+              isEditingMode={isEditing}
+            >
               <input
                 type="date"
                 className="form-control form-control-sm"
@@ -369,48 +411,90 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
             </DetailItem>
 
             {(formData.status === OSStatus.FINALIZADO || initialOs.dataFinalizacao) && (
-              <DetailItem label="Data de Finalização" value={formData.dataFinalizacao || initialOs.dataFinalizacao} icon={<CheckCircle2 size={16} className="me-2 text-success" />} name="dataFinalizacao" isEditableField={false} />
+              <DetailItem 
+                label="Data de Finalização" 
+                value={formData.dataFinalizacao || initialOs.dataFinalizacao} 
+                icon={<CheckCircle2 size={16} className="me-2 text-success" />} 
+                name="dataFinalizacao" 
+                isEditableField={false} 
+                isEditingMode={isEditing}
+              />
             )}
              {formData.status === OSStatus.FINALIZADO && (formData.tempoProducaoMinutos !== undefined && formData.tempoProducaoMinutos >= 0) && (
-                <DetailItem label="Tempo de Produção" value={`${Math.floor(formData.tempoProducaoMinutos / 60)}h ${formData.tempoProducaoMinutos % 60}m`} icon={<Clock3 size={16} className="me-2 text-success" />} name="tempoProducaoMinutos" isEditableField={false} />
+                <DetailItem 
+                  label="Tempo de Produção" 
+                  value={`${Math.floor(formData.tempoProducaoMinutos / 60)}h ${formData.tempoProducaoMinutos % 60}m`} 
+                  icon={<Clock3 size={16} className="me-2 text-success" />} 
+                  name="tempoProducaoMinutos" 
+                  isEditableField={false} 
+                  isEditingMode={isEditing}
+                />
             )}
 
-            <DetailItem label="Tarefa Principal" value={formData.tarefa} icon={<Briefcase size={16} className="me-2 text-primary" />} name="tarefa" isEditableField={true} className="border-top pt-3 mt-3">
+            <DetailItem 
+              label="Tarefa Principal" 
+              value={formData.tarefa} 
+              icon={<Briefcase size={16} className="me-2 text-primary" />} 
+              name="tarefa" 
+              isEditableField={true} 
+              isEditingMode={isEditing}
+              className="border-top pt-3 mt-3"
+            >
               <textarea
                 className="form-control form-control-sm"
                 name="tarefa"
                 rows={3}
-                value={formData.tarefa || ''} // Ensure controlled component by providing empty string for null/undefined
+                value={formData.tarefa || ''} 
                 onChange={handleInputChange}
                 disabled={!isEditing}
-                // Removed required attribute
               />
             </DetailItem>
 
-            <DetailItem label="Observações" value={formData.observacoes} icon={<MessageSquare size={16} className="me-2 text-primary" />} name="observacoes" isEditableField={true}>
+            <DetailItem 
+              label="Observações" 
+              value={formData.observacoes} 
+              icon={<MessageSquare size={16} className="me-2 text-primary" />} 
+              name="observacoes" 
+              isEditableField={true}
+              isEditingMode={isEditing}
+            >
               <textarea
                 className="form-control form-control-sm"
                 name="observacoes"
                 rows={4}
-                value={formData.observacoes || ''} // Ensure controlled component
+                value={formData.observacoes || ''} 
                 onChange={handleInputChange}
                 disabled={!isEditing}
               />
             </DetailItem>
 
-            <DetailItem label="Tempo Trabalhado" value={formData.tempoTrabalhado} icon={<Clock3 size={16} className="me-2 text-primary" />} name="tempoTrabalhado" isEditableField={true}>
+            <DetailItem 
+              label="Tempo Trabalhado" 
+              value={formData.tempoTrabalhado} 
+              icon={<Clock3 size={16} className="me-2 text-primary" />} 
+              name="tempoTrabalhado" 
+              isEditableField={true}
+              isEditingMode={isEditing}
+            >
               <textarea
                 className="form-control form-control-sm"
                 name="tempoTrabalhado"
                 rows={3}
-                value={formData.tempoTrabalhado || ''} // Ensure controlled component
+                value={formData.tempoTrabalhado || ''} 
                 onChange={handleInputChange}
                 disabled={!isEditing}
                 placeholder="Ex: 1h reunião (15/05)&#10;3h código (16/05)&#10;2h ajustes (17/05)"
               />
             </DetailItem>
 
-            <DetailItem label="Urgente" value={formData.isUrgent} icon={<Flag size={16} className={`me-2 ${formData.isUrgent ? 'text-danger' : 'text-secondary'}`} />} name="isUrgent" isEditableField={true}>
+            <DetailItem 
+              label="Urgente" 
+              value={formData.isUrgent} 
+              icon={<Flag size={16} className={`me-2 ${formData.isUrgent ? 'text-danger' : 'text-secondary'}`} />} 
+              name="isUrgent" 
+              isEditableField={true}
+              isEditingMode={isEditing}
+            >
               <div className="form-check form-switch">
                 <input
                   className="form-check-input"
