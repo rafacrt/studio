@@ -18,8 +18,8 @@ export default function RootLayout({
   return (
     // ThemeProvider will wrap the html tag to manage the theme attribute
     <ThemeProvider>
-        {/* suppressHydrationWarning is handled by ThemeProvider */}
-        <html lang="pt-BR">
+        {/* suppressHydrationWarning is added here as data-bs-theme is managed client-side */}
+        <html lang="pt-BR" suppressHydrationWarning>
           <head>
             {/* Add Bootstrap CSS CDN */}
             <link

@@ -1,8 +1,25 @@
-
-'use client'; // Make this a client component for potential future interactions
+'use client';
 
 import Link from 'next/link';
-import { LayoutGrid } from 'lucide-react'; // Icons for buttons
+import { LayoutGrid } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+// Simple component to render year client-side
+function ClientSideYearFooter() {
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
+
+  if (currentYear === null) {
+    // Render a placeholder or a static part of the string to maintain layout
+    // Using a span with opacity 0 can help maintain space if the year text is significant
+    // return <span style={{ opacity: 0 }}>© YYYY FreelaOS Minimal</span>;
+    // Or, more simply, just don't render the year part until available
+    return <>© FreelaOS Minimal</>;
+  }
+  return <>© {currentYear} FreelaOS Minimal</>;
+}
 
 export default function HomePage() {
   return (
@@ -26,9 +43,8 @@ export default function HomePage() {
       </div>
        {/* Simple footer */}
        <footer className="mt-5 text-muted small">
-           © {new Date().getFullYear()} FreelaOS Minimal
+           <ClientSideYearFooter />
        </footer>
     </div>
   );
 }
-
