@@ -24,10 +24,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true); // Initialize to true
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isAnimatingLogin, setIsAnimatingLogin] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -48,7 +47,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(null);
           setIsAuthenticated(false);
           setIsAdmin(false);
-          // No redirect here, let pages handle unauthorized access or redirect to login
         }
       } catch (error) {
         console.error("Auth check failed:", error);
@@ -62,63 +60,60 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuthState();
   }, []);
 
+  const performLoginInternal = useCallback(async (isLoginAsAdmin: boolean, _email?: string, _password?: string): Promise<boolean> => {
+    setIsAnimatingLogin(true);
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 500)); 
 
-  const performLogin = useCallback(async (isAdminLogin: boolean, _email?: string, _password?: string): Promise<boolean> => {
-    // _email and _password are not used with mock users but kept for signature consistency
-    setIsAnimatingLogin(true); // Start UI animation for LoginAnimationWrapper
+    try {
+      const userToLogin = isLoginAsAdmin ? mockAdminUser : mockUser;
+      setUser(userToLogin);
+      setIsAuthenticated(true);
+      setIsAdmin(isLoginAsAdmin);
+      localStorage.setItem('user', JSON.stringify(userToLogin));
+      localStorage.setItem('isAdmin', String(isLoginAsAdmin));
 
-    // This outer Promise is for the entire performLogin operation
-    return new Promise<boolean>((resolveLoginAttempt) => {
-      // Simulate API call delay
-      setTimeout(async () => {
-        try {
-          const userToLogin = isAdminLogin ? mockAdminUser : mockUser;
-          setUser(userToLogin);
-          setIsAuthenticated(true);
-          setIsAdmin(isAdminLogin);
-          localStorage.setItem('user', JSON.stringify(userToLogin));
-          localStorage.setItem('isAdmin', String(isAdminLogin));
-
-          // Simulate animation duration for UX before navigation
-          // This is part of the "successful login" flow
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          
-          setIsAnimatingLogin(false); // Stop UI animation; LoginAnimationWrapper will fade out
-          
-          router.push(isAdminLogin ? '/admin/dashboard' : '/explore');
-          resolveLoginAttempt(true); // Login action successful
-        } catch (e) {
-          console.error("Login failed", e);
-          toast({ title: "Erro de Login", description: "Falha ao tentar fazer login.", variant: "destructive" });
-          setIsAnimatingLogin(false); // Ensure animation stops on error
-          resolveLoginAttempt(false); // Login action failed
-        }
-      }, 500); // Delay to simulate network request before "login logic"
-    });
-  }, [router, toast]);
+      // Simulate animation duration for UX
+      await new Promise(resolve => setTimeout(resolve, 1500)); 
+      setIsAnimatingLogin(false);
+      return true; // Indicate success
+    } catch (e) {
+      console.error("Login failed", e);
+      toast({ title: "Erro de Login", description: "Falha ao tentar fazer login.", variant: "destructive" });
+      setIsAnimatingLogin(false);
+      return false; // Indicate failure
+    }
+  }, [toast]);
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
-    setIsLoadingAuth(true); // Indicate a full authentication cycle is starting
-    const success = await performLogin(false, email, password);
-    setIsLoadingAuth(false); // Authentication cycle ends
+    setIsLoadingAuth(true);
+    const success = await performLoginInternal(false, email, password);
+    if (success) {
+      router.push('/explore');
+    }
+    setIsLoadingAuth(false); 
     return success;
-  }, [performLogin]);
+  }, [performLoginInternal, router]);
 
   const adminLogin = useCallback(async (email: string, password: string): Promise<boolean> => {
-    setIsLoadingAuth(true); // Indicate a full authentication cycle is starting
-    const success = await performLogin(true, email, password);
-    setIsLoadingAuth(false); // Authentication cycle ends
+    setIsLoadingAuth(true);
+    const success = await performLoginInternal(true, email, password);
+    if (success) {
+      router.push('/admin/dashboard');
+    }
+    setIsLoadingAuth(false);
     return success;
-  }, [performLogin]);
-
+  }, [performLoginInternal, router]);
 
   const logout = useCallback(() => {
-    setIsAnimatingLogin(false); // Ensure no login animation is active
+    setIsAnimatingLogin(false); 
     setUser(null);
     setIsAuthenticated(false);
     setIsAdmin(false);
     localStorage.removeItem('user');
     localStorage.removeItem('isAdmin');
+    // Ensure isLoadingAuth is false on logout to prevent loading screens if any page relies on it.
+    setIsLoadingAuth(false); 
     router.push('/login?message=Logout realizado com sucesso');
   }, [router]);
 
@@ -136,3 +131,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
