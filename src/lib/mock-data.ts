@@ -4,7 +4,7 @@ import { mockUser, mockAdminUser } from './auth-mocks'; // Using centralized moc
 
 // Helper function to simulate API call delay
 const simulateApiCall = <T>(data: T, delay = 300): Promise<T> => {
-  return new Promise((resolve) => {
+  return new Promise((resolve) => { // NO REJECT for mocks, they always succeed
     setTimeout(() => {
       resolve(data);
     }, delay);
@@ -60,7 +60,7 @@ let mockListings: Listing[] = [
     amenities: [commonAmenities[0], commonAmenities[2], commonAmenities[8], commonAmenities[10]],
     rating: 4.8,
     reviews: 45,
-    host: mockUser,
+    host: mockAdminUser, // Changed host to mockAdminUser
     university: getUniversityByAcronym('USP')!,
     isAvailable: true,
     type: 'Quarto Individual',
@@ -84,7 +84,7 @@ let mockListings: Listing[] = [
     amenities: [commonAmenities[0], commonAmenities[1], commonAmenities[2], commonAmenities[5]],
     rating: 4.5,
     reviews: 30,
-    host: mockUser,
+    host: mockAdminUser,
     university: getUniversityByAcronym('Unicamp')!,
     isAvailable: false,
     type: 'Kitnet',
@@ -108,7 +108,7 @@ let mockListings: Listing[] = [
     amenities: [commonAmenities[0], commonAmenities[7], commonAmenities[9]],
     rating: 4.2,
     reviews: 22,
-    host: mockUser,
+    host: mockAdminUser,
     university: getUniversityByAcronym('UFMG')!,
     isAvailable: true,
     type: 'Vaga em República',
@@ -132,7 +132,7 @@ let mockListings: Listing[] = [
     amenities: [commonAmenities[0], commonAmenities[1], commonAmenities[2], commonAmenities[3], commonAmenities[5]],
     rating: 4.9,
     reviews: 55,
-    host: mockUser,
+    host: mockAdminUser,
     university: getUniversityByAcronym('PUC-Rio')!,
     isAvailable: true,
     type: 'Studio',
@@ -156,7 +156,7 @@ let mockListings: Listing[] = [
     amenities: [commonAmenities[0], commonAmenities[8], commonAmenities[9], commonAmenities[6]], // Added gym
     rating: 4.7,
     reviews: 38,
-    host: mockUser,
+    host: mockAdminUser,
     university: getUniversityByAcronym('UFSC')!,
     isAvailable: false,
     type: 'Quarto em Apartamento',
@@ -179,7 +179,7 @@ let mockListings: Listing[] = [
     amenities: [commonAmenities[0]],
     rating: 4.0,
     reviews: 15,
-    host: mockUser,
+    host: mockAdminUser,
     university: getUniversityByAcronym('USP')!, // Associating with main USP for simplicity, can create USP Leste entry
     isAvailable: true,
     type: 'Quarto Econômico',
@@ -203,7 +203,7 @@ let mockListings: Listing[] = [
     amenities: [commonAmenities[0], commonAmenities[5], commonAmenities[7], commonAmenities[8]],
     rating: 4.6,
     reviews: 28,
-    host: mockUser,
+    host: mockAdminUser,
     university: getUniversityByAcronym('Unicamp')!,
     isAvailable: true,
     type: 'Suíte',
@@ -226,7 +226,7 @@ let mockListings: Listing[] = [
     amenities: [commonAmenities[0], commonAmenities[2], commonAmenities[9]],
     rating: 4.3,
     reviews: 19,
-    host: mockUser,
+    host: mockAdminUser,
     university: getUniversityByAcronym('UFMG')!,
     isAvailable: true,
     type: 'Quarto com Vista',
@@ -250,7 +250,7 @@ let mockListings: Listing[] = [
     amenities: [commonAmenities[0], commonAmenities[1], commonAmenities[2], commonAmenities[3], commonAmenities[7]],
     rating: 4.7,
     reviews: 40,
-    host: mockUser,
+    host: mockAdminUser,
     university: getUniversityByAcronym('PUC-Rio')!,
     isAvailable: true,
     type: 'Apartamento 2 Quartos',

@@ -2,8 +2,8 @@
 
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation'; // Removed usePathname as it's not used
-import { mockUser, mockAdminUser } from '@/lib/mock-data';
+import { useRouter } from 'next/navigation'; 
+import { mockUser, mockAdminUser } from '@/lib/mock-data'; // mockUser and mockAdminUser are re-exported by mock-data
 import type { User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -81,11 +81,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAnimatingLogin(false); // Signal hide on error as well
       return false; 
     }
-  }, [toast]);
+  }, [toast]); // Removed mockAdminUser and mockUser from dependencies as they are stable imports
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
-    // isLoadingAuth is for initial load, not for login process itself.
-    // isAnimatingLogin is handled by performLoginInternal.
     const success = await performLoginInternal(false, email, password);
     if (success) {
       router.push('/explore');
@@ -94,7 +92,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [performLoginInternal, router]);
 
   const adminLogin = useCallback(async (email: string, password: string): Promise<boolean> => {
-    // isLoadingAuth is for initial load.
     const success = await performLoginInternal(true, email, password);
     if (success) {
       router.push('/admin/dashboard');
@@ -103,7 +100,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [performLoginInternal, router]);
 
   const logout = useCallback(() => {
-    // Reset animation state in case it was active
     if(isAnimatingLogin) setIsAnimatingLogin(false); 
     
     setUser(null);
@@ -111,10 +107,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAdmin(false);
     localStorage.removeItem('user');
     localStorage.removeItem('isAdmin');
-    // Ensure isLoadingAuth is false on logout if it was somehow stuck, though it shouldn't be.
     if(isLoadingAuth) setIsLoadingAuth(false); 
     router.push('/login?message=Logout realizado com sucesso');
-  }, [router, isAnimatingLogin, isLoadingAuth]); // Added dependencies
+  }, [router, isAnimatingLogin, isLoadingAuth]);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, isAdmin, user, login, adminLogin, logout, isLoadingAuth, isAnimatingLogin }}>
