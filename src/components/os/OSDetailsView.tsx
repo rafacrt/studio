@@ -35,11 +35,9 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Initialize formData ensuring programadoPara is in 'yyyy-MM-dd' or empty string
   const initialProgramadoPara = initialOs.programadoPara ? initialOs.programadoPara.split('T')[0] : '';
   const [formData, setFormData] = useState<OS>({ ...initialOs, programadoPara: initialProgramadoPara });
 
-  // Local states for controlling client/partner input fields and their suggestion lists
   const [clientInput, setClientInput] = useState(initialOs.cliente || '');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   const clientInputRef = useRef<HTMLInputElement>(null);
@@ -50,40 +48,32 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
 
 
   useEffect(() => {
-    // This effect synchronizes formData with initialOs when:
-    // 1. The `initialOs.id` changes (viewing a completely different OS).
-    // 2. We are *not* in editing mode (`!isEditing`), to reflect external updates or reset after canceling edit.
-    // It should *not* reset user's typed data if `isEditing` is true and `initialOs.id` is the same.
-    
     const currentProgramadoPara = initialOs.programadoPara ? initialOs.programadoPara.split('T')[0] : '';
 
-    if (initialOs.id !== formData.id) { // Case 1: Switched to a new OS
+    if (initialOs.id !== formData.id) { 
       setFormData({ ...initialOs, programadoPara: currentProgramadoPara });
       setClientInput(initialOs.cliente || '');
       setPartnerInput(initialOs.parceiro || '');
       setShowClientSuggestions(false);
       setShowPartnerSuggestions(false);
-    } else if (!isEditing) { // Case 2: Not editing (viewing current OS or just exited edit mode)
-      // Refresh formData from initialOs to reflect any updates or to reset after cancel.
+    } else if (!isEditing) { 
       setFormData({ ...initialOs, programadoPara: currentProgramadoPara });
       setClientInput(initialOs.cliente || '');
       setPartnerInput(initialOs.parceiro || '');
       setShowClientSuggestions(false);
       setShowPartnerSuggestions(false);
     }
-    // If isEditing is true AND initialOs.id === formData.id, this effect does nothing,
-    // allowing local formData changes (typing) to persist.
   }, [initialOs, isEditing, formData.id]);
 
 
   const filteredClients = useMemo(() => {
-    if (!clientInput) return []; // Use clientInput for filtering suggestions
+    if (!clientInput) return [];
     const lowerInput = clientInput.toLowerCase();
     return clients.filter(c => c.name.toLowerCase().includes(lowerInput));
   }, [clientInput, clients]);
 
   const filteredPartners = useMemo(() => {
-    if (!partnerInput) return []; // Use partnerInput for filtering suggestions
+    if (!partnerInput) return [];
     const lowerInput = partnerInput.toLowerCase();
     return partners.filter(p => p.name.toLowerCase().includes(lowerInput));
   }, [partnerInput, partners]);
@@ -92,22 +82,22 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
     const { name, value, type } = e.target;
 
     if (name === 'cliente') {
-      setClientInput(value); // Update local state for suggestion box logic
-      setFormData(prev => ({ ...prev, cliente: value })); // Update main form data
+      setClientInput(value); 
+      setFormData(prev => ({ ...prev, cliente: value })); 
       setShowClientSuggestions(!!value && clients.filter(c => c.name.toLowerCase().includes(value.toLowerCase())).length > 0 && document.activeElement === clientInputRef.current);
     } else if (name === 'parceiro') {
-      setPartnerInput(value); // Update local state for suggestion box logic
-      setFormData(prev => ({ ...prev, parceiro: value || undefined })); // Update main form data
+      setPartnerInput(value); 
+      setFormData(prev => ({ ...prev, parceiro: value || undefined })); 
       setShowPartnerSuggestions(!!value && partners.filter(p => p.name.toLowerCase().includes(value.toLowerCase())).length > 0 && document.activeElement === partnerInputRef.current);
     } else if (type === 'checkbox') {
       setFormData(prev => ({
         ...prev,
         [name]: (e.target as HTMLInputElement).checked,
       }));
-    } else if (name === 'programadoPara') { // Ensure date is handled correctly
+    } else if (name === 'programadoPara') { 
        setFormData(prev => ({
         ...prev,
-        [name]: value || undefined // Store as 'yyyy-MM-dd' or undefined
+        [name]: value || undefined 
       }));
     }
      else {
@@ -120,29 +110,29 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
 
   const handleClientSelect = (clientName: string) => {
     setFormData(prev => ({ ...prev, cliente: clientName }));
-    setClientInput(clientName); // Also update clientInput for consistency if needed
+    setClientInput(clientName); 
     setShowClientSuggestions(false);
-    clientInputRef.current?.focus();
+    // clientInputRef.current?.focus(); // Focus can be managed by user or further refined if needed
   };
 
   const handlePartnerSelect = (partnerName: string) => {
     setFormData(prev => ({ ...prev, parceiro: partnerName }));
-    setPartnerInput(partnerName); // Also update partnerInput
+    setPartnerInput(partnerName); 
     setShowPartnerSuggestions(false);
-    partnerInputRef.current?.focus();
+    // partnerInputRef.current?.focus(); // Focus can be managed by user
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // When saving, ensure formData contains the definitive values from clientInput/partnerInput
-      // if they were being actively typed into. Otherwise, formData's own values are fine.
-      // The current handleInputChange already updates formData correctly for client/partner.
       const dataToSave: OS = {
         ...formData,
         cliente: formData.cliente.trim(), 
         parceiro: formData.parceiro?.trim() || undefined,
-        programadoPara: formData.programadoPara || undefined, // Ensure it's undefined if empty
+        programadoPara: formData.programadoPara || undefined, 
+        // Ensure tarefa and observacoes are saved as empty strings if null/undefined, though type implies string
+        tarefa: formData.tarefa || '',
+        observacoes: formData.observacoes || '',
       };
       updateOS(dataToSave);
       console.log(`OS Atualizada: ${dataToSave.numero}`);
@@ -156,13 +146,12 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
   };
 
   const handleCancel = () => {
-    setIsEditing(false); // This will trigger the useEffect to reset formData from initialOs
+    setIsEditing(false); 
   };
 
   const handleFinalizeOS = () => {
     if (formData.status !== OSStatus.FINALIZADO) {
         updateOSStatus(formData.id, OSStatus.FINALIZADO);
-        // formData will be updated via the store update and useEffect
         console.log(`OS ${formData.numero} finalizada.`);
     }
   };
@@ -202,17 +191,16 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
     let displayValue: string | React.ReactNode = value;
     if ((name === 'programadoPara' || name === 'dataAbertura' || name === 'dataFinalizacao') && typeof value === 'string' && value) {
       try {
-        // Dates are stored as 'yyyy-MM-dd' or full ISO. Parse ISO if it contains 'T'.
-        const dateStr = value.includes('T') ? value : `${value}T00:00:00Z`; // Ensure ISO for parseISO
+        const dateStr = value.includes('T') ? value : `${value}T00:00:00Z`; 
         const date = parseISO(dateStr);
         if (isValid(date)) {
           const formatString = (name === 'programadoPara' && value.length === 10) ? "dd/MM/yyyy" : "dd/MM/yyyy 'às' HH:mm";
           displayValue = format(date, formatString, { locale: ptBR });
         } else {
-          displayValue = value; // Show original if not valid ISO string
+          displayValue = value; 
         }
       } catch {
-        displayValue = value; // Show original on parsing error
+        displayValue = value; 
       }
     } else if (typeof value === 'boolean') {
       displayValue = value ? 'Sim' : 'Não';
@@ -246,7 +234,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
               <button className="btn btn-outline-secondary btn-sm" onClick={handleCancel} disabled={isSaving}>
                 Cancelar
               </button>
-              <button className="btn btn-success btn-sm" onClick={handleSave} disabled={isSaving || !formData.cliente?.trim() || !formData.projeto?.trim() || !formData.tarefa?.trim()}>
+              <button className="btn btn-success btn-sm" onClick={handleSave} disabled={isSaving || !formData.cliente?.trim() || !formData.projeto?.trim()}>
                 {isSaving ? <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> : <Save size={16} className="me-1" />}
                 Salvar Alterações
               </button>
@@ -305,9 +293,9 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
                   type="text"
                   className="form-control form-control-sm"
                   name="cliente"
-                  value={formData.cliente || ''} // Bind value to formData.cliente
-                  onChange={handleInputChange}
-                  onFocus={() => setShowClientSuggestions(!!formData.cliente && filteredClients.length > 0)}
+                  value={clientInput} // Use clientInput for display and typing
+                  onChange={handleInputChange} // This updates clientInput AND formData.cliente
+                  onFocus={() => setShowClientSuggestions(!!clientInput && filteredClients.length > 0)}
                   onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)} 
                   autoComplete="off"
                   placeholder="Digite ou selecione um cliente"
@@ -334,9 +322,9 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
                   type="text"
                   className="form-control form-control-sm"
                   name="parceiro"
-                  value={formData.parceiro || ''} // Bind value to formData.parceiro
-                  onChange={handleInputChange}
-                  onFocus={() => setShowPartnerSuggestions(!!formData.parceiro && filteredPartners.length > 0)}
+                  value={partnerInput} // Use partnerInput for display and typing
+                  onChange={handleInputChange} // This updates partnerInput AND formData.parceiro
+                  onFocus={() => setShowPartnerSuggestions(!!partnerInput && filteredPartners.length > 0)}
                   onBlur={() => setTimeout(() => setShowPartnerSuggestions(false), 200)} 
                   autoComplete="off"
                   placeholder="Digite ou selecione um parceiro"
@@ -374,7 +362,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
                 type="date"
                 className="form-control form-control-sm"
                 name="programadoPara"
-                value={formData.programadoPara || ''} // Handles undefined by rendering empty
+                value={formData.programadoPara || ''} 
                 onChange={handleInputChange}
                 disabled={!isEditing}
               />
@@ -392,10 +380,10 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
                 className="form-control form-control-sm"
                 name="tarefa"
                 rows={3}
-                value={formData.tarefa}
+                value={formData.tarefa || ''} // Ensure controlled component by providing empty string for null/undefined
                 onChange={handleInputChange}
                 disabled={!isEditing}
-                required
+                // Removed required attribute
               />
             </DetailItem>
 
@@ -404,7 +392,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
                 className="form-control form-control-sm"
                 name="observacoes"
                 rows={4}
-                value={formData.observacoes || ''}
+                value={formData.observacoes || ''} // Ensure controlled component
                 onChange={handleInputChange}
                 disabled={!isEditing}
               />
@@ -415,7 +403,7 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
                 className="form-control form-control-sm"
                 name="tempoTrabalhado"
                 rows={3}
-                value={formData.tempoTrabalhado || ''}
+                value={formData.tempoTrabalhado || ''} // Ensure controlled component
                 onChange={handleInputChange}
                 disabled={!isEditing}
                 placeholder="Ex: 1h reunião (15/05)&#10;3h código (16/05)&#10;2h ajustes (17/05)"
@@ -445,4 +433,3 @@ export default function OSDetailsView({ os: initialOs }: OSDetailsViewProps) {
     </div>
   );
 }
-
