@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation'; // Removed usePathname as it's not used
 import { mockUser, mockAdminUser } from '@/lib/mock-data';
 import type { User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -33,8 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const checkAuthState = async () => {
       setIsLoadingAuth(true);
       try {
-        // Simulate checking auth status (e.g., from localStorage)
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 300)); // Simulate async check
         const storedUser = localStorage.getItem('user');
         const storedIsAdmin = localStorage.getItem('isAdmin') === 'true';
 
@@ -49,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsAdmin(false);
         }
       } catch (error) {
-        console.error("Auth check failed:", error);
+        console.error("Falha ao verificar estado de autenticação:", error);
         setUser(null);
         setIsAuthenticated(false);
         setIsAdmin(false);
@@ -62,8 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const performLoginInternal = useCallback(async (isLoginAsAdmin: boolean, _email?: string, _password?: string): Promise<boolean> => {
     setIsAnimatingLogin(true);
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500)); 
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call delay
 
     try {
       const userToLogin = isLoginAsAdmin ? mockAdminUser : mockUser;
@@ -75,47 +73,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // Simulate animation duration for UX
       await new Promise(resolve => setTimeout(resolve, 1500)); 
-      setIsAnimatingLogin(false);
-      return true; // Indicate success
+      setIsAnimatingLogin(false); // Signal animation wrapper to start hiding
+      return true; 
     } catch (e) {
-      console.error("Login failed", e);
+      console.error("Falha no login:", e);
       toast({ title: "Erro de Login", description: "Falha ao tentar fazer login.", variant: "destructive" });
-      setIsAnimatingLogin(false);
-      return false; // Indicate failure
+      setIsAnimatingLogin(false); // Signal hide on error as well
+      return false; 
     }
   }, [toast]);
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
-    setIsLoadingAuth(true);
+    // isLoadingAuth is for initial load, not for login process itself.
+    // isAnimatingLogin is handled by performLoginInternal.
     const success = await performLoginInternal(false, email, password);
     if (success) {
       router.push('/explore');
     }
-    setIsLoadingAuth(false); 
     return success;
   }, [performLoginInternal, router]);
 
   const adminLogin = useCallback(async (email: string, password: string): Promise<boolean> => {
-    setIsLoadingAuth(true);
+    // isLoadingAuth is for initial load.
     const success = await performLoginInternal(true, email, password);
     if (success) {
       router.push('/admin/dashboard');
     }
-    setIsLoadingAuth(false);
     return success;
   }, [performLoginInternal, router]);
 
   const logout = useCallback(() => {
-    setIsAnimatingLogin(false); 
+    // Reset animation state in case it was active
+    if(isAnimatingLogin) setIsAnimatingLogin(false); 
+    
     setUser(null);
     setIsAuthenticated(false);
     setIsAdmin(false);
     localStorage.removeItem('user');
     localStorage.removeItem('isAdmin');
-    // Ensure isLoadingAuth is false on logout to prevent loading screens if any page relies on it.
-    setIsLoadingAuth(false); 
+    // Ensure isLoadingAuth is false on logout if it was somehow stuck, though it shouldn't be.
+    if(isLoadingAuth) setIsLoadingAuth(false); 
     router.push('/login?message=Logout realizado com sucesso');
-  }, [router]);
+  }, [router, isAnimatingLogin, isLoadingAuth]); // Added dependencies
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, isAdmin, user, login, adminLogin, logout, isLoadingAuth, isAnimatingLogin }}>
@@ -127,8 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 };
-

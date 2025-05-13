@@ -1,0 +1,205 @@
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { ListingCard } from '@/components/ListingCard';
+import { fetchListings, universityAreas } from '@/lib/mock-data';
+import type { Listing, ListingFilters, UniversityArea } from '@/types';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2, Search, FilterX, MapPin } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const ITEMS_PER_PAGE = 6;
+
+export default function ExplorePage() {
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [page, setPage] = useState(1); // Tracks the *next* page to fetch for infinite scroll
+  const [hasMore, setHasMore] = useState(true);
+  const [currentFilters, setCurrentFilters] = useState<ListingFilters>({});
+  const [searchInput, setSearchInput] = useState('');
+  const [selectedUniversity, setSelectedUniversity] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastListingElementRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isLoading || isLoadingMore || !hasMore) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && hasMore && !isLoading && !isLoadingMore) {
+          loadMoreListings();
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [isLoading, isLoadingMore, hasMore] // Removed loadMoreListings from here to avoid re-creating observer too often
+                                      // loadMoreListings itself will be stable due to useCallback
+  );
+
+  const { toast } = useToast();
+
+  const loadInitialListings = useCallback(async (filters: ListingFilters) => {
+    setIsLoading(true);
+    setListings([]); // Clear existing listings
+    setPage(1); // Reset to page 1
+    try {
+      const newItems = await fetchListings(1, ITEMS_PER_PAGE, filters);
+      setListings(newItems);
+      setPage(2); // Next page to fetch will be 2
+      setHasMore(newItems.length === ITEMS_PER_PAGE);
+    } catch (err) {
+      console.error("Falha ao carregar quartos:", err);
+      toast({ title: "Erro", description: "Não foi possível carregar os quartos.", variant: "destructive" });
+      setHasMore(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]); // Removed setListings, setPage, setHasMore, setIsLoading as they are stable setters
+
+  const loadMoreListings = useCallback(async () => {
+    if (isLoading || isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    try {
+      const newItems = await fetchListings(page, ITEMS_PER_PAGE, currentFilters);
+      setListings(prev => [...prev, ...newItems]);
+      setPage(prev => prev + 1);
+      setHasMore(newItems.length === ITEMS_PER_PAGE);
+    } catch (err) {
+      console.error("Falha ao carregar mais quartos:", err);
+      toast({ title: "Erro", description: "Não foi possível carregar mais quartos.", variant: "destructive" });
+      setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoading, isLoadingMore, hasMore, page, currentFilters, toast]); // Dependencies for loadMoreListings
+
+  useEffect(() => {
+    loadInitialListings(currentFilters);
+  }, [currentFilters, loadInitialListings]);
+
+
+  const handleFilterChange = () => {
+    const filters: ListingFilters = {};
+    if (searchInput) filters.searchTerm = searchInput;
+    if (selectedUniversity) filters.university = selectedUniversity;
+    if (minPrice) filters.minPrice = parseFloat(minPrice);
+    if (maxPrice) filters.maxPrice = parseFloat(maxPrice);
+    setCurrentFilters(filters);
+  };
+
+  const clearFilters = () => {
+    setSearchInput('');
+    setSelectedUniversity('');
+    setMinPrice('');
+    setMaxPrice('');
+    setCurrentFilters({});
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <Card className="mb-8 shadow-lg rounded-xl">
+        <CardContent className="p-6">
+          <h2 className="text-2xl font-semibold mb-6 text-foreground flex items-center">
+            <Search className="mr-3 h-6 w-6 text-primary" /> Encontre seu Quarto Ideal
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div className="lg:col-span-2">
+              <label htmlFor="search" className="block text-sm font-medium text-muted-foreground mb-1">Buscar por termo</label>
+              <Input
+                id="search"
+                type="text"
+                placeholder="Título, endereço..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="h-10"
+              />
+            </div>
+            <div>
+              <label htmlFor="university" className="block text-sm font-medium text-muted-foreground mb-1">Universidade Próxima</label>
+              <Select value={selectedUniversity} onValueChange={setSelectedUniversity}>
+                <SelectTrigger id="university" className="h-10">
+                  <SelectValue placeholder="Qualquer uma" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Qualquer uma</SelectItem>
+                  {universityAreas.map((uni: UniversityArea) => (
+                    <SelectItem key={uni.acronym} value={uni.acronym}>
+                       {uni.name} ({uni.acronym})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label htmlFor="minPrice" className="block text-sm font-medium text-muted-foreground mb-1">Preço Mín.</label>
+                <Input id="minPrice" type="number" placeholder="R$" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="h-10" />
+              </div>
+              <div>
+                <label htmlFor="maxPrice" className="block text-sm font-medium text-muted-foreground mb-1">Preço Máx.</label>
+                <Input id="maxPrice" type="number" placeholder="R$" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="h-10" />
+              </div>
+            </div>
+            <div className="flex gap-2 lg:col-start-4">
+              <Button onClick={handleFilterChange} className="w-full h-10 bg-primary hover:bg-primary/90">
+                <Search className="mr-2 h-4 w-4" /> Aplicar
+              </Button>
+              <Button onClick={clearFilters} variant="outline" className="w-full h-10">
+                <FilterX className="mr-2 h-4 w-4" /> Limpar
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
+            <Card key={index} className="overflow-hidden shadow-lg rounded-xl">
+              <Skeleton className="h-52 w-full" />
+              <CardContent className="p-4 space-y-2">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-10 w-full mt-2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : listings.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {listings.map((listing, index) => {
+              if (listings.length === index + 1) {
+                return <div ref={lastListingElementRef} key={listing.id}><ListingCard listing={listing} /></div>;
+              }
+              return <ListingCard key={listing.id} listing={listing} />;
+            })}
+          </div>
+          {isLoadingMore && (
+             <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-2 text-muted-foreground">Carregando mais quartos...</p>
+            </div>
+          )}
+          {!hasMore && listings.length > 0 && (
+            <p className="text-center text-muted-foreground py-8">Você chegou ao fim da lista.</p>
+          )}
+        </>
+      ) : (
+        <div className="text-center py-16">
+            <MapPin className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+          <h3 className="text-2xl font-semibold text-foreground mb-2">Nenhum quarto encontrado</h3>
+          <p className="text-muted-foreground">Tente ajustar seus filtros ou ampliar sua busca.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
