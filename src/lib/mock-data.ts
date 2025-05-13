@@ -1,10 +1,11 @@
+
 import type { Listing, User, Booking, Amenity, UniversityArea, ListingFilters, AdminDashboardStats } from '@/types';
-import { Bed, Wifi, Tv, Utensils, Snowflake, Car, Bath, Dumbbell, WashingMachine, Trees, LampDesk, CheckSquare } from 'lucide-react';
-import { mockUser, mockAdminUser } from './auth-mocks'; // Using centralized mocks
+import { Bed, Wifi, Tv, Utensils, Snowflake, Car, Bath, Dumbbell, WashingMachine, Trees, LampDesk, CheckSquare, School } from 'lucide-react';
+import { mockUser, mockAdminUser } from './auth-mocks';
 
 // Helper function to simulate API call delay
 const simulateApiCall = <T>(data: T, delay = 300): Promise<T> => {
-  return new Promise((resolve) => { // NO REJECT for mocks, they always succeed
+  return new Promise((resolve) => {
     setTimeout(() => {
       resolve(data);
     }, delay);
@@ -27,18 +28,18 @@ export const commonAmenities: Amenity[] = [
 ];
 
 export const universityAreas: UniversityArea[] = [
-  { id: 'usp-butanta', name: 'Universidade de São Paulo', acronym: 'USP', city: 'São Paulo', neighborhood: 'Butantã', lat: -23.5595, lng: -46.7313 },
-  { id: 'unicamp-barao', name: 'Universidade Estadual de Campinas', acronym: 'Unicamp', city: 'Campinas', neighborhood: 'Barão Geraldo', lat: -22.8178, lng: -47.0687 },
-  { id: 'ufmg-pampulha', name: 'Universidade Federal de Minas Gerais', acronym: 'UFMG', city: 'Belo Horizonte', neighborhood: 'Pampulha', lat: -19.8665, lng: -43.9607 },
-  { id: 'puc-rio', name: 'Pontifícia Universidade Católica do Rio de Janeiro', acronym: 'PUC-Rio', city: 'Rio de Janeiro', neighborhood: 'Gávea', lat: -22.9777, lng: -43.2331 },
-  { id: 'ufsc-trindade', name: 'Universidade Federal de Santa Catarina', acronym: 'UFSC', city: 'Florianópolis', neighborhood: 'Trindade', lat: -27.5999, lng: -48.5172 },
+  { id: 'usp-butanta', name: 'Universidade de São Paulo', acronym: 'USP', city: 'São Paulo', neighborhood: 'Butantã', lat: -23.5595, lng: -46.7313, icon: School },
+  { id: 'unicamp-barao', name: 'Universidade Estadual de Campinas', acronym: 'Unicamp', city: 'Campinas', neighborhood: 'Barão Geraldo', lat: -22.8178, lng: -47.0687, icon: School },
+  { id: 'ufmg-pampulha', name: 'Universidade Federal de Minas Gerais', acronym: 'UFMG', city: 'Belo Horizonte', neighborhood: 'Pampulha', lat: -19.8665, lng: -43.9607, icon: School },
+  { id: 'puc-rio', name: 'Pontifícia Universidade Católica do Rio de Janeiro', acronym: 'PUC-Rio', city: 'Rio de Janeiro', neighborhood: 'Gávea', lat: -22.9777, lng: -43.2331, icon: School },
+  { id: 'ufsc-trindade', name: 'Universidade Federal de Santa Catarina', acronym: 'UFSC', city: 'Florianópolis', neighborhood: 'Trindade', lat: -27.5999, lng: -48.5172, icon: School },
 ];
 
 const getUniversityByAcronym = (acronym: string): UniversityArea | undefined => {
     return universityAreas.find(uni => uni.acronym === acronym);
 }
 
-// Initial Mock Listings (fewer, as requested)
+// Initial Mock Listings
 let mockListings: Listing[] = [
   {
     id: 'quarto1',
@@ -49,7 +50,7 @@ let mockListings: Listing[] = [
       { id: 'img2', url: 'https://picsum.photos/seed/quarto1-2/600/400' , alt: 'Área de estudos do quarto'},
       { id: 'img3', url: 'https://picsum.photos/seed/quarto1-3/600/400' , alt: 'Banheiro privativo do quarto'},
     ],
-    pricePerNight: 1200, // Price per month
+    pricePerNight: 1200, 
     address: 'Rua do Matão, 1010, Butantã, São Paulo - SP',
     lat: -23.5580,
     lng: -46.7250,
@@ -60,7 +61,7 @@ let mockListings: Listing[] = [
     amenities: [commonAmenities[0], commonAmenities[2], commonAmenities[8], commonAmenities[10]],
     rating: 4.8,
     reviews: 45,
-    host: mockAdminUser, // Changed host to mockAdminUser
+    host: mockAdminUser, 
     university: getUniversityByAcronym('USP')!,
     isAvailable: true,
     type: 'Quarto Individual',
@@ -86,7 +87,7 @@ let mockListings: Listing[] = [
     reviews: 30,
     host: mockAdminUser,
     university: getUniversityByAcronym('Unicamp')!,
-    isAvailable: false,
+    isAvailable: true, 
     type: 'Kitnet',
   },
   {
@@ -101,10 +102,10 @@ let mockListings: Listing[] = [
     address: 'Rua Prof. Baeta Viana, 200, Pampulha, Belo Horizonte - MG',
     lat: -19.8690,
     lng: -43.9630,
-    guests: 1, // Vaga individual em quarto compartilhado
-    bedrooms: 1, // Refere-se ao quarto específico
+    guests: 1, 
+    bedrooms: 1, 
     beds: 1,
-    baths: 2, // Banheiros compartilhados na casa
+    baths: 2, 
     amenities: [commonAmenities[0], commonAmenities[7], commonAmenities[9]],
     rating: 4.2,
     reviews: 22,
@@ -126,7 +127,7 @@ let mockListings: Listing[] = [
     lat: -22.9750,
     lng: -43.2300,
     guests: 1,
-    bedrooms: 0, // Studio
+    bedrooms: 0, 
     beds: 1,
     baths: 1,
     amenities: [commonAmenities[0], commonAmenities[1], commonAmenities[2], commonAmenities[3], commonAmenities[5]],
@@ -152,13 +153,13 @@ let mockListings: Listing[] = [
     guests: 1,
     bedrooms: 1,
     beds: 1,
-    baths: 1, // Banheiro compartilhado no apto
-    amenities: [commonAmenities[0], commonAmenities[8], commonAmenities[9], commonAmenities[6]], // Added gym
+    baths: 1, 
+    amenities: [commonAmenities[0], commonAmenities[8], commonAmenities[9], commonAmenities[6]], 
     rating: 4.7,
     reviews: 38,
     host: mockAdminUser,
     university: getUniversityByAcronym('UFSC')!,
-    isAvailable: false,
+    isAvailable: false, 
     type: 'Quarto em Apartamento',
   },
   {
@@ -170,17 +171,17 @@ let mockListings: Listing[] = [
     ],
     pricePerNight: 650,
     address: 'Av. Arlindo Béttio, 1000, Ermelino Matarazzo, São Paulo - SP',
-    lat: -23.5000, // Approximate coordinates for USP Leste area
+    lat: -23.5000, 
     lng: -46.4800,
     guests: 1,
     bedrooms: 1,
     beds: 1,
-    baths: 1, // Shared
+    baths: 1, 
     amenities: [commonAmenities[0]],
     rating: 4.0,
     reviews: 15,
     host: mockAdminUser,
-    university: getUniversityByAcronym('USP')!, // Associating with main USP for simplicity, can create USP Leste entry
+    university: getUniversityByAcronym('USP')!, 
     isAvailable: true,
     type: 'Quarto Econômico',
   },
@@ -199,7 +200,7 @@ let mockListings: Listing[] = [
     guests: 1,
     bedrooms: 1,
     beds: 1,
-    baths: 1, // Privativo
+    baths: 1, 
     amenities: [commonAmenities[0], commonAmenities[5], commonAmenities[7], commonAmenities[8]],
     rating: 4.6,
     reviews: 28,
@@ -222,7 +223,7 @@ let mockListings: Listing[] = [
     guests: 1,
     bedrooms: 1,
     beds: 1,
-    baths: 1, // Shared
+    baths: 1, 
     amenities: [commonAmenities[0], commonAmenities[2], commonAmenities[9]],
     rating: 4.3,
     reviews: 19,
@@ -239,7 +240,7 @@ let mockListings: Listing[] = [
       { id: 'img16', url: 'https://picsum.photos/seed/quarto9-1/600/400', alt: 'Sala de estar do apartamento' },
       { id: 'img17', url: 'https://picsum.photos/seed/quarto9-2/600/400', alt: 'Um dos quartos do apartamento' },
     ],
-    pricePerNight: 2800, // Price for the whole apartment
+    pricePerNight: 2800, 
     address: 'Rua Artur Araripe, 100, Gávea, Rio de Janeiro - RJ',
     lat: -22.9790,
     lng: -43.2350,
@@ -266,7 +267,7 @@ let mockBookings: Booking[] = [
     user: mockUser,
     checkInDate: '2024-08-01',
     checkOutDate: '2024-12-15',
-    totalPrice: mockListings.find(l => l.id === 'quarto2')!.pricePerNight * 4.5, // Approx 4.5 months
+    totalPrice: mockListings.find(l => l.id === 'quarto2')!.pricePerNight * 4.5, 
     status: 'Confirmada',
     guests: 1,
   },
@@ -285,21 +286,40 @@ let mockBookings: Booking[] = [
 ];
 
 
+// Ensure mockListings is always at least an empty array if something goes wrong with its definition.
+if (!Array.isArray(mockListings)) {
+  console.error("CRITICAL: global mockListings is not an array! Re-initializing to empty array.");
+  mockListings = [];
+}
+
 export const fetchListings = async (page: number, limit: number, filters: ListingFilters): Promise<Listing[]> => {
+  let paginatedData: Listing[] = [];
   try {
+    if (!Array.isArray(mockListings)) {
+      console.error("fetchListings: mockListings is not an array at time of call. Returning empty.");
+      return simulateApiCall([], 50); // Resolve with empty
+    }
+
     let filtered = mockListings.filter(listing => {
-      if (!listing) return false; 
+      if (!listing || typeof listing !== 'object') {
+        console.warn("fetchListings: encountered invalid listing object:", listing);
+        return false;
+      }
 
       if (filters.university) {
         if (!listing.university || typeof listing.university.acronym !== 'string' || listing.university.acronym !== filters.university) {
           return false;
         }
       }
-      if (filters.minPrice !== undefined && (typeof listing.pricePerNight !== 'number' || listing.pricePerNight < filters.minPrice)) {
-        return false;
+      if (filters.minPrice !== undefined) {
+        if (typeof listing.pricePerNight !== 'number' || listing.pricePerNight < filters.minPrice) {
+          return false;
+        }
       }
-      if (filters.maxPrice !== undefined && (typeof listing.pricePerNight !== 'number' || listing.pricePerNight > filters.maxPrice)) {
-        return false;
+      if (filters.maxPrice !== undefined) {
+        if (typeof listing.pricePerNight !== 'number' || listing.pricePerNight > filters.maxPrice) {
+          return false;
+        }
       }
       if (filters.searchTerm) {
         const searchTermLower = filters.searchTerm.toLowerCase();
@@ -314,27 +334,29 @@ export const fetchListings = async (page: number, limit: number, filters: Listin
 
     const start = (page - 1) * limit;
     const end = start + limit;
-    const paginatedData = filtered.slice(start, end);
-    return simulateApiCall(paginatedData);
+    paginatedData = filtered.slice(start, end);
+    return simulateApiCall(paginatedData, 300);
+
   } catch (error) {
-    console.error("Error during fetchListings filtering/slicing:", error);
-    return simulateApiCall([]); // Return empty array on error to prevent breaking caller
+    console.error("Error explicitly caught during fetchListings filtering/slicing logic:", error);
+    return simulateApiCall([], 50); // Ensure it always resolves with an array
   }
 };
 
+
 export const getRoomById = async (id: string): Promise<Listing | undefined> => {
  try {
-    const room = mockListings.find(listing => listing.id === id);
+    const room = mockListings.find(listing => listing && listing.id === id);
     return simulateApiCall(room);
   } catch (error) {
     console.error("Error in getRoomById:", error);
-    return simulateApiCall(undefined); // Return undefined on error
+    return simulateApiCall(undefined); 
   }
 };
 
 export const bookMockRoom = async (listingId: string, userId: string, checkInDate: string, checkOutDate: string, guests: number): Promise<Booking> => {
   try {
-    const listing = mockListings.find(l => l.id === listingId);
+    const listing = mockListings.find(l => l && l.id === listingId);
     if (!listing) {
       throw new Error("Quarto não encontrado para reserva.");
     }
@@ -342,7 +364,6 @@ export const bookMockRoom = async (listingId: string, userId: string, checkInDat
       throw new Error("Este quarto não está mais disponível.");
     }
 
-    // Mark listing as unavailable for simplicity in this mock
     listing.isAvailable = false; 
 
     const newBooking: Booking = {
@@ -350,28 +371,24 @@ export const bookMockRoom = async (listingId: string, userId: string, checkInDat
       listingId,
       listing,
       userId,
-      user: mockUser, // Assuming current user is mockUser
+      user: mockUser, 
       checkInDate,
       checkOutDate,
-      // Simplified price calculation for mock
-      totalPrice: listing.pricePerNight * 30, // Assuming a month's rent for simplicity
+      totalPrice: listing.pricePerNight * 30, 
       status: 'Confirmada',
       guests,
     };
     mockBookings.push(newBooking);
-    return simulateApiCall(newBooking, 1000); // Simulate longer delay for booking
+    return simulateApiCall(newBooking, 1000); 
   } catch (error) {
     console.error("Error in bookMockRoom:", error);
-    // For the caller, we need to return a Promise that rejects or an object indicating failure.
-    // Here, we rethrow so the caller's catch block can handle it.
-    // To ensure it's a promise that's returned even on throw before simulateApiCall:
     return Promise.reject(error); 
   }
 };
 
 export const fetchUserBookings = async (userId: string): Promise<Booking[]> => {
   try {
-    const userBookings = mockBookings.filter(booking => booking.userId === userId);
+    const userBookings = mockBookings.filter(booking => booking && booking.userId === userId);
     return simulateApiCall(userBookings);
   } catch (error) {
     console.error("Error in fetchUserBookings:", error);
@@ -381,11 +398,27 @@ export const fetchUserBookings = async (userId: string): Promise<Booking[]> => {
 
 export const addMockListing = async (newListingData: Omit<Listing, 'id' | 'rating' | 'reviews' | 'host' | 'amenities' | 'images'> & { imageUrls: string[], selectedAmenityIds: string[], universityAcronym: string }): Promise<Listing> => {
   try {
-    await simulateApiCall(null, 300); // Simulate delay for "API call"
+    await simulateApiCall(null, 300); 
     const newId = `quarto${mockListings.length + 1}${Date.now().toString().slice(-4)}`;
-    const images = newListingData.imageUrls.map((url, index) => ({ id: `img${newId}-${index}`, url, alt: `${newListingData.title} - Imagem ${index + 1}` }));
     
-    const selectedAmenities = commonAmenities.filter(amenity => newListingData.selectedAmenityIds.includes(amenity.id));
+    let images: Image[] = [];
+    if (Array.isArray(newListingData.imageUrls)) {
+      images = newListingData.imageUrls.map((url, index) => ({ 
+        id: `img${newId}-${index}`, 
+        url: typeof url === 'string' ? url : 'https://picsum.photos/seed/invalidurl/600/400', // Fallback for invalid URL
+        alt: `${newListingData.title || 'Anúncio'} - Imagem ${index + 1}` 
+      }));
+    } else {
+      console.warn("addMockListing: imageUrls was not an array.", newListingData.imageUrls);
+    }
+    
+    let selectedAmenities: Amenity[] = [];
+    if(Array.isArray(newListingData.selectedAmenityIds)) {
+      selectedAmenities = commonAmenities.filter(amenity => newListingData.selectedAmenityIds.includes(amenity.id));
+    } else {
+      console.warn("addMockListing: selectedAmenityIds was not an array.", newListingData.selectedAmenityIds);
+    }
+
 
     const universityDetails = universityAreas.find(uni => uni.acronym === newListingData.universityAcronym);
     if (!universityDetails) {
@@ -409,33 +442,36 @@ export const addMockListing = async (newListingData: Omit<Listing, 'id' | 'ratin
       amenities: selectedAmenities,
       rating: parseFloat((Math.random() * (5 - 3.5) + 3.5).toFixed(1)), 
       reviews: Math.floor(Math.random() * 100) + 5,
-      host: mockAdminUser, // Listings are added by admin
+      host: mockAdminUser, 
       university: universityDetails || universityAreas[0], 
       isAvailable: true,
-      type: 'Quarto Individual', // Default type, could be part of form
+      type: 'Quarto Individual', 
     };
     mockListings.unshift(newListing); 
-    return newListing; // Return the created listing, already wrapped by outer async
+    return newListing; 
   } catch (error) {
      console.error("Error in addMockListing:", error);
-     throw error; // Re-throw to be caught by caller
+     throw error; 
   }
 };
 
 
-// Admin Dashboard Mock Data Functions
 export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => {
   try {
-    const stats = {
-      totalRevenue: mockListings.reduce((sum, l) => sum + (l.pricePerNight * 1), 0) * 0.15, // Simplified monthly revenue from "rentals"
-      newUsers: 25, 
-      pendingApprovals: mockListings.filter(l => l.rating < 4.2).length, // Example: low rated ones are pending
-      activeBookings: mockBookings.filter(b => b.status === "Confirmada").length,
+    const activeBookingsCount = mockBookings.filter(b => b && b.status === "Confirmada").length;
+    const totalRevenueFromBookings = mockBookings
+      .filter(b => b && (b.status === "Confirmada" || b.status === "Concluída"))
+      .reduce((sum, booking) => sum + booking.totalPrice, 0);
+
+    const stats: AdminDashboardStats = {
+      totalRevenue: totalRevenueFromBookings * 0.15, // Example: 15% commission on bookings
+      newUsers: 25, // Static mock value
+      pendingApprovals: mockListings.filter(l => l && l.rating < 4.2 && l.isAvailable).length, // Example criteria
+      activeBookings: activeBookingsCount,
     };
     return simulateApiCall(stats, 700);
   } catch (error) {
     console.error("Error in getAdminDashboardStats:", error);
-    // Return a default/error state or rethrow
     const defaultStats: AdminDashboardStats = { totalRevenue: 0, newUsers: 0, pendingApprovals: 0, activeBookings: 0 };
     return simulateApiCall(defaultStats);
   }
@@ -461,10 +497,10 @@ export const getMonthlyRevenueData = async (): Promise<{ month: string; revenue:
 export const getBookingStatusData = async (): Promise<{ status: string; count: number; fill: string }[]> => {
   try {
     const data = [
-      { status: "Ativas", count: mockBookings.filter(b => b.status === "Confirmada").length, fill: "hsl(var(--chart-1))" },
-      { status: "Anteriores", count: mockBookings.filter(b => b.status === "Concluída").length, fill: "hsl(var(--chart-2))" },
-      { status: "Canceladas", count: mockBookings.filter(b => b.status === "Cancelada").length, fill: "hsl(var(--chart-3))" },
-    ];
+      { status: "Ativas", count: mockBookings.filter(b => b && b.status === "Confirmada").length, fill: "hsl(var(--chart-1))" },
+      { status: "Anteriores", count: mockBookings.filter(b => b && b.status === "Concluída").length, fill: "hsl(var(--chart-2))" },
+      { status: "Canceladas", count: mockBookings.filter(b => b && b.status === "Cancelada").length, fill: "hsl(var(--chart-3))" },
+    ]; // Added null checks for safety
     return simulateApiCall(data, 500);
   } catch (error) {
     console.error("Error in getBookingStatusData:", error);
