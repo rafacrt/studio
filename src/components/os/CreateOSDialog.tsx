@@ -34,8 +34,8 @@ export function CreateOSDialog() {
       partners: state.partners,
       clients: state.clients,
   }));
-  const modalRef = useRef<HTMLDivElement>(null);
-  const [bootstrapModal, setBootstrapModal] = useState<Modal | null>(null);
+  const modalElementRef = useRef<HTMLDivElement>(null);
+  const modalInstanceRef = useRef<Modal | null>(null); // Store modal instance in a ref
 
   const [clientInput, setClientInput] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
@@ -61,58 +61,52 @@ export function CreateOSDialog() {
     mode: 'onChange',
   });
 
-  // Memoized version of handleModalClose for useEffect dependency
   const handleModalClose = useCallback(() => {
-    console.log('handleModalClose called: Resetting form and inputs.');
+    // console.log('handleModalClose called: Resetting form and inputs.');
     form.reset();
     setClientInput('');
     setPartnerInput('');
     setShowClientSuggestions(false);
     setShowPartnerSuggestions(false);
-  }, [form]); // form.reset is stable
+    // Ensure isSubmitting is false if modal is closed externally (e.g. ESC key)
+    // though primarily it's reset in onSubmit's finally block.
+    if (isSubmitting) {
+        setIsSubmitting(false);
+    }
+  }, [form, isSubmitting]); // Added isSubmitting to dependencies
 
   useEffect(() => {
-    const modalElement = modalRef.current;
-    if (!modalElement) return;
+    const currentModalElement = modalElementRef.current;
+    if (!currentModalElement) return;
 
-    // Listener for when Bootstrap itself has finished hiding the modal
-    modalElement.addEventListener('hidden.bs.modal', handleModalClose);
+    const hiddenModalHandler = () => {
+        // console.log('Bootstrap hidden.bs.modal event fired.');
+        handleModalClose();
+    };
+    currentModalElement.addEventListener('hidden.bs.modal', hiddenModalHandler);
 
-    // Initialize Bootstrap modal instance
     if (typeof window !== 'undefined') {
         import('bootstrap/js/dist/modal').then(ModalModule => {
             const BootstrapModal = ModalModule.default;
-            if (modalElement) { // Check modalElement again, as import is async
-                // Get existing instance or create a new one.
-                const instance = BootstrapModal.getInstance(modalElement) || new BootstrapModal(modalElement);
-                setBootstrapModal(instance);
+            if (currentModalElement && !modalInstanceRef.current) { // Initialize only if not already done
+                modalInstanceRef.current = BootstrapModal.getInstance(currentModalElement) || new BootstrapModal(currentModalElement);
+                // console.log('Bootstrap modal instance initialized/retrieved and stored in ref.');
             }
         }).catch(error => console.error("Failed to initialize Bootstrap modal:", error));
     }
 
     return () => {
-      if (modalElement) {
-        modalElement.removeEventListener('hidden.bs.modal', handleModalClose);
+      if (currentModalElement) {
+        currentModalElement.removeEventListener('hidden.bs.modal', hiddenModalHandler);
       }
-      // Note: Disposing the modal instance here can be tricky if Bootstrap
-      // also manages it via data attributes. If we `new` an instance, we should `dispose` it.
-      // For modals toggled by data attributes, explicit disposal might not always be needed
-      // or could even conflict if not handled carefully.
-      // The current approach uses getInstance OR new, so disposal is generally safe.
-      if (bootstrapModal && typeof bootstrapModal.dispose === 'function') {
-        try {
-             // Check if the modal is still associated with the DOM element
-            if (bootstrapModal._element === modalElement) {
-                // bootstrapModal.dispose(); // Consider if this is truly needed or causes issues
-            }
-        } catch (e) {
-            console.warn("Error during modal dispose on cleanup:", e);
-        }
-      }
-      setBootstrapModal(null); // Clear our reference
+      // Do not dispose the modal instance here if it's managed by data-bs attributes
+      // and might be reused. If we `new` it and fully control its lifecycle, then dispose.
+      // For now, relying on Bootstrap's own cleanup when toggled by data attributes seems safer
+      // unless we fully switch to programmatic show/hide without data-bs-toggle.
+      // modalInstanceRef.current?.dispose(); // Cautious about disposing an instance potentially managed elsewhere.
+      // modalInstanceRef.current = null;
     };
-  }, [handleModalClose, bootstrapModal]); // bootstrapModal added to re-evaluate if it changes, though it shouldn't externally
-
+  }, [handleModalClose]); // Effect for attaching/detaching listeners
 
   const filteredClients = useMemo(() => {
     if (!clientInput) return [];
@@ -162,25 +156,24 @@ export function CreateOSDialog() {
       };
 
       await addOS(dataToSubmit); // This is a placeholder in the store
-
-      console.log(`OS Criada: ${dataToSubmit.cliente} - ${dataToSubmit.projeto}`);
+      // console.log(`OS Criada: ${dataToSubmit.cliente} - ${dataToSubmit.projeto}`);
       
-      // Programmatically hide the modal.
-      // The 'hidden.bs.modal' event listener (setup in useEffect)
-      // will then call handleModalClose to reset the form.
-      if (bootstrapModal && typeof bootstrapModal.hide === 'function') {
-        console.log('Attempting to hide modal programmatically.');
-        bootstrapModal.hide();
+      if (modalInstanceRef.current && typeof modalInstanceRef.current.hide === 'function') {
+        // console.log('Attempting to hide modal programmatically via modalInstanceRef.current.hide().');
+        modalInstanceRef.current.hide(); // This should trigger 'hidden.bs.modal'
       } else {
-        console.warn('onSubmit: bootstrapModal instance not found or hide is not a function. Modal might not close.');
-        // If hide fails for some reason, manually trigger cleanup as a fallback.
-        // This won't hide the modal but will reset the form.
+        // console.warn('onSubmit: modal instance from ref not found or hide is not a function. Modal might not close properly.');
+        // Fallback: If programmatic hide fails, manually call cleanup.
+        // This won't animate the modal out but will reset the form.
         handleModalClose();
       }
     } catch (error) {
       console.error("Failed to create OS:", error);
       alert('Falha ao criar OS. Por favor, tente novamente.');
     } finally {
+      // Ensure isSubmitting is set to false regardless of success or failure,
+      // unless an error occurs before modal hide starts and we want to keep the modal open.
+      // For now, it's fine to set it false here.
       setIsSubmitting(false);
     }
   }
@@ -210,12 +203,11 @@ export function CreateOSDialog() {
         <PlusCircle className="me-2" size={18} /> Nova OS
       </button>
 
-      <div className="modal fade" id="createOSModal" tabIndex={-1} aria-labelledby="createOSModalLabel" aria-hidden="true" ref={modalRef}>
+      <div className="modal fade" id="createOSModal" tabIndex={-1} aria-labelledby="createOSModalLabel" aria-hidden="true" ref={modalElementRef}>
         <div className="modal-dialog modal-dialog-scrollable modal-lg">
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title" id="createOSModalLabel">Criar Nova Ordem de Serviço</h5>
-              {/* Removed onClick from btn-close, data-bs-dismiss will trigger hidden.bs.modal */}
               <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div className="modal-body">
@@ -240,14 +232,15 @@ export function CreateOSDialog() {
                                 setShowClientSuggestions(!!val && clients.filter(c => c.name.toLowerCase().includes(val.toLowerCase())).length > 0);
                             }}
                             onFocus={() => setShowClientSuggestions(!!clientInput && filteredClients.length > 0)}
-                             onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
+                             onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)} // Delay to allow click on suggestion
                             autoComplete="off"
                           />
                           {showClientSuggestions && filteredClients.length > 0 && (
                             <div className="list-group position-absolute w-100" style={{ zIndex: 1056, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}>
                               {filteredClients.map(c => (
                                 <button type="button" key={c.id} className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
-                                  onMouseDown={(e) => e.preventDefault()} onClick={() => handleClientSelect(c.name)}>
+                                  onMouseDown={(e) => e.preventDefault()} // Prevent blur before click
+                                  onClick={() => handleClientSelect(c.name)}>
                                   {c.name}
                                 </button>
                               ))}
@@ -276,14 +269,15 @@ export function CreateOSDialog() {
                                 setShowPartnerSuggestions(!!val && partners.filter(p => p.name.toLowerCase().includes(val.toLowerCase())).length > 0);
                             }}
                             onFocus={() => setShowPartnerSuggestions(!!partnerInput && filteredPartners.length > 0)}
-                            onBlur={() => setTimeout(() => setShowPartnerSuggestions(false), 200)}
+                            onBlur={() => setTimeout(() => setShowPartnerSuggestions(false), 200)} // Delay to allow click on suggestion
                             autoComplete="off"
                           />
                           {showPartnerSuggestions && filteredPartners.length > 0 && (
                             <div className="list-group position-absolute w-100" style={{ zIndex: 1056, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}>
                               {filteredPartners.map(p => (
                                 <button type="button" key={p.id} className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
-                                  onMouseDown={(e) => e.preventDefault()} onClick={() => handlePartnerSelect(p.name)}>
+                                  onMouseDown={(e) => e.preventDefault()} // Prevent blur before click
+                                  onClick={() => handlePartnerSelect(p.name)}>
                                   {p.name}
                                 </button>
                               ))}
@@ -411,7 +405,6 @@ export function CreateOSDialog() {
                 </div>
 
                 <div className="modal-footer mt-4 pt-3 border-top">
-                    {/* Removed onClick from Cancel button, data-bs-dismiss will trigger hidden.bs.modal */}
                     <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal" disabled={isSubmitting}>
                         Cancelar
                     </button>
@@ -432,4 +425,4 @@ export function CreateOSDialog() {
     </>
   );
 }
-
+    
