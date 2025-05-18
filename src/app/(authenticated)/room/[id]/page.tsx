@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Star, Bed, Bath, Users, Tv, Utensils, Snowflake, ChevronRight, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, StarHalf, MapPin } from 'lucide-react';
+import { ChevronLeft, Star, Bed, Bath, Users, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, StarHalf, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -118,11 +118,11 @@ export default function RoomDetailPage() {
     const totalStars = 5;
     for (let i = 1; i <= totalStars; i++) {
       if (i <= rating) {
-        stars.push(<Star key={`star-full-${i}`} className="h-3 w-3 text-foreground fill-foreground" />);
+        stars.push(<Star key={`star-full-${i}`} className="h-2.5 w-2.5 text-foreground fill-foreground" />);
       } else if (i - 0.5 <= rating) {
-        stars.push(<StarHalf key={`star-half-${i}`} className="h-3 w-3 text-foreground fill-foreground" />);
+        stars.push(<StarHalf key={`star-half-${i}`} className="h-2.5 w-2.5 text-foreground fill-foreground" />);
       } else {
-        stars.push(<Star key={`star-empty-${i}`} className="h-3 w-3 text-foreground fill-none stroke-current" />);
+        stars.push(<Star key={`star-empty-${i}`} className="h-2.5 w-2.5 text-foreground fill-none stroke-current" />);
       }
     }
     return stars;
@@ -396,4 +396,3 @@ export default function RoomDetailPage() {
     </div>
   );
 }
-

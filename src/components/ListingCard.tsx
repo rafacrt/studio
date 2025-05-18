@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Listing } from '@/types';
@@ -55,7 +56,7 @@ export function ListingCard({ listing }: ListingCardProps) {
             </p>
             {listing.rating > 0 && (
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                    <Star className="h-3.5 w-3.5 text-foreground fill-foreground" />
                     <span>{listing.rating.toFixed(1)}</span>
                 </div>
             )}
