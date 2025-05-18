@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Star, Bed, Bath, Users, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, StarHalf, MapPin } from 'lucide-react';
+import { ChevronLeft, Star, Bed, Bath, Users, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, StarHalf, MapPin, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
