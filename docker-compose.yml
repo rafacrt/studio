@@ -1,0 +1,32 @@
+
+version: '3.8'
+
+services:
+  westudy-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: westudy-next-app
+    container_name: westudy-next-app-container
+    ports:
+      - "9002:3000" # Map host port 9002 to container port 3000
+    environment:
+      # Define any production environment variables here
+      # Example:
+      # NEXT_PUBLIC_API_URL: http://api.example.com
+      # DATABASE_URL: postgresql://user:password@host:port/database
+      # These would override any defaults or be necessary if your app expects them
+      # For NEXT_PUBLIC_GOOGLE_MAPS_API_KEY, ensure it's available if needed at runtime
+      # or built into the image if it's a NEXT_PUBLIC_ variable and used during build.
+      # However, for keys, it's better to pass them at runtime.
+      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: "${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}" # Example: Get from .env file for local compose
+    # If you have a local .env file for docker-compose to read, uncomment next line
+    # env_file:
+    #  - .env # This .env file is for docker-compose, not to be confused with .env.local for next dev
+    restart: unless-stopped
+    volumes:
+      # If you have specific data that needs to persist outside the container, define volumes here.
+      # For a typical Next.js app, usually, no volumes are needed for the app code itself post-build.
+      # Example for persistent logs or uploaded files if not using external storage:
+      # - ./persistent_data/uploads:/app/public/uploads
+      pass:
