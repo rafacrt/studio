@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Star, Bed, Bath, Users, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, StarHalf, MapPin, ChevronRight } from 'lucide-react';
+import { ChevronLeft, Star, Bed, Bath, Users, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, StarHalf, MapPin, ChevronRight, Map as MapIcon, MessageSquareText, FileText, Home, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -149,6 +149,18 @@ export default function RoomDetailPage() {
             <Skeleton className="h-8 w-3/4 mx-auto" />
             <Skeleton className="h-4 w-1/2 mx-auto" />
             <Separator />
+            <div className="flex justify-center items-center space-x-6 text-center my-4">
+                <div className="flex flex-col items-center">
+                    <Skeleton className="h-5 w-10 mb-1" />
+                    <Skeleton className="h-3 w-20" />
+                </div>
+                <div className="h-8 border-l border-border"></div>
+                <div className="flex flex-col items-center">
+                    <Skeleton className="h-5 w-8" />
+                    <Skeleton className="h-3 w-16" />
+                </div>
+            </div>
+            <Separator />
             <div className="space-y-2 text-center">
               <div className="flex items-center justify-center space-x-2">
                 <Skeleton className="h-5 w-5 rounded-full" />
@@ -282,31 +294,10 @@ export default function RoomDetailPage() {
             </p>
           </section>
 
-          <Separator />
-
-          <section className="text-sm text-foreground flex flex-row flex-wrap justify-center items-center gap-x-4 sm:gap-x-6 gap-y-2">
-            <div className="flex items-center space-x-1.5">
-              <Bed className="h-4 w-4 text-primary flex-shrink-0" />
-              <span>{room.beds} cama(s)</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <Bath className="h-4 w-4 text-primary flex-shrink-0" />
-              <span>Banheiro {room.baths > 0 ? 'privativo' : 'compartilhado'}</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <Users className="h-4 w-4 text-primary flex-shrink-0" />
-              <span>{room.guests} hóspede(s)</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <UniversityIcon className="h-4 w-4 text-primary flex-shrink-0" />
-              <span>Próximo à {room.university.acronym}</span>
-            </div>
-          </section>
-
           {room.rating > 0 && (
             <>
               <Separator />
-              <section className="flex justify-center items-center space-x-6 text-center">
+              <section className="flex justify-center items-center space-x-6 text-center py-4">
                 <div className="flex flex-col items-center">
                   <p className="text-base font-medium text-foreground mb-0.5">{room.rating.toFixed(2)}</p>
                   <div className="flex items-center space-x-0.5">
@@ -321,6 +312,27 @@ export default function RoomDetailPage() {
               </section>
             </>
           )}
+
+          <Separator />
+
+          <section className="text-sm text-foreground space-y-2 text-center">
+            <div className="flex items-center justify-center space-x-1.5">
+              <Bed className="h-4 w-4 text-primary flex-shrink-0" />
+              <span>{room.beds} cama(s)</span>
+            </div>
+            <div className="flex items-center justify-center space-x-1.5">
+              <Bath className="h-4 w-4 text-primary flex-shrink-0" />
+              <span>Banheiro {room.baths > 0 ? 'privativo' : 'compartilhado'}</span>
+            </div>
+            <div className="flex items-center justify-center space-x-1.5">
+              <Users className="h-4 w-4 text-primary flex-shrink-0" />
+              <span>{room.guests} hóspede(s)</span>
+            </div>
+            <div className="flex items-center justify-center space-x-1.5">
+              <UniversityIcon className="h-4 w-4 text-primary flex-shrink-0" />
+              <span>Próximo à {room.university.acronym}</span>
+            </div>
+          </section>
 
           <Separator />
 
@@ -347,6 +359,70 @@ export default function RoomDetailPage() {
               </section>
             </>
           )}
+
+          <Separator />
+          <section>
+            <div className="flex items-center mb-3">
+              <MapIcon className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
+              <h2 className="text-lg font-semibold text-foreground">Onde você estará</h2>
+            </div>
+            <div className="bg-muted rounded-3xl h-64 flex items-center justify-center text-muted-foreground p-4">
+              <p>Espaço reservado para o mapa da localização.</p>
+              {/* Map component would go here */}
+            </div>
+             <p className="text-xs text-muted-foreground mt-2">Localização exata fornecida após a reserva.</p>
+          </section>
+
+          <Separator />
+          <section>
+             <div className="flex items-center mb-3">
+                <MessageSquareText className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
+                <h2 className="text-lg font-semibold text-foreground">Avaliações dos Usuários</h2>
+            </div>
+            <div className="bg-muted rounded-lg p-6 text-center text-muted-foreground">
+              <p>Carrossel de avaliações dos usuários aparecerá aqui.</p>
+              {/* User reviews carousel component would go here */}
+            </div>
+          </section>
+
+          <Separator />
+          <section>
+            <div className="flex items-center mb-2">
+                <FileText className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
+                <h2 className="text-lg font-semibold text-foreground">Política de Cancelamento</h2>
+            </div>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Detalhes sobre a política de cancelamento serão exibidos aqui. Por exemplo: Cancelamento gratuito até X dias antes do check-in. Após esse período, uma taxa pode ser aplicada.
+            </p>
+          </section>
+
+          <Separator />
+          <section>
+             <div className="flex items-center mb-2">
+                <Home className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
+                <h2 className="text-lg font-semibold text-foreground">Regras da Casa</h2>
+            </div>
+            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 leading-relaxed">
+              <li>Não são permitidas festas ou eventos.</li>
+              <li>Horário de silêncio após as 22:00.</li>
+              <li>Não fumar dentro do quarto ou áreas comuns.</li>
+              <li>Mantenha as áreas comuns limpas e organizadas.</li>
+            </ul>
+          </section>
+
+          <Separator />
+          <section>
+            <div className="flex items-center mb-2">
+                <ShieldCheck className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
+                <h2 className="text-lg font-semibold text-foreground">Segurança e Propriedade</h2>
+            </div>
+            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 leading-relaxed">
+              <li>Detector de fumaça instalado.</li>
+              <li>Extintor de incêndio disponível.</li>
+              <li>Câmeras de segurança nas áreas comuns externas.</li>
+            </ul>
+          </section>
+
         </div>
       </main>
 
@@ -396,3 +472,6 @@ export default function RoomDetailPage() {
     </div>
   );
 }
+
+
+    
