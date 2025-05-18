@@ -19,17 +19,17 @@ const generateNewOSNumero = async (connection: PoolConnection): Promise<string> 
 
 export async function createOSInDB(data: CreateOSData): Promise<OS> {
   const connection = await db.getConnection();
-  console.log('[OSAction] Starting createOSInDB with data:', data);
+  console.log('[OSAction] Starting createOSInDB with data:', JSON.stringify(data, null, 2));
   try {
     await connection.beginTransaction();
     console.log('[OSAction] Transaction started.');
 
     // 1. Find or Create Client
-    console.log(`[OSAction] Finding or creating client: "${data.cliente}"`);
-    const client = await findOrCreateClientByName(data.cliente);
+    console.log(`[OSAction] Attempting to find or create client: "${data.cliente}"`);
+    const client = await findOrCreateClientByName(data.cliente, connection); // Pass connection
     if (!client || !client.id) {
-        console.error('[OSAction] Failed to get client ID for:', data.cliente);
-        await connection.rollback(); // Rollback if client creation fails
+        console.error('[OSAction] Failed to get client ID for:', data.cliente, 'Client object received:', client);
+        await connection.rollback();
         throw new Error('Failed to get client ID.');
     }
     console.log(`[OSAction] Client resolved: ID ${client.id}, Name ${client.name}`);
@@ -38,11 +38,11 @@ export async function createOSInDB(data: CreateOSData): Promise<OS> {
     let partnerId: string | null = null;
     let partnerName: string | undefined = undefined;
     if (data.parceiro && data.parceiro.trim() !== '') {
-      console.log(`[OSAction] Finding or creating partner: "${data.parceiro}"`);
-      const partner = await findOrCreatePartnerByName(data.parceiro);
+      console.log(`[OSAction] Attempting to find or create partner: "${data.parceiro}"`);
+      const partner = await findOrCreatePartnerByName(data.parceiro, connection); // Pass connection
       if (!partner || !partner.id) {
-          console.error('[OSAction] Failed to get partner ID for:', data.parceiro);
-          await connection.rollback(); // Rollback if partner creation fails
+          console.error('[OSAction] Failed to get partner ID for:', data.parceiro, 'Partner object received:', partner);
+          await connection.rollback();
           throw new Error('Failed to get partner ID.');
       }
       partnerId = partner.id;
@@ -58,16 +58,12 @@ export async function createOSInDB(data: CreateOSData): Promise<OS> {
     console.log(`[OSAction] New OS numero generated: ${newOsNumero}`);
 
     // 4. Create OS
-    let programadoParaDate: Date | null = null;
+    let programadoParaDate: Date | string | null = null; // Can be string for DB or Date object
     if (data.programadoPara && data.programadoPara.trim() !== '') {
         const parsedDate = new Date(data.programadoPara);
-        // Check if the date is valid. The input type="date" should give YYYY-MM-DD.
-        // Appending T00:00:00Z to ensure it's treated as UTC midnight for storage if only date is given.
         if (!isNaN(parsedDate.getTime())) {
-            // To store just the date part, we can format it back to YYYY-MM-DD string for MySQL DATE type
-            // Or if the column is DATETIME, ensure it's a full valid datetime.
-            // For a DATE column, passing a Date object directly is usually fine, MySQL driver handles it.
-             programadoParaDate = parsedDate;
+            // For MySQL DATE type, 'YYYY-MM-DD' string is preferred.
+            programadoParaDate = parsedDate.toISOString().split('T')[0];
         } else {
             console.warn(`[OSAction] Invalid programadoPara date string received: "${data.programadoPara}". Setting to null.`);
         }
@@ -80,18 +76,18 @@ export async function createOSInDB(data: CreateOSData): Promise<OS> {
       parceiro_id: partnerId ? parseInt(partnerId, 10) : null,
       projeto: data.projeto,
       tarefa: data.tarefa,
-      observacoes: data.observacoes || '', // Ensure empty string becomes empty string, not null, if column is NOT NULL
-      tempoTrabalhado: data.tempoTrabalhado || null, // Allow null if field is empty
+      observacoes: data.observacoes || '',
+      tempoTrabalhado: data.tempoTrabalhado || null,
       status: data.status || OSStatus.NA_FILA,
-      dataAbertura: new Date(), 
-      programadoPara: programadoParaDate, // Use the Date object or null
+      dataAbertura: new Date(),
+      programadoPara: programadoParaDate,
       isUrgent: data.isUrgent || false,
       dataFinalizacao: null,
       dataInicioProducao: null,
       tempoProducaoMinutos: null,
     };
-    
-    console.log('[OSAction] OS data prepared for DB insertion:', osDataForDB);
+
+    console.log('[OSAction] OS data prepared for DB insertion:', JSON.stringify(osDataForDB, null, 2));
 
     const [result] = await connection.execute<ResultSetHeader>(
       `INSERT INTO os_table (numero, cliente_id, parceiro_id, projeto, tarefa, observacoes, tempoTrabalhado, status, dataAbertura, programadoPara, isUrgent, dataFinalizacao, dataInicioProducao, tempoProducaoMinutos)
@@ -115,9 +111,9 @@ export async function createOSInDB(data: CreateOSData): Promise<OS> {
     );
 
     if (!result.insertId || result.insertId === 0) {
-      console.error('[OSAction] Failed to create OS: insertId is 0 or not returned. This often means the `id` column in os_table is not AUTO_INCREMENT.', result);
+      console.error('[OSAction] Failed to create OS: insertId is 0 or not returned. This often means the `id` column in os_table is not AUTO_INCREMENT, or another DB constraint failed silently.', result);
       await connection.rollback();
-      throw new Error('Failed to create OS: No valid insertId returned from DB. Check AUTO_INCREMENT on os_table.id.');
+      throw new Error('Failed to create OS: No valid insertId returned from DB. Check AUTO_INCREMENT on os_table.id and other constraints.');
     }
     console.log(`[OSAction] OS successfully inserted with ID: ${result.insertId}`);
 
@@ -127,8 +123,8 @@ export async function createOSInDB(data: CreateOSData): Promise<OS> {
     const createdOS: OS = {
       id: String(result.insertId),
       numero: newOsNumero,
-      cliente: client.name, 
-      parceiro: partnerName, 
+      cliente: client.name,
+      parceiro: partnerName,
       clientId: client.id,
       partnerId: partnerId ?? undefined,
       projeto: data.projeto,
@@ -137,18 +133,15 @@ export async function createOSInDB(data: CreateOSData): Promise<OS> {
       tempoTrabalhado: data.tempoTrabalhado || '',
       status: data.status || OSStatus.NA_FILA,
       dataAbertura: osDataForDB.dataAbertura.toISOString(),
-      programadoPara: programadoParaDate ? programadoParaDate.toISOString().split('T')[0] : undefined,
+      programadoPara: programadoParaDate ? String(programadoParaDate) : undefined, // Ensure it's string
       isUrgent: data.isUrgent || false,
     };
-    console.log('[OSAction] OS object constructed to return to client:', createdOS);
+    console.log('[OSAction] OS object constructed to return to client:', JSON.stringify(createdOS, null, 2));
     return createdOS;
 
   } catch (error: any) {
-    await connection.rollback(); // Ensure rollback on any error within the try block
-    console.error('[OSAction] Original DB error in createOSInDB:', error);
-    if (error.message.includes('No valid insertId returned')) {
-        throw error;
-    }
+    console.error('[OSAction] Error in createOSInDB. Rolling back transaction.', error);
+    await connection.rollback();
     console.error(`[OSAction] Failed to create OS. Details: ${error.message}`);
     throw new Error(`Failed to create OS: ${error.message}`);
   } finally {
@@ -162,7 +155,7 @@ export async function getAllOSFromDB(): Promise<OS[]> {
   try {
     console.log('[OSAction] Fetching all OS from DB.');
     const [rows] = await connection.query<RowDataPacket[]>(`
-      SELECT 
+      SELECT
         os.id, os.numero, os.projeto, os.tarefa, os.observacoes, os.tempoTrabalhado, os.status,
         os.dataAbertura, os.dataFinalizacao, os.programadoPara, os.isUrgent,
         os.dataInicioProducao, os.tempoProducaoMinutos,
