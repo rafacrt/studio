@@ -4,57 +4,57 @@
 
 @layer base {
   :root {
-    --background: 240 1% 20%; /* #323233 */
-    --foreground: 0 0% 100%; /* #ffffff */
+    /* Light Theme (Default) - Airbnb inspired with user's blue */
+    --background: 0 0% 100%; /* #ffffff */
+    --foreground: 240 1% 20%; /* #323233 - For main text */
 
-    --card: 240 1% 25%; /* Um pouco mais claro que o fundo */
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 100%; /* White cards */
+    --card-foreground: 240 1% 20%; /* Dark text on cards */
 
-    --popover: 240 1% 25%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 0 0% 100%; /* White popovers */
+    --popover-foreground: 240 1% 20%; /* Dark text on popovers */
 
-    --primary: 223 69% 54%; /* #416ed3 */
-    --primary-foreground: 0 0% 100%; /* branco */
+    --primary: 223 69% 54%; /* #416ed3 - User's blue for primary actions */
+    --primary-foreground: 0 0% 100%; /* White text on primary actions */
 
-    --secondary: 240 1% 30%; /* Cinza mais claro para secundário */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%; /* Very light gray for secondary elements */
+    --secondary-foreground: 240 1% 20%; /* Dark text for secondary elements */
 
-    --muted: 240 1% 35%; /* Cinza ainda mais claro para texto muted ou fundos sutis */
-    --muted-foreground: 0 0% 80%; /* Branco mais suave */
+    --muted: 240 5% 96%; /* Very light gray for muted backgrounds/text */
+    --muted-foreground: 240 1% 45%; /* Softer gray for muted text */
 
-    --accent: 223 69% 60%; /* Azul um pouco mais claro/brilhante para acentos */
-    --accent-foreground: 0 0% 100%;
+    --accent: 240 5% 92%; /* Slightly darker light gray for accents or hover states */
+    --accent-foreground: 240 1% 15%; /* Darker text for accents */
 
-    --destructive: 0 70% 55%; /* Vermelho padrão, pode precisar de ajuste para fundo escuro */
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 70% 55%; /* Standard red for destructive actions */
+    --destructive-foreground: 0 0% 100%; /* White text on destructive actions */
 
-    --border: 240 1% 30%; /* Borda cinza */
-    --input: 240 1% 30%; /* Mesmo que a borda para fundo de input */
-    --ring: 223 69% 54%; /* Azul para anel, mesmo que primário */
+    --border: 240 5% 88%; /* Light gray for borders (e.g., input, card borders) */
+    --input: 0 0% 100%; /* White input background */
+    --ring: 223 69% 54%; /* User's blue for focus rings */
 
     --radius: 0.5rem;
 
-    /* Cores do gráfico - podem precisar de ajuste para tema escuro */
-    --chart-1: 220 70% 60%;
-    --chart-2: 160 60% 55%;
-    --chart-3: 30 80% 65%;
-    --chart-4: 280 65% 70%;
-    --chart-5: 340 75% 60%;
+    /* Chart colors - suitable for light background */
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 50%;
 
-    /* Cores da Sidebar para tema escuro */
-    --sidebar-background: 240 1% 15%; /* Mais escuro que o fundo principal */
-    --sidebar-foreground: 0 0% 95%; /* Branco levemente acinzentado para texto da sidebar */
-    --sidebar-primary: 223 69% 54%; /* Novo azul */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 223 69% 65%; /* Azul mais claro para acento da sidebar */
-    --sidebar-accent-foreground: 0 0% 100%; 
-    --sidebar-border: 240 1% 25%; /* Borda para elementos da sidebar */
-    --sidebar-ring: 223 69% 54%;
+    /* Sidebar colors for light theme */
+    --sidebar-background: 240 5% 97%; /* Off-white or very light gray */
+    --sidebar-foreground: 240 1% 20%;   /* Dark gray text */
+    --sidebar-primary: 223 69% 54%; /* User's blue */
+    --sidebar-primary-foreground: 0 0% 100%; /* White */
+    --sidebar-accent: 240 5% 90%;   /* Light gray for active/hover items */
+    --sidebar-accent-foreground: 223 69% 54%; /* Blue text on accent */
+    --sidebar-border: 240 5% 85%; /* Light gray border */
+    --sidebar-ring: 223 69% 54%; /* User's blue */
   }
 
-  /* O bloco .dark reflete o novo tema escuro como padrão.
-     Se um tema claro for reintroduzido, este bloco precisará ser diferente. */
   .dark {
+    /* Dark Theme (Remains available if .dark class is applied to html) */
     --background: 240 1% 20%; /* #323233 */
     --foreground: 0 0% 100%; /* #ffffff */
 
@@ -83,14 +83,14 @@
     --input: 240 1% 30%;
     --ring: 223 69% 54%;
 
-    /* Cores do gráfico para tema escuro */
+    /* Chart colors for dark theme */
     --chart-1: 220 70% 60%;
     --chart-2: 160 60% 55%;
     --chart-3: 30 80% 65%;
     --chart-4: 280 65% 70%;
     --chart-5: 340 75% 60%;
 
-    /* Cores da Sidebar para tema escuro */
+    /* Sidebar colors for dark theme */
     --sidebar-background: 240 1% 15%;
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 223 69% 54%;

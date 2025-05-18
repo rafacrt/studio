@@ -23,10 +23,10 @@ const AppLogo: React.FC<AppLogoProps> = (props) => (
           text-anchor: middle;
         }
         .logo-text-w {
-          fill: hsl(var(--primary)); /* Agora será o novo azul #416ed3 */
+          fill: hsl(var(--primary)); /* Will use the new blue #416ed3 */
         }
         .logo-text-s {
-           fill: hsl(var(--foreground)); /* Agora será branco #ffffff */
+           fill: hsl(var(--foreground)); /* Will use the new dark gray #323233 for light theme */
         }
       `}
     </style>
