@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 // Removed: import { persist, createJSONStorage } from 'zustand/middleware';
 import type { OS, CreateOSData, Client } from '@/lib/types';
@@ -26,7 +27,7 @@ interface OSState {
   setClients: (clients: Client[]) => void; // For loading data from DB
   setNextOsNumber: (num: number) => void; // For setting after DB query
 
-  addOS: (data: CreateOSData) => Promise<OS | null>; // Now async, returns Promise
+  addOS: (data: CreateOSData) => OS | null; // Temporarily synchronous for debugging modal
   updateOS: (updatedOS: OS) => Promise<void>; // Now async
   updateOSStatus: (osId: string, newStatus: OSStatus) => Promise<void>; // Now async
   getOSById: (osId: string) => OS | undefined; // Might become async or rely on fetched list
@@ -69,10 +70,29 @@ export const useOSStore = create<OSState>()(
       // TODO: Re-implement all mutation and fetch functions below to use Server Actions + Database
       // For now, they are placeholders or operate on local state for basic structure.
 
-      addOS: async (data) => {
-        console.warn('addOS: DB implementation pending. Called with:', data);
-        // This would typically call a server action.
-        // For now, returning null or a mock.
+      // Temporarily synchronous for modal debugging
+      addOS: (data) => {
+        console.warn('addOS: DB implementation pending. Called with (sync for debug):', data);
+        // In a real scenario, this would call a server action.
+        // For now, we simulate a successful synchronous operation.
+        // You might want to add to local state for immediate UI feedback if needed,
+        // but for debugging the modal, just logging and returning null is fine.
+        // Example:
+        // const newOsId = `os-${Date.now()}`;
+        // const newOsNumero = String(get().nextOsNumber).padStart(6, '0');
+        // const newOS: OS = {
+        //   id: newOsId,
+        //   numero: newOsNumero,
+        //   ...data,
+        //   dataAbertura: new Date().toISOString(),
+        //   observacoes: data.observacoes || '',
+        //   tempoTrabalhado: data.tempoTrabalhado || '',
+        // };
+        // set((state) => ({
+        //   osList: [...state.osList, newOS],
+        //   nextOsNumber: state.nextOsNumber + 1,
+        // }));
+        // return newOS;
         return null;
       },
 

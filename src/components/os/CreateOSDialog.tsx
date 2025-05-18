@@ -11,7 +11,8 @@ import { useOSStore } from '@/store/os-store';
 import type { Partner } from '@/store/os-store';
 import type { Client } from '@/lib/types';
 import { OSStatus, ALL_OS_STATUSES, type CreateOSData } from '@/lib/types';
-import type Modal from 'bootstrap/js/dist/modal';
+// Ensure Modal type is imported if needed, or use `any` for the instance.
+// import type Modal from 'bootstrap/js/dist/modal';
 
 const formSchema = z.object({
   cliente: z.string().min(1, { message: 'Nome do cliente é obrigatório.' }),
@@ -35,7 +36,7 @@ export function CreateOSDialog() {
       clients: state.clients,
   }));
   const modalElementRef = useRef<HTMLDivElement>(null);
-  const modalInstanceRef = useRef<Modal | null>(null); // Store modal instance in a ref
+  const modalInstanceRef = useRef<any | null>(null); // Store Bootstrap modal instance here
 
   const [clientInput, setClientInput] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
@@ -61,52 +62,45 @@ export function CreateOSDialog() {
     mode: 'onChange',
   });
 
-  const handleModalClose = useCallback(() => {
-    // console.log('handleModalClose called: Resetting form and inputs.');
+  // Stable callback for form reset and state cleanup
+  const resetFormAndStates = useCallback(() => {
     form.reset();
     setClientInput('');
     setPartnerInput('');
     setShowClientSuggestions(false);
     setShowPartnerSuggestions(false);
-    // Ensure isSubmitting is false if modal is closed externally (e.g. ESC key)
-    // though primarily it's reset in onSubmit's finally block.
-    if (isSubmitting) {
-        setIsSubmitting(false);
-    }
-  }, [form, isSubmitting]); // Added isSubmitting to dependencies
+    setIsSubmitting(false); // Ensure submitting state is also reset
+  }, [form]); // form is stable from useForm
 
+  // Initialize Bootstrap modal and attach/detach event listeners
   useEffect(() => {
     const currentModalElement = modalElementRef.current;
-    if (!currentModalElement) return;
+    if (!currentModalElement || typeof window === undefined) return;
 
-    const hiddenModalHandler = () => {
-        // console.log('Bootstrap hidden.bs.modal event fired.');
-        handleModalClose();
-    };
-    currentModalElement.addEventListener('hidden.bs.modal', hiddenModalHandler);
-
-    if (typeof window !== 'undefined') {
-        import('bootstrap/js/dist/modal').then(ModalModule => {
-            const BootstrapModal = ModalModule.default;
-            if (currentModalElement && !modalInstanceRef.current) { // Initialize only if not already done
-                modalInstanceRef.current = BootstrapModal.getInstance(currentModalElement) || new BootstrapModal(currentModalElement);
-                // console.log('Bootstrap modal instance initialized/retrieved and stored in ref.');
-            }
-        }).catch(error => console.error("Failed to initialize Bootstrap modal:", error));
-    }
+    import('bootstrap/js/dist/modal').then(ModalModule => {
+        const BootstrapModal = ModalModule.default;
+        if (currentModalElement && !modalInstanceRef.current) {
+            modalInstanceRef.current = new BootstrapModal(currentModalElement);
+            // console.log('Bootstrap modal instance CREATED and stored in ref.');
+            currentModalElement.addEventListener('hidden.bs.modal', resetFormAndStates);
+        }
+    }).catch(error => console.error("Failed to initialize Bootstrap modal:", error));
 
     return () => {
       if (currentModalElement) {
-        currentModalElement.removeEventListener('hidden.bs.modal', hiddenModalHandler);
+        currentModalElement.removeEventListener('hidden.bs.modal', resetFormAndStates);
       }
-      // Do not dispose the modal instance here if it's managed by data-bs attributes
-      // and might be reused. If we `new` it and fully control its lifecycle, then dispose.
-      // For now, relying on Bootstrap's own cleanup when toggled by data attributes seems safer
-      // unless we fully switch to programmatic show/hide without data-bs-toggle.
-      // modalInstanceRef.current?.dispose(); // Cautious about disposing an instance potentially managed elsewhere.
-      // modalInstanceRef.current = null;
+      if (modalInstanceRef.current && typeof modalInstanceRef.current.dispose === 'function') {
+        // console.log('Disposing Bootstrap modal instance.');
+        try {
+            modalInstanceRef.current.dispose();
+        } catch (e) {
+            console.warn("Error disposing modal instance on cleanup:", e);
+        }
+        modalInstanceRef.current = null;
+      }
     };
-  }, [handleModalClose]); // Effect for attaching/detaching listeners
+  }, [resetFormAndStates]); // Runs once on mount, cleans up on unmount
 
   const filteredClients = useMemo(() => {
     if (!clientInput) return [];
@@ -143,7 +137,15 @@ export function CreateOSDialog() {
     partnerInputRef.current?.focus();
   };
 
-  async function onSubmit(values: CreateOSFormValues) {
+  const handleShowModal = () => {
+    if (modalInstanceRef.current && typeof modalInstanceRef.current.show === 'function') {
+        modalInstanceRef.current.show();
+    } else {
+        console.warn('Modal instance not available to show.');
+    }
+  };
+
+  function onSubmit(values: CreateOSFormValues) { // Removed async as addOS is sync for now
     setIsSubmitting(true);
     try {
       const dataToSubmit: CreateOSData = {
@@ -155,27 +157,23 @@ export function CreateOSDialog() {
         programadoPara: values.programadoPara || undefined,
       };
 
-      await addOS(dataToSubmit); // This is a placeholder in the store
-      // console.log(`OS Criada: ${dataToSubmit.cliente} - ${dataToSubmit.projeto}`);
+      addOS(dataToSubmit); // This is now synchronous for testing
+      // console.log(`OS Data prepared (sync): ${dataToSubmit.cliente} - ${dataToSubmit.projeto}`);
       
       if (modalInstanceRef.current && typeof modalInstanceRef.current.hide === 'function') {
         // console.log('Attempting to hide modal programmatically via modalInstanceRef.current.hide().');
-        modalInstanceRef.current.hide(); // This should trigger 'hidden.bs.modal'
+        modalInstanceRef.current.hide(); // This should trigger 'hidden.bs.modal' which calls resetFormAndStates
       } else {
-        // console.warn('onSubmit: modal instance from ref not found or hide is not a function. Modal might not close properly.');
-        // Fallback: If programmatic hide fails, manually call cleanup.
-        // This won't animate the modal out but will reset the form.
-        handleModalClose();
+        console.warn('onSubmit: modal instance not found or hide is not a function. Modal might not close properly.');
+        resetFormAndStates(); // Fallback cleanup if programmatic hide fails
       }
     } catch (error) {
       console.error("Failed to create OS:", error);
       alert('Falha ao criar OS. Por favor, tente novamente.');
-    } finally {
-      // Ensure isSubmitting is set to false regardless of success or failure,
-      // unless an error occurs before modal hide starts and we want to keep the modal open.
-      // For now, it's fine to set it false here.
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Explicitly reset on error if modal doesn't hide
     }
+    // NOTE: setIsSubmitting(false) is now primarily handled by resetFormAndStates,
+    // which is called by the 'hidden.bs.modal' event.
   }
 
    const setupClickListener = (ref: React.RefObject<HTMLInputElement>, setShowSuggestionsFn: React.Dispatch<React.SetStateAction<boolean>>) => {
@@ -199,15 +197,18 @@ export function CreateOSDialog() {
 
   return (
     <>
-      <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOSModal">
+      {/* Button to trigger the modal programmatically */}
+      <button type="button" className="btn btn-primary" onClick={handleShowModal}>
         <PlusCircle className="me-2" size={18} /> Nova OS
       </button>
 
+      {/* Modal HTML structure (removed data-bs-toggle from trigger, id is used by instance) */}
       <div className="modal fade" id="createOSModal" tabIndex={-1} aria-labelledby="createOSModalLabel" aria-hidden="true" ref={modalElementRef}>
         <div className="modal-dialog modal-dialog-scrollable modal-lg">
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title" id="createOSModalLabel">Criar Nova Ordem de Serviço</h5>
+              {/* data-bs-dismiss still works fine for internal close buttons */}
               <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div className="modal-body">
@@ -425,4 +426,3 @@ export function CreateOSDialog() {
     </>
   );
 }
-    
