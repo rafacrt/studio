@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -12,17 +13,18 @@ import { Loader2, Search, FilterX, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 9; // Changed from 6 to 9
+const ALL_UNIVERSITIES_VALUE = "__ALL__"; // Special value for "Qualquer uma"
 
 export default function ExplorePage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [page, setPage] = useState(1); // Tracks the *next* page to fetch for infinite scroll
+  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [currentFilters, setCurrentFilters] = useState<ListingFilters>({});
   const [searchInput, setSearchInput] = useState('');
-  const [selectedUniversity, setSelectedUniversity] = useState('');
+  const [selectedUniversity, setSelectedUniversity] = useState(''); // Default to empty string for placeholder
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
 
@@ -38,20 +40,19 @@ export default function ExplorePage() {
       });
       if (node) observer.current.observe(node);
     },
-    [isLoading, isLoadingMore, hasMore] // Removed loadMoreListings from here to avoid re-creating observer too often
-                                      // loadMoreListings itself will be stable due to useCallback
+    [isLoading, isLoadingMore, hasMore]
   );
 
   const { toast } = useToast();
 
   const loadInitialListings = useCallback(async (filters: ListingFilters) => {
     setIsLoading(true);
-    setListings([]); // Clear existing listings
-    setPage(1); // Reset to page 1
+    setListings([]);
+    setPage(1);
     try {
       const newItems = await fetchListings(1, ITEMS_PER_PAGE, filters);
       setListings(newItems);
-      setPage(2); // Next page to fetch will be 2
+      setPage(2);
       setHasMore(newItems.length === ITEMS_PER_PAGE);
     } catch (err) {
       console.error("Falha ao carregar quartos:", err);
@@ -60,7 +61,7 @@ export default function ExplorePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]); // Removed setListings, setPage, setHasMore, setIsLoading as they are stable setters
+  }, [toast]);
 
   const loadMoreListings = useCallback(async () => {
     if (isLoading || isLoadingMore || !hasMore) return;
@@ -77,7 +78,7 @@ export default function ExplorePage() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoading, isLoadingMore, hasMore, page, currentFilters, toast]); // Dependencies for loadMoreListings
+  }, [isLoading, isLoadingMore, hasMore, page, currentFilters, toast]);
 
   useEffect(() => {
     loadInitialListings(currentFilters);
@@ -87,7 +88,9 @@ export default function ExplorePage() {
   const handleFilterChange = () => {
     const filters: ListingFilters = {};
     if (searchInput) filters.searchTerm = searchInput;
-    if (selectedUniversity) filters.university = selectedUniversity;
+    if (selectedUniversity && selectedUniversity !== ALL_UNIVERSITIES_VALUE) {
+      filters.university = selectedUniversity;
+    }
     if (minPrice) filters.minPrice = parseFloat(minPrice);
     if (maxPrice) filters.maxPrice = parseFloat(maxPrice);
     setCurrentFilters(filters);
@@ -95,7 +98,7 @@ export default function ExplorePage() {
 
   const clearFilters = () => {
     setSearchInput('');
-    setSelectedUniversity('');
+    setSelectedUniversity(''); // Reset to empty string to show placeholder
     setMinPrice('');
     setMaxPrice('');
     setCurrentFilters({});
@@ -127,7 +130,7 @@ export default function ExplorePage() {
                   <SelectValue placeholder="Qualquer uma" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Qualquer uma</SelectItem>
+                  <SelectItem value={ALL_UNIVERSITIES_VALUE}>Qualquer uma</SelectItem>
                   {universityAreas.map((uni: UniversityArea) => (
                     <SelectItem key={uni.acronym} value={uni.acronym}>
                        {uni.name} ({uni.acronym})
@@ -202,4 +205,4 @@ export default function ExplorePage() {
     </div>
   );
 }
-
+    
