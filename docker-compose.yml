@@ -29,4 +29,5 @@ services:
       # For a typical Next.js app, usually, no volumes are needed for the app code itself post-build.
       # Example for persistent logs or uploaded files if not using external storage:
       # - ./persistent_data/uploads:/app/public/uploads
-      pass:
+      pass: # This line will be removed
+
