@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Star, MapPin, Bed, Bath, Wifi, Users, Tv, Utensils, Snowflake, ChevronRight, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, StarHalf } from 'lucide-react';
+import { ChevronLeft, Star, MapPin, Bed, Bath, Users, Tv, Utensils, Snowflake, ChevronRight, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, StarHalf } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -118,11 +118,11 @@ export default function RoomDetailPage() {
     const totalStars = 5;
     for (let i = 1; i <= totalStars; i++) {
       if (i <= rating) {
-        stars.push(<Star key={`star-full-${i}`} className="h-3.5 w-3.5 text-foreground fill-foreground" />);
+        stars.push(<Star key={`star-full-${i}`} className="h-3 w-3 text-foreground fill-foreground" />);
       } else if (i - 0.5 <= rating) {
-        stars.push(<StarHalf key={`star-half-${i}`} className="h-3.5 w-3.5 text-foreground fill-foreground" />);
+        stars.push(<StarHalf key={`star-half-${i}`} className="h-3 w-3 text-foreground fill-foreground" />);
       } else {
-        stars.push(<Star key={`star-empty-${i}`} className="h-3.5 w-3.5 text-foreground fill-none stroke-current" />);
+        stars.push(<Star key={`star-empty-${i}`} className="h-3 w-3 text-foreground fill-none stroke-current" />);
       }
     }
     return stars;
@@ -301,16 +301,11 @@ export default function RoomDetailPage() {
             <>
               <Separator />
               <section className="text-center">
-                <p className="text-lg font-medium text-foreground">{room.rating.toFixed(2)}</p>
-                <div className="flex justify-center items-center mt-1">
-                  <div className="flex space-x-0.5 mr-2">
+                <p className="text-base font-medium text-foreground mb-0.5">{room.rating.toFixed(2)}</p>
+                <div className="flex justify-center items-center space-x-1 mb-1">
                     {renderStars(room.rating)}
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-foreground leading-tight">{room.reviews}</p>
-                    <p className="text-xs text-muted-foreground -mt-0.5">avaliações</p>
-                  </div>
                 </div>
+                <p className="text-xs text-muted-foreground">{room.reviews} avaliações</p>
               </section>
             </>
           )}
