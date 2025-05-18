@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Star, MapPin, Bed, Bath, Wifi, Users, Tv, Utensils, Snowflake, ChevronRight, Loader2, School2 as DefaultUniversityIcon, Share2, Heart } from 'lucide-react';
+import { ChevronLeft, Star, MapPin, Bed, Bath, Wifi, Users, Tv, Utensils, Snowflake, ChevronRight, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, StarHalf } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -97,7 +97,6 @@ export default function RoomDetailPage() {
     }
   };
 
-  // Placeholder for favorite and share actions
   const handleFavorite = () => {
     toast({ title: "Favoritos", description: "Funcionalidade de favoritar em desenvolvimento." });
   };
@@ -114,11 +113,26 @@ export default function RoomDetailPage() {
     }
   };
 
+  const renderStars = (rating: number) => {
+    const stars = [];
+    const totalStars = 5;
+    for (let i = 1; i <= totalStars; i++) {
+      if (i <= rating) {
+        stars.push(<Star key={`star-full-${i}`} className="h-4 w-4 text-foreground fill-foreground" />);
+      } else if (i - 0.5 <= rating) {
+        stars.push(<StarHalf key={`star-half-${i}`} className="h-4 w-4 text-foreground fill-foreground" />);
+      } else {
+        stars.push(<Star key={`star-empty-${i}`} className="h-4 w-4 text-foreground fill-none stroke-current" />);
+      }
+    }
+    return stars;
+  };
+
 
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center p-4 bg-background">
-        <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50 p-3 flex items-center justify-between border-b">
+        <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50 p-3 flex items-center justify-between border-b h-14">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
             <ChevronLeft className="h-6 w-6" />
           </Button>
@@ -129,9 +143,9 @@ export default function RoomDetailPage() {
           </div>
         </header>
         
-        <div className="w-full mt-16"> {/* Adjusted for fixed header */}
+        <div className="w-full mt-14"> {/* Adjusted for fixed header */}
           <Skeleton className="w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] rounded-b-lg" />
-          <div className="p-4 md:p-6 space-y-4 w-full max-w-4xl mx-auto">
+          <div className="p-4 md:p-6 space-y-4 w-full max-w-4xl mx-auto bg-background rounded-t-3xl -mt-6 md:-mt-8 relative z-10 shadow-xl">
             <Skeleton className="h-8 w-3/4 mx-auto" />
             <Skeleton className="h-4 w-1/2 mx-auto" />
             <Separator />
@@ -150,11 +164,17 @@ export default function RoomDetailPage() {
             <Skeleton className="h-4 w-2/3" />
           </div>
         </div>
-        <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 shadow-top-md z-20">
+        <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 shadow-top-md z-20 md:hidden">
            <div className="flex items-center justify-between">
             <Skeleton className="h-8 w-1/4" />
             <Skeleton className="h-12 w-1/2 rounded-lg" />
            </div>
+        </div>
+         <div className="hidden md:block fixed bottom-6 right-6 z-20">
+            <Card className="w-96 shadow-xl rounded-xl border">
+                <CardHeader className="pb-4"> <Skeleton className="h-8 w-1/2" /> <Skeleton className="h-4 w-3/4 mt-1" /> </CardHeader>
+                <CardContent className="pt-2"> <Skeleton className="h-12 w-full rounded-lg" /> </CardContent>
+            </Card>
         </div>
       </div>
     );
@@ -163,14 +183,14 @@ export default function RoomDetailPage() {
   if (!room) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center p-4 text-center bg-background">
-         <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50 p-3 flex items-center justify-between border-b">
+         <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50 p-3 flex items-center justify-between border-b h-14">
             <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
                 <ChevronLeft className="h-6 w-6" />
             </Button>
             <h1 className="text-lg font-semibold">Quarto Não Encontrado</h1>
              <div className="w-16"></div> {/* Spacer */}
         </header>
-        <div className="mt-16"> {/* Adjusted for fixed header */}
+        <div className="mt-14"> {/* Adjusted for fixed header */}
             <h1 className="text-2xl font-semibold mb-2">Quarto não encontrado</h1>
             <p className="text-muted-foreground mb-4">O quarto que você está procurando não existe ou foi removido.</p>
             <Button onClick={() => router.push('/explore')} variant="outline">Voltar para Exploração</Button>
@@ -183,7 +203,6 @@ export default function RoomDetailPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40"> {/* Page background */}
-      {/* New Fixed Header */}
       <header className="fixed top-0 left-0 right-0 z-50 p-3 bg-background border-b flex items-center justify-between h-14">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-foreground">
           <ChevronLeft className="h-6 w-6" />
@@ -198,7 +217,7 @@ export default function RoomDetailPage() {
         </div>
       </header>
 
-      <main className="flex-grow pb-32 md:pb-10 pt-14"> {/* Added pt-14 for fixed header */}
+      <main className="flex-grow pb-32 md:pb-10 pt-14">
         <div className="relative w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] group overflow-hidden md:rounded-b-lg">
           {room.images.length > 0 ? (
             <Image
@@ -214,6 +233,14 @@ export default function RoomDetailPage() {
             <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
               <MapPin className="h-16 w-16" />
             </div>
+          )}
+          {room.images.length > 0 && ( // Show counter only if there are images
+            <Badge
+              variant="secondary"
+              className="absolute bottom-3 right-3 z-10 bg-black/60 text-white px-2.5 py-1 text-xs rounded-full shadow-md"
+            >
+              {currentImageIndex + 1} / {room.images.length}
+            </Badge>
           )}
           {room.images.length > 1 && (
             <>
@@ -235,18 +262,11 @@ export default function RoomDetailPage() {
               >
                 <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
               </Button>
-              <Badge
-                variant="secondary"
-                className="absolute bottom-3 right-3 z-10 bg-black/60 text-white px-2.5 py-1 text-xs rounded-full shadow-md"
-              >
-                {currentImageIndex + 1} / {room.images.length}
-              </Badge>
             </>
           )}
         </div>
 
-        {/* Content section with top rounded corners */}
-        <div className="bg-background rounded-t-2xl p-5 md:p-8 space-y-6 max-w-full mx-auto -mt-5 md:-mt-8 relative z-10 shadow-xl">
+        <div className="bg-background rounded-t-3xl p-5 md:p-8 space-y-6 max-w-full mx-auto -mt-6 md:-mt-8 relative z-10 shadow-xl">
           <section className="text-center">
             <h1 className="text-xl md:text-2xl font-semibold text-foreground leading-tight">
               {room.type} com Ar-condicionado e Wi-Fi – Próximo à {room.university.acronym}
@@ -276,15 +296,21 @@ export default function RoomDetailPage() {
               <span>Próximo à {room.university.acronym}</span>
             </div>
           </section>
-
+          
           {room.rating > 0 && (
             <>
               <Separator />
-              <section className="flex items-center space-x-2 justify-center">
-                <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                <span className="font-semibold text-foreground">{room.rating.toFixed(1)}</span>
-                <span className="text-muted-foreground">·</span>
-                <span className="text-muted-foreground">{room.reviews} avaliações</span>
+              <section className="text-center">
+                <p className="text-xl font-bold text-foreground">{room.rating.toFixed(2)}</p>
+                <div className="flex justify-center items-end space-x-3 mt-1">
+                  <div className="flex space-x-0.5">
+                    {renderStars(room.rating)}
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-foreground leading-tight">{room.reviews}</p>
+                    <p className="text-xs text-muted-foreground -mt-0.5">avaliações</p>
+                  </div>
+                </div>
               </section>
             </>
           )}
@@ -317,7 +343,6 @@ export default function RoomDetailPage() {
         </div>
       </main>
 
-      {/* Bottom action bar for mobile */}
       <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 shadow-top-lg z-20 md:hidden">
         <div className="flex items-center justify-between gap-4">
             <div>
@@ -330,14 +355,13 @@ export default function RoomDetailPage() {
               onClick={handleBookRoom}
               disabled={isBooking || !room.isAvailable}
               size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg shadow-md flex-grow text-base py-3" // Removed max-w-[220px]
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg shadow-md flex-grow text-base py-3"
             >
               {isBooking ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (room.isAvailable ? 'Conferir disponibilidade' : 'Indisponível')}
             </Button>
         </div>
       </div>
       
-      {/* Floating action card for desktop */}
       <div className="hidden md:block fixed bottom-6 right-6 z-20">
           <Card className="w-96 shadow-xl rounded-xl border">
               <CardHeader className="pb-4">
@@ -365,3 +389,4 @@ export default function RoomDetailPage() {
     </div>
   );
 }
+
