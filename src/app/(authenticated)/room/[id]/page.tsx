@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronLeft, Star, MapPin, Bed, Bath, Wifi, Users, Tv, Utensils, Snowflake, ChevronRight, Loader2, School2 as DefaultUniversityIcon } from 'lucide-react';
+import { ChevronLeft, Star, MapPin, Bed, Bath, Wifi, Users, Tv, Utensils, Snowflake, ChevronRight, Loader2, School2 as DefaultUniversityIcon, Share2, Heart as HeartIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -63,10 +63,9 @@ export default function RoomDetailPage() {
     }
     setIsBooking(true);
     try {
-      // Ensure checkOutDate is a valid future date or handle appropriately
       const checkInDate = new Date().toISOString().split('T')[0];
       const checkOutDateObj = new Date();
-      checkOutDateObj.setMonth(checkOutDateObj.getMonth() + 1); // Example: 1 month later
+      checkOutDateObj.setMonth(checkOutDateObj.getMonth() + 1); 
       const checkOutDate = checkOutDateObj.toISOString().split('T')[0];
 
       await bookMockRoom(room.id, user.id, checkInDate, checkOutDate, 1);
@@ -76,7 +75,6 @@ export default function RoomDetailPage() {
         variant: "default",
         className: "bg-accent text-accent-foreground",
       });
-      // Update room availability locally if desired
       setRoom(prevRoom => prevRoom ? { ...prevRoom, isAvailable: false } : null);
     } catch (error: any) {
       toast({
@@ -104,7 +102,6 @@ export default function RoomDetailPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center p-4 bg-background">
-        {/* Header Minimalista (Simulado com botão de voltar e Skeleton para título) */}
         <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50 p-4 flex items-center border-b">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
             <ChevronLeft className="h-6 w-6" />
@@ -131,7 +128,6 @@ export default function RoomDetailPage() {
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-2/3" />
         </div>
-        {/* Footer Action Skeleton */}
         <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 shadow-top-md z-20">
            <div className="flex items-center justify-between">
             <Skeleton className="h-8 w-1/4" />
@@ -161,10 +157,16 @@ export default function RoomDetailPage() {
   const UniversityIcon = room.university?.icon || DefaultUniversityIcon;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Header é gerenciado pelo AuthenticatedLayout */}
-      <main className="flex-grow pb-32 md:pb-10"> {/* Padding bottom for mobile action bar */}
-        <div className="relative w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] group overflow-hidden md:rounded-b-lg">
+    <div className="flex flex-col min-h-screen bg-muted/40"> {/* Page background */}
+      {/* Header with back button */}
+      <header className="fixed top-0 left-0 right-0 z-50 p-3 bg-transparent">
+        <Button variant="ghost" size="icon" onClick={() => router.back()} className="bg-black/30 hover:bg-black/50 text-white rounded-full">
+          <ChevronLeft className="h-6 w-6" />
+        </Button>
+      </header>
+
+      <main className="flex-grow pb-32 md:pb-10">
+        <div className="relative w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] group overflow-hidden">
           {room.images.length > 0 ? (
             <Image
               src={room.images[currentImageIndex]?.url || `https://placehold.co/1200x600.png?text=${encodeURIComponent(room.title)}`}
@@ -177,7 +179,7 @@ export default function RoomDetailPage() {
             />
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
-              <MapPin className="h-16 w-16" /> {/* Placeholder Icon */}
+              <MapPin className="h-16 w-16" />
             </div>
           )}
           {room.images.length > 1 && (
@@ -210,41 +212,42 @@ export default function RoomDetailPage() {
           )}
         </div>
 
-        <div className="p-4 md:p-6 space-y-5 max-w-3xl mx-auto">
-          <section>
-            <h1 className="text-2xl md:text-3xl font-semibold text-foreground leading-tight">
+        {/* Content section with top rounded corners */}
+        <div className="bg-background rounded-t-2xl p-5 md:p-8 space-y-6 max-w-full mx-auto -mt-5 md:-mt-8 relative z-10 shadow-2xl">
+          <section className="text-center">
+            <h1 className="text-xl md:text-2xl font-semibold text-foreground leading-tight">
               {room.type} com Ar-condicionado e Wi-Fi – Próximo à {room.university.acronym}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1.5">
+            <p className="text-xs text-muted-foreground mt-1">
               Quarto em {room.university.city}, Brasil
             </p>
           </section>
 
           <Separator />
 
-          <section className="text-sm text-foreground space-y-2.5">
-            <div className="flex items-center space-x-3">
-              <Bed className="h-5 w-5 text-primary flex-shrink-0" />
-              <span>{room.beds} cama(s) de solteiro</span>
+          <section className="text-sm text-foreground flex flex-row flex-wrap justify-center items-center gap-x-4 sm:gap-x-6 gap-y-2">
+            <div className="flex items-center space-x-1.5">
+              <Bed className="h-4 w-4 text-primary flex-shrink-0" />
+              <span>{room.beds} cama(s)</span>
             </div>
-            <div className="flex items-center space-x-3">
-              <Bath className="h-5 w-5 text-primary flex-shrink-0" />
+            <div className="flex items-center space-x-1.5">
+              <Bath className="h-4 w-4 text-primary flex-shrink-0" />
               <span>Banheiro {room.baths > 0 ? 'privativo' : 'compartilhado'}</span>
             </div>
-            <div className="flex items-center space-x-3">
-              <Users className="h-5 w-5 text-primary flex-shrink-0" />
-              <span>Acomoda {room.guests} pessoa(s)</span>
+            <div className="flex items-center space-x-1.5">
+              <Users className="h-4 w-4 text-primary flex-shrink-0" />
+              <span>{room.guests} hóspede(s)</span>
             </div>
-            <div className="flex items-center space-x-3">
-              <UniversityIcon className="h-5 w-5 text-primary flex-shrink-0" />
-              <span>Próximo à {room.university.name} ({room.university.acronym})</span>
+            <div className="flex items-center space-x-1.5">
+              <UniversityIcon className="h-4 w-4 text-primary flex-shrink-0" />
+              <span>Próximo à {room.university.acronym}</span>
             </div>
           </section>
 
           {room.rating > 0 && (
             <>
               <Separator />
-              <section className="flex items-center space-x-2">
+              <section className="flex items-center space-x-2 justify-center">
                 <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
                 <span className="font-semibold text-foreground">{room.rating.toFixed(1)}</span>
                 <span className="text-muted-foreground">·</span>
@@ -256,7 +259,7 @@ export default function RoomDetailPage() {
           <Separator />
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-2">Descrição</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-2">Descrição</h2>
             <p className="text-muted-foreground whitespace-pre-line text-sm leading-relaxed">
               {room.description}
             </p>
@@ -266,7 +269,7 @@ export default function RoomDetailPage() {
             <>
               <Separator />
               <section>
-                <h2 className="text-xl font-semibold text-foreground mb-3">O que este lugar oferece</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-3">O que este lugar oferece</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                   {room.amenities.map((amenity: AmenityType) => (
                     <div key={amenity.id} className="flex items-center space-x-3 text-sm">
@@ -312,11 +315,6 @@ export default function RoomDetailPage() {
                    <p className="text-xs text-muted-foreground">Preço final estimado. Confirme os detalhes.</p>
               </CardHeader>
               <CardContent className="pt-2">
-                  {/* Future: Date Pickers and Guest Selector */}
-                  {/* <div className="space-y-3 mb-4">
-                       <Skeleton className="h-10 w-full rounded-md" />
-                       <Skeleton className="h-10 w-full rounded-md" />
-                  </div> */}
                   <Button
                       onClick={handleBookRoom}
                       disabled={isBooking || !room.isAvailable}
@@ -334,3 +332,6 @@ export default function RoomDetailPage() {
     </div>
   );
 }
+
+
+    
