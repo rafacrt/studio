@@ -1,15 +1,17 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { PlusCircle } from 'lucide-react'; // Loader2 removed as not directly used for submission state
+import { PlusCircle } from 'lucide-react';
 
 import { useOSStore } from '@/store/os-store';
 import type { Partner } from '@/store/os-store';
 import type { Client } from '@/lib/types';
 import { OSStatus, ALL_OS_STATUSES, type CreateOSData } from '@/lib/types';
+import type Modal from 'bootstrap/js/dist/modal'; // Import Modal type for Bootstrap
 
 const formSchema = z.object({
   cliente: z.string().min(1, { message: 'Nome do cliente é obrigatório.' }),
@@ -17,7 +19,7 @@ const formSchema = z.object({
   projeto: z.string().min(1, { message: 'Nome do projeto é obrigatório.' }),
   tarefa: z.string().min(1, { message: 'A descrição da tarefa é obrigatória.' }),
   observacoes: z.string().optional(),
-  tempoTrabalhado: z.string().optional(), // Keeping as string for now
+  tempoTrabalhado: z.string().optional(),
   programadoPara: z.string().optional(),
   status: z.nativeEnum(OSStatus).default(OSStatus.NA_FILA),
   isUrgent: z.boolean().default(false),
@@ -30,11 +32,10 @@ export function CreateOSDialog() {
   const { addOS, partners, clients } = useOSStore((state) => ({
       addOS: state.addOS,
       partners: state.partners,
-      clients: state.clients, // Get clients from store
-      // addPartner and addClient are implicitly called by addOS if names are new
+      clients: state.clients,
   }));
   const modalRef = useRef<HTMLDivElement>(null);
-  const [bootstrapModal, setBootstrapModal] = useState<any>(null);
+  const [bootstrapModal, setBootstrapModal] = useState<Modal | null>(null); // Typed state
 
   // States for input suggestions
   const [clientInput, setClientInput] = useState('');
@@ -47,24 +48,36 @@ export function CreateOSDialog() {
 
 
   useEffect(() => {
+    let modalInstance: Modal | null = null;
     if (typeof window !== 'undefined' && modalRef.current) {
       import('bootstrap/js/dist/modal').then((ModalModule) => {
-          const Modal = ModalModule.default;
-          if (modalRef.current && !bootstrapModal) {
-             setBootstrapModal(new Modal(modalRef.current));
+          const BootstrapModal = ModalModule.default;
+          if (modalRef.current) {
+             // Get existing instance or create a new one.
+             modalInstance = BootstrapModal.getInstance(modalRef.current) || new BootstrapModal(modalRef.current);
+             setBootstrapModal(modalInstance);
           }
       }).catch(err => console.error("Failed to load Bootstrap modal:", err));
     }
+
+    // Cleanup function:
     return () => {
-      if (bootstrapModal && typeof bootstrapModal.dispose === 'function') {
+      // `modalInstance` refers to the instance created in this effect's scope.
+      if (modalInstance && typeof modalInstance.dispose === 'function') {
         try {
-            if ((bootstrapModal as any)._isShown) bootstrapModal.hide();
-            bootstrapModal.dispose();
-        } catch (error) { console.warn("Error disposing Bootstrap modal:", error); }
+            // Check if modalRef.current still exists and if the instance is still associated
+            // This check requires ModalModule to be in scope, which is tricky for cleanup of async import.
+            // A simpler check is if modalInstance itself is truthy.
+            if ((modalInstance as any)._isShown) { // Internal Bootstrap check, might be fragile
+              modalInstance.hide();
+            }
+            modalInstance.dispose();
+        } catch (error) {
+          console.warn("Error disposing Bootstrap modal on unmount:", error);
+        }
       }
-      setBootstrapModal(null);
     };
-  }, []);
+  }, []); // CORRECTED: Empty dependency array
 
 
   const form = useForm<CreateOSFormValues>({
@@ -83,7 +96,6 @@ export function CreateOSDialog() {
     mode: 'onChange',
   });
 
-  // Filtered suggestions
   const filteredClients = useMemo(() => {
     if (!clientInput) return [];
     const lowerInput = clientInput.toLowerCase();
@@ -96,7 +108,6 @@ export function CreateOSDialog() {
     return partners.filter(p => p.name.toLowerCase().includes(lowerInput));
   }, [partnerInput, partners]);
 
-  // Sync form values with local input states for suggestions
   useEffect(() => {
     const subscription = form.watch((value) => {
       setClientInput(value.cliente ?? '');
@@ -125,19 +136,18 @@ export function CreateOSDialog() {
     try {
       const dataToSubmit: CreateOSData = {
         ...values,
-        // Ensure client and partner names from the input fields (which might have been selected) are used.
-        cliente: clientInput.trim(), 
+        cliente: clientInput.trim(),
         parceiro: partnerInput.trim() || undefined,
         observacoes: values.observacoes || '',
         tempoTrabalhado: values.tempoTrabalhado || '',
         programadoPara: values.programadoPara || undefined,
       };
 
-      addOS(dataToSubmit); // Store handles adding new client/partner implicitly
+      await addOS(dataToSubmit);
 
       console.log(`OS Criada: ${dataToSubmit.cliente} - ${dataToSubmit.projeto}`);
       form.reset();
-      setClientInput(''); 
+      setClientInput('');
       setPartnerInput('');
       if (bootstrapModal && typeof bootstrapModal.hide === 'function') {
             bootstrapModal.hide();
@@ -156,9 +166,10 @@ export function CreateOSDialog() {
       setPartnerInput('');
       setShowClientSuggestions(false);
       setShowPartnerSuggestions(false);
+      // This function is typically called when Bootstrap itself closes the modal (e.g. 'x' button)
+      // No need to call bootstrapModal.hide() here as Bootstrap handles it.
   };
 
-  // Close suggestions when clicking outside
    const setupClickListener = (ref: React.RefObject<HTMLInputElement>, setShowSuggestionsFn: React.Dispatch<React.SetStateAction<boolean>>) => {
       const handleClickOutside = (event: MouseEvent) => {
         if (ref.current && !ref.current.parentElement?.contains(event.target as Node)) {
@@ -205,7 +216,7 @@ export function CreateOSDialog() {
                             placeholder="Ex: Empresa Acme"
                             className={`form-control ${form.formState.errors.cliente ? 'is-invalid' : ''}`}
                             {...form.register('cliente')}
-                            value={clientInput} // Controlled by clientInput state
+                            value={clientInput}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 setClientInput(val);
@@ -213,11 +224,11 @@ export function CreateOSDialog() {
                                 setShowClientSuggestions(!!val && clients.filter(c => c.name.toLowerCase().includes(val.toLowerCase())).length > 0);
                             }}
                             onFocus={() => setShowClientSuggestions(!!clientInput && filteredClients.length > 0)}
-                             onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)} // Delay
+                             onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
                             autoComplete="off"
                           />
                           {showClientSuggestions && filteredClients.length > 0 && (
-                            <div className="list-group position-absolute w-100" style={{ zIndex: 10, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}>
+                            <div className="list-group position-absolute w-100" style={{ zIndex: 1056, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}> {/* Increased z-index */}
                               {filteredClients.map(c => (
                                 <button type="button" key={c.id} className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
                                   onMouseDown={(e) => e.preventDefault()} onClick={() => handleClientSelect(c.name)}>
@@ -241,7 +252,7 @@ export function CreateOSDialog() {
                             placeholder="Ex: Agência XYZ"
                             className={`form-control ${form.formState.errors.parceiro ? 'is-invalid' : ''}`}
                             {...form.register('parceiro')}
-                            value={partnerInput} // Controlled by partnerInput state
+                            value={partnerInput}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 setPartnerInput(val);
@@ -249,11 +260,11 @@ export function CreateOSDialog() {
                                 setShowPartnerSuggestions(!!val && partners.filter(p => p.name.toLowerCase().includes(val.toLowerCase())).length > 0);
                             }}
                             onFocus={() => setShowPartnerSuggestions(!!partnerInput && filteredPartners.length > 0)}
-                            onBlur={() => setTimeout(() => setShowPartnerSuggestions(false), 200)} // Delay
+                            onBlur={() => setTimeout(() => setShowPartnerSuggestions(false), 200)}
                             autoComplete="off"
                           />
                           {showPartnerSuggestions && filteredPartners.length > 0 && (
-                            <div className="list-group position-absolute w-100" style={{ zIndex: 10, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}>
+                            <div className="list-group position-absolute w-100" style={{ zIndex: 1056, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}> {/* Increased z-index */}
                               {filteredPartners.map(p => (
                                 <button type="button" key={p.id} className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
                                   onMouseDown={(e) => e.preventDefault()} onClick={() => handlePartnerSelect(p.name)}>
