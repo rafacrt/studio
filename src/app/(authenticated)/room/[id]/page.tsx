@@ -118,11 +118,11 @@ export default function RoomDetailPage() {
     const totalStars = 5;
     for (let i = 1; i <= totalStars; i++) {
       if (i <= rating) {
-        stars.push(<Star key={`star-full-${i}`} className="h-4 w-4 text-foreground fill-foreground" />);
+        stars.push(<Star key={`star-full-${i}`} className="h-3.5 w-3.5 text-foreground fill-foreground" />);
       } else if (i - 0.5 <= rating) {
-        stars.push(<StarHalf key={`star-half-${i}`} className="h-4 w-4 text-foreground fill-foreground" />);
+        stars.push(<StarHalf key={`star-half-${i}`} className="h-3.5 w-3.5 text-foreground fill-foreground" />);
       } else {
-        stars.push(<Star key={`star-empty-${i}`} className="h-4 w-4 text-foreground fill-none stroke-current" />);
+        stars.push(<Star key={`star-empty-${i}`} className="h-3.5 w-3.5 text-foreground fill-none stroke-current" />);
       }
     }
     return stars;
@@ -234,10 +234,10 @@ export default function RoomDetailPage() {
               <MapPin className="h-16 w-16" />
             </div>
           )}
-          {room.images.length > 0 && ( // Show counter only if there are images
+          {room.images.length > 0 && ( 
             <Badge
               variant="secondary"
-              className="absolute bottom-3 right-3 z-10 bg-black/60 text-white px-2.5 py-1 text-xs rounded-full shadow-md"
+              className="absolute bottom-4 right-4 z-10 bg-black/60 text-white px-2.5 py-1 text-xs rounded-full shadow-md"
             >
               {currentImageIndex + 1} / {room.images.length}
             </Badge>
@@ -301,9 +301,9 @@ export default function RoomDetailPage() {
             <>
               <Separator />
               <section className="text-center">
-                <p className="text-xl font-bold text-foreground">{room.rating.toFixed(2)}</p>
-                <div className="flex justify-center items-end space-x-3 mt-1">
-                  <div className="flex space-x-0.5">
+                <p className="text-lg font-medium text-foreground">{room.rating.toFixed(2)}</p>
+                <div className="flex justify-center items-center mt-1">
+                  <div className="flex space-x-0.5 mr-2">
                     {renderStars(room.rating)}
                   </div>
                   <div className="text-left">
