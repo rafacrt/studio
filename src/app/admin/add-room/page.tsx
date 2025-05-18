@@ -15,7 +15,7 @@ import * as z from "zod";
 import { Loader2, PackagePlus } from "lucide-react";
 import { commonAmenities, universityAreas, addMockListing } from "@/lib/mock-data"; 
 import type { Amenity, UniversityArea, Listing } from "@/types";
-import { Separator } from "@/components/ui/separator"; // Added import for Separator
+import { Separator } from "@/components/ui/separator";
 
 const listingSchema = z.object({
   title: z.string().min(5, { message: "O título deve ter pelo menos 5 caracteres." }),
@@ -33,6 +33,9 @@ const listingSchema = z.object({
   beds: z.coerce.number().int().min(1, { message: "Pelo menos 1 cama." }),
   baths: z.coerce.number().int().min(1, { message: "Pelo menos 1 banheiro." }),
   selectedAmenityIds: z.array(z.string()).min(1, { message: "Selecione pelo menos uma comodidade." }),
+  cancellationPolicy: z.string().min(10, { message: "A política de cancelamento deve ter pelo menos 10 caracteres." }),
+  houseRules: z.string().min(10, { message: "As regras da casa devem ter pelo menos 10 caracteres." }),
+  safetyAndProperty: z.string().min(10, { message: "As informações de segurança devem ter pelo menos 10 caracteres." }),
 });
 
 type ListingFormInputs = z.infer<typeof listingSchema>;
@@ -55,19 +58,36 @@ export default function AddRoomPage() {
       beds: 1,
       baths: 1,
       selectedAmenityIds: [],
+      cancellationPolicy: "Cancelamento flexível: Reembolso total até 5 dias antes do check-in.",
+      houseRules: "Não são permitidas festas ou eventos.\nHorário de silêncio após as 22:00.\nNão fumar dentro do quarto ou áreas comuns.",
+      safetyAndProperty: "Detector de fumaça instalado.\nExtintor de incêndio disponível.",
     },
   });
 
   const onSubmit: SubmitHandler<ListingFormInputs> = async (data) => {
     try {
-      // Simulate API call to add listing
       // In a real app, you'd send this to your backend
-      const newListingData = {
-        ...data,
-        // rating, reviews, host will be defaults from addMockListing
+      // The addMockListing function expects a specific type, so we ensure data conforms to it.
+      const listingDataForMock = {
+        title: data.title,
+        description: data.description,
+        imageUrls: data.imageUrls, // This is already an array of strings from the transform
+        pricePerNight: data.pricePerNight,
+        address: data.address,
+        lat: data.lat,
+        lng: data.lng,
+        guests: data.guests,
+        bedrooms: data.bedrooms,
+        beds: data.beds,
+        baths: data.baths,
+        selectedAmenityIds: data.selectedAmenityIds,
+        universityAcronym: data.universityAcronym,
+        cancellationPolicy: data.cancellationPolicy,
+        houseRules: data.houseRules,
+        safetyAndProperty: data.safetyAndProperty,
       };
       
-      const addedListing = await addMockListing(newListingData as Omit<Listing, 'id' | 'rating' | 'reviews' | 'host' | 'images' | 'amenities'> & { imageUrls: string[], selectedAmenityIds: string[] });
+      const addedListing = await addMockListing(listingDataForMock as Omit<Listing, 'id' | 'rating' | 'reviews' | 'host' | 'amenities' | 'images' | 'university'> & { imageUrls: string[], selectedAmenityIds: string[], universityAcronym: string, cancellationPolicy: string, houseRules: string, safetyAndProperty: string });
 
       toast({
         title: "Quarto Adicionado!",
@@ -125,7 +145,7 @@ export default function AddRoomPage() {
             <div className="space-y-1">
               <Label htmlFor="imageUrls">URLs das Imagens (separadas por vírgula)</Label>
               <Textarea id="imageUrls" {...register("imageUrls")} placeholder="https://exemplo.com/img1.jpg, https://exemplo.com/img2.png" rows={2} />
-              {errors.imageUrls && <p className="text-xs text-destructive">{errors.imageUrls.message}</p>}
+              {errors.imageUrls && <p className="text-xs text-destructive">{errors.imageUrls.message as string}</p>}
             </div>
 
             {/* Location */}
@@ -228,6 +248,25 @@ export default function AddRoomPage() {
             />
             {errors.selectedAmenityIds && <p className="text-xs text-destructive">{errors.selectedAmenityIds.message}</p>}
             
+            {/* Additional Information */}
+            <Separator />
+            <h3 className="text-lg font-medium text-foreground pt-2">Informações Adicionais</h3>
+            <div className="space-y-1">
+              <Label htmlFor="cancellationPolicy">Política de Cancelamento</Label>
+              <Textarea id="cancellationPolicy" {...register("cancellationPolicy")} placeholder="Detalhes sobre a política de cancelamento..." rows={3} />
+              {errors.cancellationPolicy && <p className="text-xs text-destructive">{errors.cancellationPolicy.message}</p>}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="houseRules">Regras da Casa</Label>
+              <Textarea id="houseRules" {...register("houseRules")} placeholder="Ex: Não fumar, não são permitidas festas..." rows={3} />
+              {errors.houseRules && <p className="text-xs text-destructive">{errors.houseRules.message}</p>}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="safetyAndProperty">Segurança e Propriedade</Label>
+              <Textarea id="safetyAndProperty" {...register("safetyAndProperty")} placeholder="Ex: Detector de fumaça, extintor..." rows={3} />
+              {errors.safetyAndProperty && <p className="text-xs text-destructive">{errors.safetyAndProperty.message}</p>}
+            </div>
+
             <div className="flex justify-end pt-6">
               <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground px-8">
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -240,4 +279,3 @@ export default function AddRoomPage() {
     </div>
   );
 }
-

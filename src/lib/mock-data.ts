@@ -1,5 +1,5 @@
 
-import type { Listing, User, Booking, Amenity, UniversityArea, ListingFilters, AdminDashboardStats } from '@/types';
+import type { Listing, User, Booking, Amenity, UniversityArea, ListingFilters, AdminDashboardStats, ListingImage } from '@/types';
 import { Bed, Wifi, Tv, Utensils, Snowflake, Car, Bath, Dumbbell, WashingMachine, Trees, LampDesk, CheckSquare, School } from 'lucide-react';
 import { mockUser, mockAdminUser } from './auth-mocks';
 
@@ -39,6 +39,10 @@ const getUniversityByAcronym = (acronym: string): UniversityArea | undefined => 
     return universityAreas.find(uni => uni.acronym === acronym);
 }
 
+const defaultCancellationPolicy = 'Cancelamento flexível: Reembolso total até 5 dias antes do check-in. Após esse período, uma taxa pode ser aplicada.';
+const defaultHouseRules = 'Não são permitidas festas ou eventos.\nHorário de silêncio após as 22:00.\nNão fumar dentro do quarto ou áreas comuns.\nMantenha as áreas comuns limpas e organizadas.';
+const defaultSafetyAndProperty = 'Detector de fumaça instalado.\nExtintor de incêndio disponível.\nCâmeras de segurança nas áreas comuns externas.';
+
 // Initial Mock Listings
 let mockListings: Listing[] = [
   {
@@ -59,12 +63,15 @@ let mockListings: Listing[] = [
     beds: 1,
     baths: 1,
     amenities: [commonAmenities[0], commonAmenities[2], commonAmenities[8], commonAmenities[10]],
-    rating: 4.8,
+    rating: 4.81,
     reviews: 45,
     host: mockAdminUser, 
     university: getUniversityByAcronym('USP')!,
     isAvailable: true,
     type: 'Quarto Individual',
+    cancellationPolicy: defaultCancellationPolicy,
+    houseRules: defaultHouseRules,
+    safetyAndProperty: defaultSafetyAndProperty,
   },
   {
     id: 'quarto2',
@@ -83,12 +90,15 @@ let mockListings: Listing[] = [
     beds: 1,
     baths: 1,
     amenities: [commonAmenities[0], commonAmenities[1], commonAmenities[2], commonAmenities[5]],
-    rating: 4.5,
+    rating: 4.53,
     reviews: 30,
     host: mockAdminUser,
     university: getUniversityByAcronym('Unicamp')!,
     isAvailable: true, 
     type: 'Kitnet',
+    cancellationPolicy: 'Cancelamento moderado: Reembolso total até 15 dias antes do check-in.',
+    houseRules: 'Permitido animais de pequeno porte.\nVisitas com aviso prévio.',
+    safetyAndProperty: 'Kit de primeiros socorros.',
   },
   {
     id: 'quarto3',
@@ -107,12 +117,15 @@ let mockListings: Listing[] = [
     beds: 1,
     baths: 2, 
     amenities: [commonAmenities[0], commonAmenities[7], commonAmenities[9]],
-    rating: 4.2,
+    rating: 4.20,
     reviews: 22,
     host: mockAdminUser,
     university: getUniversityByAcronym('UFMG')!,
     isAvailable: true,
     type: 'Vaga em República',
+    cancellationPolicy: defaultCancellationPolicy,
+    houseRules: 'Respeitar os horários dos colegas de quarto.\nLimpeza semanal colaborativa.',
+    safetyAndProperty: defaultSafetyAndProperty,
   },
   {
     id: 'quarto4',
@@ -131,12 +144,15 @@ let mockListings: Listing[] = [
     beds: 1,
     baths: 1,
     amenities: [commonAmenities[0], commonAmenities[1], commonAmenities[2], commonAmenities[3], commonAmenities[5]],
-    rating: 4.9,
+    rating: 4.92,
     reviews: 55,
     host: mockAdminUser,
     university: getUniversityByAcronym('PUC-Rio')!,
     isAvailable: true,
     type: 'Studio',
+    cancellationPolicy: 'Cancelamento restrito: Sem reembolso após a reserva.',
+    houseRules: 'Não são permitidas crianças.\nApenas o hóspede registrado pode pernoitar.',
+    safetyAndProperty: 'Portaria 24h com controle de acesso.',
   },
   {
     id: 'quarto5',
@@ -155,12 +171,15 @@ let mockListings: Listing[] = [
     beds: 1,
     baths: 1, 
     amenities: [commonAmenities[0], commonAmenities[8], commonAmenities[9], commonAmenities[6]], 
-    rating: 4.7,
+    rating: 4.75,
     reviews: 38,
     host: mockAdminUser,
     university: getUniversityByAcronym('UFSC')!,
     isAvailable: false, 
     type: 'Quarto em Apartamento',
+    cancellationPolicy: defaultCancellationPolicy,
+    houseRules: defaultHouseRules,
+    safetyAndProperty: defaultSafetyAndProperty,
   },
   {
     id: 'quarto6',
@@ -178,12 +197,15 @@ let mockListings: Listing[] = [
     beds: 1,
     baths: 1, 
     amenities: [commonAmenities[0]],
-    rating: 4.0,
+    rating: 4.01,
     reviews: 15,
     host: mockAdminUser,
     university: getUniversityByAcronym('USP')!, 
     isAvailable: true,
     type: 'Quarto Econômico',
+    cancellationPolicy: defaultCancellationPolicy,
+    houseRules: defaultHouseRules,
+    safetyAndProperty: defaultSafetyAndProperty,
   },
   {
     id: 'quarto7',
@@ -202,12 +224,15 @@ let mockListings: Listing[] = [
     beds: 1,
     baths: 1, 
     amenities: [commonAmenities[0], commonAmenities[5], commonAmenities[7], commonAmenities[8]],
-    rating: 4.6,
+    rating: 4.66,
     reviews: 28,
     host: mockAdminUser,
     university: getUniversityByAcronym('Unicamp')!,
     isAvailable: true,
     type: 'Suíte',
+    cancellationPolicy: defaultCancellationPolicy,
+    houseRules: defaultHouseRules,
+    safetyAndProperty: defaultSafetyAndProperty,
   },
   {
     id: 'quarto8',
@@ -225,12 +250,15 @@ let mockListings: Listing[] = [
     beds: 1,
     baths: 1, 
     amenities: [commonAmenities[0], commonAmenities[2], commonAmenities[9]],
-    rating: 4.3,
+    rating: 4.33,
     reviews: 19,
     host: mockAdminUser,
     university: getUniversityByAcronym('UFMG')!,
     isAvailable: true,
     type: 'Quarto com Vista',
+    cancellationPolicy: defaultCancellationPolicy,
+    houseRules: defaultHouseRules,
+    safetyAndProperty: defaultSafetyAndProperty,
   },
   {
     id: 'quarto9',
@@ -249,12 +277,15 @@ let mockListings: Listing[] = [
     beds: 2,
     baths: 2,
     amenities: [commonAmenities[0], commonAmenities[1], commonAmenities[2], commonAmenities[3], commonAmenities[7]],
-    rating: 4.7,
+    rating: 4.78,
     reviews: 40,
     host: mockAdminUser,
     university: getUniversityByAcronym('PUC-Rio')!,
     isAvailable: true,
     type: 'Apartamento 2 Quartos',
+    cancellationPolicy: defaultCancellationPolicy,
+    houseRules: defaultHouseRules,
+    safetyAndProperty: defaultSafetyAndProperty,
   },
 ];
 
@@ -396,16 +427,25 @@ export const fetchUserBookings = async (userId: string): Promise<Booking[]> => {
   }
 };
 
-export const addMockListing = async (newListingData: Omit<Listing, 'id' | 'rating' | 'reviews' | 'host' | 'amenities' | 'images'> & { imageUrls: string[], selectedAmenityIds: string[], universityAcronym: string }): Promise<Listing> => {
+export const addMockListing = async (
+  newListingData: Omit<Listing, 'id' | 'rating' | 'reviews' | 'host' | 'amenities' | 'images' | 'university'> & { 
+    imageUrls: string[]; 
+    selectedAmenityIds: string[]; 
+    universityAcronym: string;
+    cancellationPolicy: string;
+    houseRules: string;
+    safetyAndProperty: string;
+  }
+): Promise<Listing> => {
   try {
     await simulateApiCall(null, 300); 
     const newId = `quarto${mockListings.length + 1}${Date.now().toString().slice(-4)}`;
     
-    let images: Image[] = [];
+    let images: ListingImage[] = []; // Changed from Image[] to ListingImage[]
     if (Array.isArray(newListingData.imageUrls)) {
       images = newListingData.imageUrls.map((url, index) => ({ 
         id: `img${newId}-${index}`, 
-        url: typeof url === 'string' ? url : 'https://picsum.photos/seed/invalidurl/600/400', // Fallback for invalid URL
+        url: typeof url === 'string' ? url : `https://placehold.co/600x400.png?text=Imagem+Inválida`, 
         alt: `${newListingData.title || 'Anúncio'} - Imagem ${index + 1}` 
       }));
     } else {
@@ -445,7 +485,10 @@ export const addMockListing = async (newListingData: Omit<Listing, 'id' | 'ratin
       host: mockAdminUser, 
       university: universityDetails || universityAreas[0], 
       isAvailable: true,
-      type: 'Quarto Individual', 
+      type: 'Quarto Individual', // Default or could be part of form
+      cancellationPolicy: newListingData.cancellationPolicy || defaultCancellationPolicy,
+      houseRules: newListingData.houseRules || defaultHouseRules,
+      safetyAndProperty: newListingData.safetyAndProperty || defaultSafetyAndProperty,
     };
     mockListings.unshift(newListing); 
     return newListing; 
@@ -500,7 +543,7 @@ export const getBookingStatusData = async (): Promise<{ status: string; count: n
       { status: "Ativas", count: mockBookings.filter(b => b && b.status === "Confirmada").length, fill: "hsl(var(--chart-1))" },
       { status: "Anteriores", count: mockBookings.filter(b => b && b.status === "Concluída").length, fill: "hsl(var(--chart-2))" },
       { status: "Canceladas", count: mockBookings.filter(b => b && b.status === "Cancelada").length, fill: "hsl(var(--chart-3))" },
-    ]; // Added null checks for safety
+    ]; 
     return simulateApiCall(data, 500);
   } catch (error) {
     console.error("Error in getBookingStatusData:", error);

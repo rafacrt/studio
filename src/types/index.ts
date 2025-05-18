@@ -12,7 +12,7 @@ export interface User {
   dateJoined?: string;
 }
 
-export interface ListingImage { // Renamed from Image to ListingImage
+export interface ListingImage {
   id: string;
   url: string;
   alt: string;
@@ -39,7 +39,7 @@ export interface Listing {
   id: string;
   title: string;
   description: string;
-  images: ListingImage[]; // Updated to use ListingImage
+  images: ListingImage[];
   pricePerNight: number; // Represents monthly price
   address: string;
   lat: number;
@@ -55,6 +55,9 @@ export interface Listing {
   university: UniversityArea;
   isAvailable: boolean;
   type: string; // e.g., 'Quarto Individual', 'Kitnet', 'Vaga em República'
+  cancellationPolicy: string;
+  houseRules: string; // Can be a list of rules separated by newlines
+  safetyAndProperty: string; // Can be a list of items separated by newlines
 }
 
 export interface Booking {
