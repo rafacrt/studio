@@ -4,11 +4,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
-import { ChevronLeft, Star, MapPin, Bed, Bath, Wifi, Users, Tv, Utensils, Snowflake, ChevronRight, Loader2, School2 as DefaultUniversityIcon, Share2, Heart as HeartIcon } from 'lucide-react';
+import { ChevronLeft, Star, MapPin, Bed, Bath, Wifi, Users, Tv, Utensils, Snowflake, ChevronRight, Loader2, School2 as DefaultUniversityIcon, Share2, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
@@ -99,34 +97,58 @@ export default function RoomDetailPage() {
     }
   };
 
+  // Placeholder for favorite and share actions
+  const handleFavorite = () => {
+    toast({ title: "Favoritos", description: "Funcionalidade de favoritar em desenvolvimento." });
+  };
+
+  const handleShare = () => {
+    if (navigator.share && room) {
+      navigator.share({
+        title: room.title,
+        text: `Confira este quarto: ${room.title}`,
+        url: window.location.href,
+      }).catch(error => console.log('Erro ao compartilhar', error));
+    } else {
+      toast({ title: "Compartilhar", description: "Navegador não suporta compartilhamento ou quarto não carregado." });
+    }
+  };
+
+
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center p-4 bg-background">
-        <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50 p-4 flex items-center border-b">
+        <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50 p-3 flex items-center justify-between border-b">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
             <ChevronLeft className="h-6 w-6" />
           </Button>
-          <Skeleton className="h-6 w-1/2" />
-        </div>
-        
-        <Skeleton className="w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] md:rounded-b-lg" />
-        <div className="p-4 md:p-6 space-y-4 w-full max-w-4xl mx-auto">
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-          <Separator />
-          <div className="space-y-2">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex items-center space-x-2">
-                <Skeleton className="h-5 w-5 rounded-full" />
-                <Skeleton className="h-4 w-1/3" />
-              </div>
-            ))}
+          <Skeleton className="h-6 w-1/3" />
+           <div className="flex items-center space-x-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-8 w-8 rounded-full" />
           </div>
-          <Separator />
-          <Skeleton className="h-6 w-1/4 mb-2" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-2/3" />
+        </header>
+        
+        <div className="w-full mt-16"> {/* Adjusted for fixed header */}
+          <Skeleton className="w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] rounded-b-lg" />
+          <div className="p-4 md:p-6 space-y-4 w-full max-w-4xl mx-auto">
+            <Skeleton className="h-8 w-3/4 mx-auto" />
+            <Skeleton className="h-4 w-1/2 mx-auto" />
+            <Separator />
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center justify-center space-x-2">
+                  <Skeleton className="h-5 w-5 rounded-full" />
+                  <Skeleton className="h-4 w-1/3" />
+                </div>
+              ))}
+            </div>
+            <Separator />
+            <Skeleton className="h-6 w-1/4 mb-2" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
         </div>
         <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 shadow-top-md z-20">
            <div className="flex items-center justify-between">
@@ -141,15 +163,18 @@ export default function RoomDetailPage() {
   if (!room) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center p-4 text-center bg-background">
-         <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50 p-4 flex items-center border-b">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="text-lg font-semibold">Quarto Não Encontrado</h1>
+         <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50 p-3 flex items-center justify-between border-b">
+            <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
+                <ChevronLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="text-lg font-semibold">Quarto Não Encontrado</h1>
+             <div className="w-16"></div> {/* Spacer */}
+        </header>
+        <div className="mt-16"> {/* Adjusted for fixed header */}
+            <h1 className="text-2xl font-semibold mb-2">Quarto não encontrado</h1>
+            <p className="text-muted-foreground mb-4">O quarto que você está procurando não existe ou foi removido.</p>
+            <Button onClick={() => router.push('/explore')} variant="outline">Voltar para Exploração</Button>
         </div>
-        <h1 className="text-2xl font-semibold mb-2 mt-16">Quarto não encontrado</h1>
-        <p className="text-muted-foreground mb-4">O quarto que você está procurando não existe ou foi removido.</p>
-        <Button onClick={() => router.push('/explore')} variant="outline">Voltar para Exploração</Button>
       </div>
     );
   }
@@ -158,15 +183,23 @@ export default function RoomDetailPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40"> {/* Page background */}
-      {/* Header with back button */}
-      <header className="fixed top-0 left-0 right-0 z-50 p-3 bg-transparent">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} className="bg-black/30 hover:bg-black/50 text-white rounded-full">
+      {/* New Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 p-3 bg-background border-b flex items-center justify-between h-14">
+        <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-foreground">
           <ChevronLeft className="h-6 w-6" />
         </Button>
+        <div className="flex items-center space-x-1">
+          <Button variant="ghost" size="icon" onClick={handleShare} className="text-foreground">
+            <Share2 className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleFavorite} className="text-foreground">
+            <Heart className="h-5 w-5" />
+          </Button>
+        </div>
       </header>
 
-      <main className="flex-grow pb-32 md:pb-10">
-        <div className="relative w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] group overflow-hidden">
+      <main className="flex-grow pb-32 md:pb-10 pt-14"> {/* Added pt-14 for fixed header */}
+        <div className="relative w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] group overflow-hidden md:rounded-b-lg">
           {room.images.length > 0 ? (
             <Image
               src={room.images[currentImageIndex]?.url || `https://placehold.co/1200x600.png?text=${encodeURIComponent(room.title)}`}
@@ -213,7 +246,7 @@ export default function RoomDetailPage() {
         </div>
 
         {/* Content section with top rounded corners */}
-        <div className="bg-background rounded-t-2xl p-5 md:p-8 space-y-6 max-w-full mx-auto -mt-5 md:-mt-8 relative z-10 shadow-2xl">
+        <div className="bg-background rounded-t-2xl p-5 md:p-8 space-y-6 max-w-full mx-auto -mt-5 md:-mt-8 relative z-10 shadow-xl">
           <section className="text-center">
             <h1 className="text-xl md:text-2xl font-semibold text-foreground leading-tight">
               {room.type} com Ar-condicionado e Wi-Fi – Próximo à {room.university.acronym}
@@ -297,7 +330,7 @@ export default function RoomDetailPage() {
               onClick={handleBookRoom}
               disabled={isBooking || !room.isAvailable}
               size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg shadow-md flex-grow max-w-[220px] text-base py-3"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg shadow-md flex-grow text-base py-3" // Removed max-w-[220px]
             >
               {isBooking ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (room.isAvailable ? 'Conferir disponibilidade' : 'Indisponível')}
             </Button>
@@ -332,6 +365,3 @@ export default function RoomDetailPage() {
     </div>
   );
 }
-
-
-    
