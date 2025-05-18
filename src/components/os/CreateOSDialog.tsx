@@ -4,14 +4,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { PlusCircle } from 'lucide-react';
 
 import { useOSStore } from '@/store/os-store';
 import type { Partner } from '@/store/os-store';
 import type { Client } from '@/lib/types';
 import { OSStatus, ALL_OS_STATUSES, type CreateOSData } from '@/lib/types';
-import type Modal from 'bootstrap/js/dist/modal'; // Import Modal type for Bootstrap
+import type Modal from 'bootstrap/js/dist/modal';
 
 const formSchema = z.object({
   cliente: z.string().min(1, { message: 'Nome do cliente é obrigatório.' }),
@@ -35,9 +35,8 @@ export function CreateOSDialog() {
       clients: state.clients,
   }));
   const modalRef = useRef<HTMLDivElement>(null);
-  const [bootstrapModal, setBootstrapModal] = useState<Modal | null>(null); // Typed state
+  const [bootstrapModal, setBootstrapModal] = useState<Modal | null>(null);
 
-  // States for input suggestions
   const [clientInput, setClientInput] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   const clientInputRef = useRef<HTMLInputElement>(null);
@@ -45,40 +44,6 @@ export function CreateOSDialog() {
   const [partnerInput, setPartnerInput] = useState('');
   const [showPartnerSuggestions, setShowPartnerSuggestions] = useState(false);
   const partnerInputRef = useRef<HTMLInputElement>(null);
-
-
-  useEffect(() => {
-    let modalInstance: Modal | null = null;
-    if (typeof window !== 'undefined' && modalRef.current) {
-      import('bootstrap/js/dist/modal').then((ModalModule) => {
-          const BootstrapModal = ModalModule.default;
-          if (modalRef.current) {
-             // Get existing instance or create a new one.
-             modalInstance = BootstrapModal.getInstance(modalRef.current) || new BootstrapModal(modalRef.current);
-             setBootstrapModal(modalInstance);
-          }
-      }).catch(err => console.error("Failed to load Bootstrap modal:", err));
-    }
-
-    // Cleanup function:
-    return () => {
-      // `modalInstance` refers to the instance created in this effect's scope.
-      if (modalInstance && typeof modalInstance.dispose === 'function') {
-        try {
-            // Check if modalRef.current still exists and if the instance is still associated
-            // This check requires ModalModule to be in scope, which is tricky for cleanup of async import.
-            // A simpler check is if modalInstance itself is truthy.
-            if ((modalInstance as any)._isShown) { // Internal Bootstrap check, might be fragile
-              modalInstance.hide();
-            }
-            modalInstance.dispose();
-        } catch (error) {
-          console.warn("Error disposing Bootstrap modal on unmount:", error);
-        }
-      }
-    };
-  }, []); // CORRECTED: Empty dependency array
-
 
   const form = useForm<CreateOSFormValues>({
     resolver: zodResolver(formSchema),
@@ -95,6 +60,59 @@ export function CreateOSDialog() {
     },
     mode: 'onChange',
   });
+
+  // Memoized version of handleModalClose for useEffect dependency
+  const handleModalClose = useCallback(() => {
+    console.log('handleModalClose called: Resetting form and inputs.');
+    form.reset();
+    setClientInput('');
+    setPartnerInput('');
+    setShowClientSuggestions(false);
+    setShowPartnerSuggestions(false);
+  }, [form]); // form.reset is stable
+
+  useEffect(() => {
+    const modalElement = modalRef.current;
+    if (!modalElement) return;
+
+    // Listener for when Bootstrap itself has finished hiding the modal
+    modalElement.addEventListener('hidden.bs.modal', handleModalClose);
+
+    // Initialize Bootstrap modal instance
+    if (typeof window !== 'undefined') {
+        import('bootstrap/js/dist/modal').then(ModalModule => {
+            const BootstrapModal = ModalModule.default;
+            if (modalElement) { // Check modalElement again, as import is async
+                // Get existing instance or create a new one.
+                const instance = BootstrapModal.getInstance(modalElement) || new BootstrapModal(modalElement);
+                setBootstrapModal(instance);
+            }
+        }).catch(error => console.error("Failed to initialize Bootstrap modal:", error));
+    }
+
+    return () => {
+      if (modalElement) {
+        modalElement.removeEventListener('hidden.bs.modal', handleModalClose);
+      }
+      // Note: Disposing the modal instance here can be tricky if Bootstrap
+      // also manages it via data attributes. If we `new` an instance, we should `dispose` it.
+      // For modals toggled by data attributes, explicit disposal might not always be needed
+      // or could even conflict if not handled carefully.
+      // The current approach uses getInstance OR new, so disposal is generally safe.
+      if (bootstrapModal && typeof bootstrapModal.dispose === 'function') {
+        try {
+             // Check if the modal is still associated with the DOM element
+            if (bootstrapModal._element === modalElement) {
+                // bootstrapModal.dispose(); // Consider if this is truly needed or causes issues
+            }
+        } catch (e) {
+            console.warn("Error during modal dispose on cleanup:", e);
+        }
+      }
+      setBootstrapModal(null); // Clear our reference
+    };
+  }, [handleModalClose, bootstrapModal]); // bootstrapModal added to re-evaluate if it changes, though it shouldn't externally
+
 
   const filteredClients = useMemo(() => {
     if (!clientInput) return [];
@@ -143,14 +161,21 @@ export function CreateOSDialog() {
         programadoPara: values.programadoPara || undefined,
       };
 
-      await addOS(dataToSubmit);
+      await addOS(dataToSubmit); // This is a placeholder in the store
 
       console.log(`OS Criada: ${dataToSubmit.cliente} - ${dataToSubmit.projeto}`);
-      form.reset();
-      setClientInput('');
-      setPartnerInput('');
+      
+      // Programmatically hide the modal.
+      // The 'hidden.bs.modal' event listener (setup in useEffect)
+      // will then call handleModalClose to reset the form.
       if (bootstrapModal && typeof bootstrapModal.hide === 'function') {
-            bootstrapModal.hide();
+        console.log('Attempting to hide modal programmatically.');
+        bootstrapModal.hide();
+      } else {
+        console.warn('onSubmit: bootstrapModal instance not found or hide is not a function. Modal might not close.');
+        // If hide fails for some reason, manually trigger cleanup as a fallback.
+        // This won't hide the modal but will reset the form.
+        handleModalClose();
       }
     } catch (error) {
       console.error("Failed to create OS:", error);
@@ -159,16 +184,6 @@ export function CreateOSDialog() {
       setIsSubmitting(false);
     }
   }
-
-  const handleModalClose = () => {
-      form.reset();
-      setClientInput('');
-      setPartnerInput('');
-      setShowClientSuggestions(false);
-      setShowPartnerSuggestions(false);
-      // This function is typically called when Bootstrap itself closes the modal (e.g. 'x' button)
-      // No need to call bootstrapModal.hide() here as Bootstrap handles it.
-  };
 
    const setupClickListener = (ref: React.RefObject<HTMLInputElement>, setShowSuggestionsFn: React.Dispatch<React.SetStateAction<boolean>>) => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -200,7 +215,8 @@ export function CreateOSDialog() {
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title" id="createOSModalLabel">Criar Nova Ordem de Serviço</h5>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={handleModalClose}></button>
+              {/* Removed onClick from btn-close, data-bs-dismiss will trigger hidden.bs.modal */}
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div className="modal-body">
               <p className="text-muted mb-4">Preencha os detalhes abaixo para criar uma nova OS. Clique em salvar quando terminar.</p>
@@ -228,7 +244,7 @@ export function CreateOSDialog() {
                             autoComplete="off"
                           />
                           {showClientSuggestions && filteredClients.length > 0 && (
-                            <div className="list-group position-absolute w-100" style={{ zIndex: 1056, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}> {/* Increased z-index */}
+                            <div className="list-group position-absolute w-100" style={{ zIndex: 1056, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}>
                               {filteredClients.map(c => (
                                 <button type="button" key={c.id} className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
                                   onMouseDown={(e) => e.preventDefault()} onClick={() => handleClientSelect(c.name)}>
@@ -264,7 +280,7 @@ export function CreateOSDialog() {
                             autoComplete="off"
                           />
                           {showPartnerSuggestions && filteredPartners.length > 0 && (
-                            <div className="list-group position-absolute w-100" style={{ zIndex: 1056, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}> {/* Increased z-index */}
+                            <div className="list-group position-absolute w-100" style={{ zIndex: 1056, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 .5rem 1rem rgba(0,0,0,.15)' }}>
                               {filteredPartners.map(p => (
                                 <button type="button" key={p.id} className="list-group-item list-group-item-action list-group-item-light py-1 px-2 small"
                                   onMouseDown={(e) => e.preventDefault()} onClick={() => handlePartnerSelect(p.name)}>
@@ -395,7 +411,8 @@ export function CreateOSDialog() {
                 </div>
 
                 <div className="modal-footer mt-4 pt-3 border-top">
-                    <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal" onClick={handleModalClose} disabled={isSubmitting}>
+                    {/* Removed onClick from Cancel button, data-bs-dismiss will trigger hidden.bs.modal */}
+                    <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal" disabled={isSubmitting}>
                         Cancelar
                     </button>
                     <button type="submit" className="btn btn-primary" disabled={!form.formState.isValid || isSubmitting || !clientInput.trim()}>
@@ -415,3 +432,4 @@ export function CreateOSDialog() {
     </>
   );
 }
+
