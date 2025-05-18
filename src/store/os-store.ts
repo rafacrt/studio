@@ -1,11 +1,13 @@
 
 import { create } from 'zustand';
-// Removed: import { persist, createJSONStorage } from 'zustand/middleware';
 import type { OS, CreateOSData, Client } from '@/lib/types';
 import { OSStatus } from '@/lib/types';
-import { parseISO, differenceInMinutes } from 'date-fns'; // Keep for time calculation
+import { parseISO, differenceInMinutes } from 'date-fns';
+import { createOSInDB } from '@/lib/actions/os-actions';
+import { findOrCreateClientByName } from '@/lib/actions/client-actions';
+import { findOrCreatePartnerByName } from '@/lib/actions/partner-actions';
 
-// Define Partner type explicitly for managed state
+
 export interface Partner {
     id: string;
     name: string;
@@ -13,88 +15,96 @@ export interface Partner {
 
 interface OSState {
   osList: OS[];
-  nextOsNumber: number;
+  // nextOsNumber: number; // nextOsNumber will now be determined by the DB
   partners: Partner[];
   clients: Client[];
+  isStoreInitialized: boolean; // To track if initial data load has happened
 
+  initializeStore: (initialData: { osList: OS[], clients: Client[], partners: Partner[] }) => void;
   setOsList: (osList: OS[]) => void;
   setPartners: (partners: Partner[]) => void;
   setClients: (clients: Client[]) => void;
-  setNextOsNumber: (num: number) => void;
+  // setNextOsNumber: (num: number) => void; // No longer needed from client
 
-  addOS: (data: CreateOSData) => OS; // Changed return type
+  addOS: (data: CreateOSData) => Promise<OS | null>; // Changed return type
   updateOS: (updatedOS: OS) => Promise<void>;
   updateOSStatus: (osId: string, newStatus: OSStatus) => Promise<void>;
   getOSById: (osId: string) => OS | undefined;
   duplicateOS: (osId: string) => Promise<OS | null>;
   toggleUrgent: (osId: string) => Promise<void>;
 
-  addPartner: (partnerData: Omit<Partner, 'id'>) => Partner; // Temporarily sync
+  addPartner: (partnerData: { name: string }) => Promise<Partner | null>;
   updatePartner: (updatedPartner: Partner) => Promise<void>;
   deletePartner: (partnerId: string) => Promise<void>;
   getPartnerById: (partnerId: string) => Partner | undefined;
   getPartnerByName: (partnerName: string) => Partner | undefined;
 
-  addClient: (clientData: Omit<Client, 'id'>) => Client; // Temporarily sync
+  addClient: (clientData: { name: string }) => Promise<Client | null>;
   updateClient: (updatedClient: Client) => Promise<void>;
   deleteClient: (clientId: string) => Promise<void>;
   getClientById: (clientId: string) => Client | undefined;
   getClientByName: (clientName: string) => Client | undefined;
 }
 
-const generateOSNumero = (num: number): string => String(num).padStart(6, '0');
+// const generateOSNumero = (num: number): string => String(num).padStart(6, '0'); // DB will handle numero generation
 
 
 export const useOSStore = create<OSState>()(
     (set, get) => ({
       osList: [],
-      nextOsNumber: 1,
+      // nextOsNumber: 1, // Removed, DB handles this
       partners: [],
       clients: [],
+      isStoreInitialized: false,
+
+      initializeStore: (initialData) => {
+        set({
+          osList: initialData.osList,
+          clients: initialData.clients,
+          partners: initialData.partners,
+          isStoreInitialized: true,
+        });
+        console.log('Zustand store initialized with data from server.');
+      },
 
       setOsList: (osList) => set({ osList }),
       setPartners: (partners) => set({ partners }),
       setClients: (clients) => set({ clients }),
-      setNextOsNumber: (num) => set({ nextOsNumber: num }),
+      // setNextOsNumber: (num) => set({ nextOsNumber: num }), // Removed
 
-      addOS: (data) => {
-        const newOsId = `os-${Date.now()}`; // Simple unique ID for now
-        const newOsNumero = generateOSNumero(get().nextOsNumber);
-        const newOS: OS = {
-          id: newOsId,
-          numero: newOsNumero,
-          cliente: data.cliente,
-          parceiro: data.parceiro,
-          projeto: data.projeto,
-          tarefa: data.tarefa,
-          observacoes: data.observacoes || '',
-          tempoTrabalhado: data.tempoTrabalhado || '',
-          status: data.status,
-          dataAbertura: new Date().toISOString(),
-          programadoPara: data.programadoPara,
-          isUrgent: data.isUrgent,
-          // dataInicioProducao and tempoProducaoMinutos will be set when status changes
-        };
+      addOS: async (data) => {
+        try {
+          // The nextOsNumber is now determined by the DB in createOSInDB
+          const newOS = await createOSInDB(data);
+          
+          set((state) => ({
+            osList: [...state.osList, newOS],
+          }));
 
-        set((state) => ({
-          osList: [...state.osList, newOS],
-          nextOsNumber: state.nextOsNumber + 1,
-        }));
-        console.warn(`addOS: OS "${newOS.numero}" adicionada ao estado local. Implementação do banco de dados pendente.`);
-        
-        // Add new client if it doesn't exist (local state for now)
-        if (data.cliente && !get().clients.find(c => c.name.toLowerCase() === data.cliente.toLowerCase())) {
-            get().addClient({ name: data.cliente });
+          // Ensure client and partner from the new OS are in the local store if not already
+          const existingClient = get().clients.find(c => c.id === newOS.clientId);
+          if (!existingClient) {
+             // This implies findOrCreateClientByName was successful and client is in DB
+             // We add it to local store for UI consistency if it wasn't there already
+             // This case might be rare if client list is kept up-to-date
+             set(state => ({clients: [...state.clients, {id: newOS.clientId, name: newOS.cliente}]}));
+          }
+          if (newOS.partnerId && newOS.parceiro) {
+            const existingPartner = get().partners.find(p => p.id === newOS.partnerId);
+            if (!existingPartner) {
+              set(state => ({partners: [...state.partners, {id: newOS.partnerId!, name: newOS.parceiro!}]}));
+            }
+          }
+          return newOS;
+        } catch (error) {
+            console.error("Error in store addOS calling server action:", error);
+            // Optionally re-throw or handle error (e.g., show toast to user)
+            return null;
         }
-        // Add new partner if it doesn't exist (local state for now)
-        if (data.parceiro && !get().partners.find(p => p.name.toLowerCase() === data.parceiro!.toLowerCase())) {
-            get().addPartner({ name: data.parceiro });
-        }
-
-        return newOS;
       },
 
       updateOS: async (updatedOSData) => {
+        // TODO: Implement updateOSInDB server action and call it here
         console.warn('updateOS: DB implementation pending. Called with:', updatedOSData);
         set((state) => ({
           osList: state.osList.map((os) =>
@@ -104,35 +114,30 @@ export const useOSStore = create<OSState>()(
       },
 
       updateOSStatus: async (osId, newStatus) => {
+        // TODO: Implement updateOSStatusInDB server action
+        // This action would also handle dataInicioProducao, dataFinalizacao, tempoProducaoMinutos in the DB
+        console.warn(`updateOSStatus: DB implementation pending for OS ID ${osId} to status ${newStatus}.`);
         set((state) => ({
           osList: state.osList.map((os) => {
             if (os.id === osId) {
               const now = new Date().toISOString();
               let dataInicioProducao = os.dataInicioProducao;
               let tempoProducaoMinutos = os.tempoProducaoMinutos;
+              let dataFinalizacao = os.dataFinalizacao;
 
-              // Start production timer
               if (newStatus === OSStatus.EM_PRODUCAO && os.status !== OSStatus.EM_PRODUCAO) {
                 dataInicioProducao = now;
               }
 
-              // Calculate production time if finalizing
               if (newStatus === OSStatus.FINALIZADO && os.status !== OSStatus.FINALIZADO) {
-                if (os.dataInicioProducao) { // Ensure production had started
-                    // Simple calculation: difference in minutes
-                    // More complex logic for business hours can be added here or server-side
+                dataFinalizacao = now;
+                if (os.dataInicioProducao) {
                     tempoProducaoMinutos = differenceInMinutes(parseISO(now), parseISO(os.dataInicioProducao));
-                } else if (os.status === OSStatus.EM_PRODUCAO) { // If it was in production but no explicit start_date (e.g. old data)
-                     // Fallback: if no explicit start, but was in production, calculate from dataAbertura if it was set to EM_PRODUCAO from start
+                } else if (os.status === OSStatus.EM_PRODUCAO) {
                     tempoProducaoMinutos = differenceInMinutes(parseISO(now), parseISO(os.dataAbertura));
                 }
-
-
-                console.warn(`updateOSStatus: OS "${os.numero}" finalizada. Tempo de produção calculado: ${tempoProducaoMinutos} min. DB pendente.`);
-                return { ...os, status: newStatus, dataFinalizacao: now, dataInicioProducao, tempoProducaoMinutos };
               }
-              console.warn(`updateOSStatus: Status da OS "${os.numero}" atualizado para ${newStatus}. DB pendente.`);
-              return { ...os, status: newStatus, dataInicioProducao };
+              return { ...os, status: newStatus, dataFinalizacao, dataInicioProducao, tempoProducaoMinutos };
             }
             return os;
           }),
@@ -147,25 +152,33 @@ export const useOSStore = create<OSState>()(
         const osToDuplicate = get().osList.find(os => os.id === osId);
         if (!osToDuplicate) return null;
 
-        const newOsNumero = generateOSNumero(get().nextOsNumber);
         const duplicatedOSData: CreateOSData = {
-            cliente: osToDuplicate.cliente,
-            parceiro: osToDuplicate.parceiro,
+            cliente: osToDuplicate.cliente, // Name
+            parceiro: osToDuplicate.parceiro, // Name
             projeto: `${osToDuplicate.projeto} (Cópia)`,
             tarefa: osToDuplicate.tarefa,
             observacoes: osToDuplicate.observacoes,
-            tempoTrabalhado: '', // Reset time worked for a new OS
-            status: OSStatus.NA_FILA, // Start as new
-            programadoPara: undefined, // Reset programming
-            isUrgent: false, // Reset urgency
+            tempoTrabalhado: '',
+            status: OSStatus.NA_FILA,
+            programadoPara: undefined,
+            isUrgent: false,
         };
-        // Use the existing addOS logic to create the new OS
-        const newOS = get().addOS(duplicatedOSData);
-        console.warn(`duplicateOS: OS "${osToDuplicate.numero}" duplicada como "${newOS.numero}". DB pendente.`);
-        return newOS;
+        
+        try {
+            // Create the duplicated OS in the DB
+            const newOS = await createOSInDB(duplicatedOSData);
+            set((state) => ({
+              osList: [...state.osList, newOS],
+            }));
+            return newOS;
+        } catch (error) {
+            console.error("Error in store duplicateOS calling server action:", error);
+            return null;
+        }
       },
 
       toggleUrgent: async (osId: string) => {
+        // TODO: Implement toggleUrgentInDB server action
         console.warn('toggleUrgent: DB implementation pending. Called for OS ID:', osId);
         set((state) => ({
           osList: state.osList.map((os) =>
@@ -176,20 +189,31 @@ export const useOSStore = create<OSState>()(
 
       getPartnerById: (partnerId) => get().partners.find(p => p.id === partnerId),
       getPartnerByName: (partnerName) => get().partners.find(p => p.name.toLowerCase() === partnerName.toLowerCase()),
-      addPartner: (partnerData) => { // Temporarily sync
-        const newPartnerId = `partner-${Date.now()}`;
-        const newPartner: Partner = { id: newPartnerId, ...partnerData };
-        set(state => ({ partners: [...state.partners, newPartner] }));
-        console.warn(`addPartner: Parceiro "${newPartner.name}" adicionado ao estado local. DB pendente.`);
-        return newPartner;
+      addPartner: async (partnerData) => {
+        try {
+            const newPartner = await findOrCreatePartnerByName(partnerData.name);
+            // Ensure partner is in local store if it was newly created or found
+            const existing = get().partners.find(p => p.id === newPartner.id);
+            if (!existing) {
+                 set(state => ({ partners: [...state.partners, newPartner] }));
+            } else if (existing.name !== newPartner.name) { // Should not happen if DB has unique constraint
+                 set(state => ({ partners: state.partners.map(p => p.id === newPartner.id ? newPartner : p) }));
+            }
+            return newPartner;
+        } catch (error) {
+            console.error("Error in store addPartner:", error);
+            return null;
+        }
       },
       updatePartner: async (updatedPartner) => {
+        // TODO: Implement updatePartnerInDB server action
         console.warn('updatePartner: DB implementation pending. Called with:', updatedPartner);
         set(state => ({
             partners: state.partners.map(p => p.id === updatedPartner.id ? updatedPartner : p)
         }));
       },
       deletePartner: async (partnerId) => {
+        // TODO: Implement deletePartnerInDB server action
         console.warn('deletePartner: DB implementation pending. Called for ID:', partnerId);
          set(state => ({
             partners: state.partners.filter(p => p.id !== partnerId)
@@ -198,20 +222,31 @@ export const useOSStore = create<OSState>()(
 
       getClientById: (clientId) => get().clients.find(c => c.id === clientId),
       getClientByName: (clientName) => get().clients.find(c => c.name.toLowerCase() === clientName.toLowerCase()),
-      addClient: (clientData) => { // Temporarily sync
-        const newClientId = `client-${Date.now()}`;
-        const newClient: Client = { id: newClientId, ...clientData };
-        set(state => ({ clients: [...state.clients, newClient] }));
-        console.warn(`addClient: Cliente "${newClient.name}" adicionado ao estado local. DB pendente.`);
-        return newClient;
+      addClient: async (clientData) => {
+        try {
+            const newClient = await findOrCreateClientByName(clientData.name);
+             // Ensure client is in local store if it was newly created or found
+            const existing = get().clients.find(c => c.id === newClient.id);
+            if (!existing) {
+                set(state => ({ clients: [...state.clients, newClient] }));
+            } else if (existing.name !== newClient.name) { // Should not happen
+                set(state => ({ clients: state.clients.map(c => c.id === newClient.id ? newClient : p) }));
+            }
+            return newClient;
+        } catch (error) {
+            console.error("Error in store addClient:", error);
+            return null;
+        }
       },
       updateClient: async (updatedClient) => {
+        // TODO: Implement updateClientInDB server action
         console.warn('updateClient: DB implementation pending. Called with:', updatedClient);
         set(state => ({
             clients: state.clients.map(c => c.id === updatedClient.id ? updatedClient : c)
         }));
       },
       deleteClient: async (clientId) => {
+        // TODO: Implement deleteClientInDB server action
         console.warn('deleteClient: DB implementation pending. Called for ID:', clientId);
         set(state => ({
             clients: state.clients.filter(c => c.id !== clientId)
@@ -219,3 +254,16 @@ export const useOSStore = create<OSState>()(
       },
     })
 );
+
+// Function to fetch initial data on the server (e.g., in a Server Component or Route Handler)
+// This is a conceptual placement; actual usage would be in a component that calls this and then initializes the store.
+// For now, you'll need a way to call this and then use `useOSStore.getState().initializeStore(...)` on the client.
+/*
+async function getInitialStoreData() {
+    const osList = await getAllOSFromDB();
+    const clients = await getAllClientsFromDB();
+    const partners = await getAllPartnersFromDB();
+    return { osList, clients, partners };
+}
+*/
+

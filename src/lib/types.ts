@@ -16,20 +16,21 @@ export const ALL_OS_STATUSES: OSStatus[] = [
 ];
 
 export interface OS {
-  id: string;
+  id: string; // Will be the DB auto-incremented ID (as string)
   numero: string; // 6-digit sequential number
-  cliente: string; // Keep as string for now, link conceptually to Client list
-  parceiro?: string;
+  cliente: string; // Name of the client
+  parceiro?: string; // Name of the partner
+  clientId: string; // Foreign key to clients table
+  partnerId?: string; // Foreign key to partners table (nullable)
   projeto: string;
-  tarefa: string; // New field
+  tarefa: string;
   observacoes: string;
-  tempoTrabalhado?: string; // New field, simple text for now
+  tempoTrabalhado?: string;
   status: OSStatus;
   dataAbertura: string; // ISO Date string (includes time)
   dataFinalizacao?: string; // ISO Date string
-  programadoPara?: string; // ISO Date string (optional, YYYY-MM-DD format expected from input) - NEW
+  programadoPara?: string; // ISO Date string (optional, YYYY-MM-DD format expected from input)
   isUrgent: boolean;
-  // Time Tracking Fields
   dataInicioProducao?: string; // ISO Date string when status moves to 'Em Produção'
   tempoProducaoMinutos?: number; // Calculated duration in minutes from 'Em Produção' to 'Finalizado'
 }
@@ -37,28 +38,27 @@ export interface OS {
 export interface User {
   id: string;
   username: string;
-  // role?: 'admin' | 'client'; // Removed role as workflow module is removed
 }
 
-// For CreateOSForm
+// For CreateOSForm - keeps taking names
 export interface CreateOSData {
-  cliente: string;
-  parceiro?: string;
+  cliente: string; // Name of the client
+  parceiro?: string; // Name of the partner
   projeto: string;
   tarefa: string;
   observacoes: string;
   tempoTrabalhado?: string;
-  status: OSStatus; // Should default to NA_FILA
-  programadoPara?: string; // NEW, expects YYYY-MM-DD
+  status: OSStatus;
+  programadoPara?: string;
   isUrgent: boolean;
 }
 
-// Interface for managing Clients separately
 export interface Client {
-    id: string;
+    id: string; // Will be the DB auto-incremented ID (as string)
     name: string;
-    // Add other client details as needed (e.g., contact, address)
 }
 
-// Artwork interface removed as workflow module is deleted.
-
+export interface Partner {
+    id: string; // Will be the DB auto-incremented ID (as string)
+    name: string;
+}
