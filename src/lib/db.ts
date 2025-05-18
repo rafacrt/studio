@@ -1,8 +1,7 @@
-// src/lib/db.ts
 import mysql from 'mysql2/promise';
+import 'dotenv/config';
 
-// Database connection configuration
-// These should ideally come from environment variables
+
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306', 10),
@@ -14,49 +13,18 @@ const dbConfig = {
   queueLimit: 0,
 };
 
-// Create a connection pool
 const pool = mysql.createPool(dbConfig);
 
-// Function to test the connection (optional)
-export async function testConnection() {
+export const testConnection = async () => {
   try {
     const connection = await pool.getConnection();
-    console.log('Successfully connected to the MySQL database.');
+    console.log('✅ Conectado ao banco MySQL.');
     connection.release();
     return true;
   } catch (error) {
-    console.error('Error connecting to the MySQL database:', error);
-    // Depending on the error type, you might want to handle it differently
-    if (error instanceof Error) {
-        if ('code' in error && error.code === 'PROTOCOL_CONNECTION_LOST') {
-            console.error('Database connection was closed.');
-        } else if ('code' in error && error.code === 'ER_CON_COUNT_ERROR') {
-            console.error('Database has too many connections.');
-        } else if ('code' in error && error.code === 'ECONNREFUSED') {
-            console.error('Database connection was refused.');
-        } else {
-            console.error('Unknown database connection error:', error.message);
-        }
-    } else {
-        console.error('An unknown error occurred during database connection:', error);
-    }
-    // Rethrow or handle as appropriate for your application
-    // For a simple test, returning false or throwing might be sufficient
-    // throw error; // or return false;
+    console.error('❌ Erro ao conectar ao banco:', error);
     return false;
   }
-}
+};
 
-// Export the pool for use in other modules (e.g., server actions)
 export default pool;
-
-// Example of how to execute a query
-// export async function query(sql: string, params?: any[]) {
-//   const connection = await pool.getConnection();
-//   try {
-//     const [results] = await connection.execute(sql, params);
-//     return results;
-//   } finally {
-//     connection.release();
-//   }
-// }
