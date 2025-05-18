@@ -12,12 +12,6 @@ const AppLogo: React.FC<AppLogoProps> = (props) => (
     aria-labelledby="appLogoTitle"
   >
     <title id="appLogoTitle">WeStudy Logo</title>
-    <defs>
-      <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 1 }} />
-        <stop offset="100%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 1 }} />
-      </linearGradient>
-    </defs>
     <style>
       {`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap');
@@ -25,15 +19,14 @@ const AppLogo: React.FC<AppLogoProps> = (props) => (
           font-family: 'Poppins', sans-serif;
           font-size: 30px;
           font-weight: 700;
-          fill: url(#logoGradient);
           dominant-baseline: central;
           text-anchor: middle;
         }
         .logo-text-w {
-          fill: hsl(var(--primary));
+          fill: hsl(var(--primary)); /* Agora será o novo azul #416ed3 */
         }
         .logo-text-s {
-           fill: hsl(var(--accent));
+           fill: hsl(var(--foreground)); /* Agora será branco #ffffff */
         }
       `}
     </style>
