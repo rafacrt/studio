@@ -31,6 +31,7 @@ export interface UniversityArea {
   neighborhood: string;
   lat: number;
   lng: number;
+  icon?: LucideIcon; // Added optional icon property
 }
 
 export interface Listing {
