@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from 'lucide-react';
 
 export interface User {
@@ -11,7 +12,7 @@ export interface User {
   dateJoined?: string;
 }
 
-export interface Image {
+export interface ListingImage { // Renamed from Image to ListingImage
   id: string;
   url: string;
   alt: string;
@@ -31,14 +32,14 @@ export interface UniversityArea {
   neighborhood: string;
   lat: number;
   lng: number;
-  icon?: LucideIcon; // Added optional icon property
+  icon?: LucideIcon;
 }
 
 export interface Listing {
   id: string;
   title: string;
   description: string;
-  images: Image[];
+  images: ListingImage[]; // Updated to use ListingImage
   pricePerNight: number; // Represents monthly price
   address: string;
   lat: number;
@@ -74,7 +75,6 @@ export interface ListingFilters {
   university?: string;
   minPrice?: number;
   maxPrice?: number;
-  // Add other potential filters like amenities, number of bedrooms, etc.
 }
 
 export interface AdminDashboardStats {
