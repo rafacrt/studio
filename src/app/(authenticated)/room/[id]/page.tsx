@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Star, MapPin, Bed, Bath, Users, Tv, Utensils, Snowflake, ChevronRight, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, StarHalf } from 'lucide-react';
+import { ChevronLeft, Star, Bed, Bath, Users, Tv, Utensils, Snowflake, ChevronRight, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, StarHalf, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,7 +63,7 @@ export default function RoomDetailPage() {
     try {
       const checkInDate = new Date().toISOString().split('T')[0];
       const checkOutDateObj = new Date();
-      checkOutDateObj.setMonth(checkOutDateObj.getMonth() + 1); 
+      checkOutDateObj.setMonth(checkOutDateObj.getMonth() + 1);
       const checkOutDate = checkOutDateObj.toISOString().split('T')[0];
 
       await bookMockRoom(room.id, user.id, checkInDate, checkOutDate, 1);
@@ -142,23 +142,29 @@ export default function RoomDetailPage() {
             <Skeleton className="h-8 w-8 rounded-full" />
           </div>
         </header>
-        
+
         <div className="w-full mt-14"> {/* Adjusted for fixed header */}
           <Skeleton className="w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] rounded-b-lg" />
-          <div className="p-4 md:p-6 space-y-4 w-full max-w-4xl mx-auto bg-background rounded-t-3xl -mt-6 md:-mt-8 relative z-10 shadow-xl">
+          <div className="bg-background rounded-t-3xl p-5 md:p-8 space-y-4 w-full max-w-4xl mx-auto -mt-6 md:-mt-8 relative z-10 shadow-xl">
             <Skeleton className="h-8 w-3/4 mx-auto" />
             <Skeleton className="h-4 w-1/2 mx-auto" />
             <Separator />
-            <div className="space-y-2">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex items-center justify-center space-x-2">
-                  <Skeleton className="h-5 w-5 rounded-full" />
-                  <Skeleton className="h-4 w-1/3" />
-                </div>
-              ))}
+            <div className="space-y-2 text-center">
+              <div className="flex items-center justify-center space-x-2">
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <Skeleton className="h-4 w-1/3" />
+              </div>
+               <div className="flex items-center justify-center space-x-2">
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <Skeleton className="h-4 w-1/3" />
+              </div>
+               <div className="flex items-center justify-center space-x-2">
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <Skeleton className="h-4 w-1/3" />
+              </div>
             </div>
             <Separator />
-            <Skeleton className="h-6 w-1/4 mb-2" />
+            <Skeleton className="h-6 w-1/4 mb-2 mx-auto" />
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-2/3" />
@@ -234,7 +240,7 @@ export default function RoomDetailPage() {
               <MapPin className="h-16 w-16" />
             </div>
           )}
-          {room.images.length > 0 && ( 
+          {room.images.length > 0 && (
             <Badge
               variant="secondary"
               className="absolute bottom-4 right-4 z-10 bg-black/60 text-white px-2.5 py-1 text-xs rounded-full shadow-md"
@@ -296,20 +302,26 @@ export default function RoomDetailPage() {
               <span>Próximo à {room.university.acronym}</span>
             </div>
           </section>
-          
+
           {room.rating > 0 && (
             <>
               <Separator />
-              <section className="text-center">
-                <p className="text-base font-medium text-foreground mb-0.5">{room.rating.toFixed(2)}</p>
-                <div className="flex justify-center items-center space-x-1 mb-1">
-                    {renderStars(room.rating)}
+              <section className="flex justify-center items-center space-x-6 text-center">
+                <div className="flex flex-col items-center">
+                  <p className="text-base font-medium text-foreground mb-0.5">{room.rating.toFixed(2)}</p>
+                  <div className="flex items-center space-x-0.5">
+                      {renderStars(room.rating)}
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">{room.reviews} avaliações</p>
+                <div className="h-8 border-l border-border"></div> {/* Vertical separator */}
+                <div className="flex flex-col items-center">
+                  <p className="text-base font-medium text-foreground">{room.reviews}</p>
+                  <p className="text-xs text-muted-foreground">avaliações</p>
+                </div>
               </section>
             </>
           )}
-          
+
           <Separator />
 
           <section>
@@ -356,7 +368,7 @@ export default function RoomDetailPage() {
             </Button>
         </div>
       </div>
-      
+
       <div className="hidden md:block fixed bottom-6 right-6 z-20">
           <Card className="w-96 shadow-xl rounded-xl border">
               <CardHeader className="pb-4">
