@@ -15,30 +15,37 @@ export async function findOrCreatePartnerByName(partnerName: string): Promise<Pa
   }
   const connection = await db.getConnection();
   try {
+    const trimmedPartnerName = partnerName.trim();
+    console.log(`[PartnerAction] Attempting to find partner: "${trimmedPartnerName}"`);
     // Check if partner exists
     const [existingPartners] = await connection.query<RowDataPacket[]>(
       'SELECT id, name FROM partners WHERE name = ?',
-      [partnerName.trim()]
+      [trimmedPartnerName]
     );
 
     if (existingPartners.length > 0) {
       const existingPartner = existingPartners[0];
+      console.log(`[PartnerAction] Found existing partner: ID ${existingPartner.id}, Name ${existingPartner.name}`);
       return { id: String(existingPartner.id), name: existingPartner.name };
     }
 
     // Partner does not exist, create new
+    console.log(`[PartnerAction] Partner "${trimmedPartnerName}" not found, creating new.`);
     const [result] = await connection.execute<ResultSetHeader>(
       'INSERT INTO partners (name) VALUES (?)',
-      [partnerName.trim()]
+      [trimmedPartnerName]
     );
     
     if (result.insertId) {
-      return { id: String(result.insertId), name: partnerName.trim() };
+      console.log(`[PartnerAction] Successfully created partner: ID ${result.insertId}, Name ${trimmedPartnerName}`);
+      return { id: String(result.insertId), name: trimmedPartnerName };
     } else {
+      console.error('[PartnerAction] Failed to create partner: No insertId returned.', result);
       throw new Error('Failed to create partner: No insertId returned.');
     }
-  } catch (error) {
-    console.error('Database error in findOrCreatePartnerByName:', error);
+  } catch (error: any) {
+    console.error('[PartnerAction] Original DB error in findOrCreatePartnerByName:', error);
+    console.error(`[PartnerAction] Failed to find or create partner "${partnerName}". Details: ${error.message}`);
     throw new Error(`Failed to find or create partner "${partnerName}".`);
   } finally {
     connection.release();
@@ -51,12 +58,16 @@ export async function findOrCreatePartnerByName(partnerName: string): Promise<Pa
 export async function getAllPartnersFromDB(): Promise<Partner[]> {
   const connection = await db.getConnection();
   try {
+    console.log('[PartnerAction] Fetching all partners from DB.');
     const [rows] = await connection.query<RowDataPacket[]>('SELECT id, name FROM partners ORDER BY name ASC');
+    console.log(`[PartnerAction] Found ${rows.length} partners.`);
     return rows.map(row => ({ id: String(row.id), name: row.name }));
-  } catch (error) {
-    console.error('Database error in getAllPartnersFromDB:', error);
+  } catch (error: any) {
+    console.error('[PartnerAction] Original DB error in getAllPartnersFromDB:', error);
+    console.error(`[PartnerAction] Failed to fetch partners. Details: ${error.message}`);
     throw new Error('Failed to fetch partners from database.');
   } finally {
     connection.release();
   }
 }
+

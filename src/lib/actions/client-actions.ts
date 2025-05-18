@@ -16,30 +16,37 @@ export async function findOrCreateClientByName(clientName: string): Promise<Clie
 
   const connection = await db.getConnection();
   try {
+    const trimmedClientName = clientName.trim();
+    console.log(`[ClientAction] Attempting to find client: "${trimmedClientName}"`);
     // Check if client exists
     const [existingClients] = await connection.query<RowDataPacket[]>(
       'SELECT id, name FROM clients WHERE name = ?',
-      [clientName.trim()]
+      [trimmedClientName]
     );
 
     if (existingClients.length > 0) {
       const existingClient = existingClients[0];
+      console.log(`[ClientAction] Found existing client: ID ${existingClient.id}, Name ${existingClient.name}`);
       return { id: String(existingClient.id), name: existingClient.name };
     }
 
     // Client does not exist, create new
+    console.log(`[ClientAction] Client "${trimmedClientName}" not found, creating new.`);
     const [result] = await connection.execute<ResultSetHeader>(
       'INSERT INTO clients (name) VALUES (?)',
-      [clientName.trim()]
+      [trimmedClientName]
     );
 
     if (result.insertId) {
-      return { id: String(result.insertId), name: clientName.trim() };
+      console.log(`[ClientAction] Successfully created client: ID ${result.insertId}, Name ${trimmedClientName}`);
+      return { id: String(result.insertId), name: trimmedClientName };
     } else {
+      console.error('[ClientAction] Failed to create client: No insertId returned.', result);
       throw new Error('Failed to create client: No insertId returned.');
     }
-  } catch (error) {
-    console.error('Database error in findOrCreateClientByName:', error);
+  } catch (error: any) {
+    console.error('[ClientAction] Original DB error in findOrCreateClientByName:', error);
+    console.error(`[ClientAction] Failed to find or create client "${clientName}". Details: ${error.message}`);
     throw new Error(`Failed to find or create client "${clientName}".`);
   } finally {
     connection.release();
@@ -52,12 +59,16 @@ export async function findOrCreateClientByName(clientName: string): Promise<Clie
 export async function getAllClientsFromDB(): Promise<Client[]> {
   const connection = await db.getConnection();
   try {
+    console.log('[ClientAction] Fetching all clients from DB.');
     const [rows] = await connection.query<RowDataPacket[]>('SELECT id, name FROM clients ORDER BY name ASC');
+    console.log(`[ClientAction] Found ${rows.length} clients.`);
     return rows.map(row => ({ id: String(row.id), name: row.name }));
-  } catch (error) {
-    console.error('Database error in getAllClientsFromDB:', error);
+  } catch (error: any) {
+    console.error('[ClientAction] Original DB error in getAllClientsFromDB:', error);
+    console.error(`[ClientAction] Failed to fetch clients. Details: ${error.message}`);
     throw new Error('Failed to fetch clients from database.');
   } finally {
     connection.release();
   }
 }
+
