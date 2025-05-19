@@ -14,7 +14,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { AppLogo } from '@/components/AppLogo';
+import AppLogo from '@/components/AppLogo'; // Corrected import: removed curly braces
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -101,4 +101,3 @@ export function AdminNavigation() {
     </>
   );
 }
-
