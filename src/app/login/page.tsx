@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react'; // Added Suspense
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,16 +18,17 @@ import { useToast } from '@/hooks/use-toast';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Por favor, insira um email válido." }),
-  password: z.string().min(1, { message: "A senha é obrigatória." }), // Simplified for mock
+  password: z.string().min(1, { message: "A senha é obrigatória." }), 
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+// This component will use useSearchParams and be wrapped in Suspense
+function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { login, adminLogin, isAuthenticated, isAdmin, isLoadingAuth } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // Used here
   const { toast } = useToast();
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
@@ -52,7 +54,7 @@ export default function LoginPage() {
     // If already authenticated and auth is not loading, redirect
     if (!isLoadingAuth && isAuthenticated) {
       if (isAdmin) {
-        router.replace('/admin/dashboard');
+        router.replace('/admin');
       } else {
         router.replace('/explore');
       }
@@ -97,7 +99,6 @@ export default function LoginPage() {
 
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
       <Card className="w-full max-w-md shadow-2xl rounded-xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-6">
@@ -155,6 +156,19 @@ export default function LoginPage() {
           </p>
         </CardFooter>
       </Card>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
+      <Suspense fallback={
+        <div className="flex h-screen w-screen items-center justify-center bg-background">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      }>
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }
