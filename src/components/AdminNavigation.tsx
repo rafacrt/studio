@@ -11,26 +11,25 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import AppLogo from '@/components/AppLogo'; // Corrected import: removed curly braces
+import AppLogo from '@/components/AppLogo';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const adminNavItems = [
-  { href: '/admin/dashboard', label: 'Painel de Controle', icon: LayoutDashboard },
+  { href: '/admin', label: 'Painel de Controle', icon: LayoutDashboard }, // Updated href
   { href: '/admin/room-approvals', label: 'Aprovações de Quartos', icon: BedDouble },
   { href: '/admin/user-management', label: 'Gerenciamento de Usuários', icon: Users },
-  { href: '/admin/add-room', label: 'Adicionar Quarto', icon: HousePlus }, // Using HousePlus
+  { href: '/admin/add-room', label: 'Adicionar Quarto', icon: HousePlus },
 ];
 
 export function AdminNavigation() {
   const pathname = usePathname();
   const { logout, user } = useAuth();
   const router = useRouter();
-  const { state, setOpen } = useSidebar();
+  const { setOpen } = useSidebar();
 
 
   const handleLogout = () => {
@@ -55,7 +54,7 @@ export function AdminNavigation() {
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.href}
+                isActive={pathname === item.href || (item.href === '/admin' && pathname === '/admin/dashboard')} // Handle exact match for /admin
                 tooltip={item.label}
               >
                 <Link href={item.href}>

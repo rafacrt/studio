@@ -14,7 +14,7 @@ export default function HomePage() {
     if (!isLoadingAuth) {
       if (isAuthenticated) {
         if (isAdmin) {
-            router.replace('/admin/dashboard');
+            router.replace('/admin'); // Updated redirect to /admin
         } else {
             router.replace('/explore');
         }

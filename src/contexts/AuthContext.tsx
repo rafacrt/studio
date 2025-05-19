@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ReactNode } from 'react';
@@ -81,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAnimatingLogin(false); // Signal hide on error as well
       return false; 
     }
-  }, [toast]); // Removed mockAdminUser and mockUser from dependencies as they are stable imports
+  }, [toast]);
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     const success = await performLoginInternal(false, email, password);
@@ -94,7 +95,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const adminLogin = useCallback(async (email: string, password: string): Promise<boolean> => {
     const success = await performLoginInternal(true, email, password);
     if (success) {
-      router.push('/admin/dashboard');
+      router.push('/admin'); // Updated redirect to /admin
     }
     return success;
   }, [performLoginInternal, router]);
