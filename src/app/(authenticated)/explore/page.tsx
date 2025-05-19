@@ -3,10 +3,9 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ListingCard } from '@/components/ListingCard';
-import { fetchListings, universityAreas } from '@/lib/mock-data';
+import { fetchListings } from '@/lib/mock-data';
 import type { Listing, ListingFilters } from '@/types';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, Search, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -82,33 +81,25 @@ export default function ExplorePage() {
 
   const handleSearch = () => {
     const filters: ListingFilters = {};
-    if (searchInput) filters.searchTerm = searchInput;
+    if (searchInput.trim()) filters.searchTerm = searchInput.trim();
     setCurrentFilters(filters);
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card className="mb-8 shadow-lg rounded-xl">
-        <CardContent className="p-6">
-          <h2 className="text-2xl font-semibold mb-6 text-foreground flex items-center">
-            <Search className="mr-3 h-6 w-6 text-primary" /> Encontre seu Quarto Ideal
-          </h2>
-          <div className="flex items-end gap-4">
-            <div className="flex-grow">
-              <label htmlFor="search" className="block text-sm font-medium text-muted-foreground mb-1">Buscar por termo</label>
-              <Input
-                id="search"
-                type="text"
-                placeholder="Título, endereço, universidade..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="h-12 rounded-full px-6 text-base" // Increased height and padding for better visual
-                onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-              />
-            </div>
-            <Button onClick={handleSearch} className="h-12 rounded-full px-8 bg-primary hover:bg-primary/90 text-base">
-              <Search className="mr-2 h-5 w-5" /> Buscar
-            </Button>
+      <Card className="mb-8 shadow-lg rounded-xl bg-transparent border-none">
+        <CardContent className="p-0 md:p-2">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="search"
+              type="text"
+              placeholder="Encontre seu quarto ideal"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="h-14 w-full rounded-full pl-12 pr-6 text-base shadow-md focus-visible:ring-primary" 
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+            />
           </div>
         </CardContent>
       </Card>
