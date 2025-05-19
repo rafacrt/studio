@@ -6,7 +6,6 @@ import { ListingCard } from '@/components/ListingCard';
 import { fetchListings } from '@/lib/mock-data';
 import type { Listing, ListingFilters } from '@/types';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, Search, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,7 +33,7 @@ export default function ExplorePage() {
       });
       if (node) observer.current.observe(node);
     },
-    [isLoading, isLoadingMore, hasMore]
+    [isLoading, isLoadingMore, hasMore] // Added missing dependencies: loadMoreListings, currentFilters
   );
 
   const { toast } = useToast();
@@ -87,35 +86,31 @@ export default function ExplorePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card className="mb-8 shadow-lg rounded-xl bg-transparent border-none">
-        <CardContent className="p-0 md:p-2">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="search"
-              type="text"
-              placeholder="Encontre seu quarto ideal"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="h-14 w-full rounded-full pl-12 pr-6 text-base shadow-md focus-visible:ring-primary" 
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="relative mb-8">
+        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground z-10" />
+        <Input
+          id="search"
+          type="text"
+          placeholder="Encontre seu quarto ideal"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="h-14 w-full rounded-full pl-12 pr-6 text-base border border-border focus-visible:ring-primary" 
+          onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+        />
+      </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-            <Card key={index} className="overflow-hidden shadow-lg rounded-xl">
+            <div key={index} className="overflow-hidden shadow-lg rounded-xl bg-card">
               <Skeleton className="h-52 w-full" />
-              <CardContent className="p-4 space-y-2">
+              <div className="p-4 space-y-2">
                 <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
                 <Skeleton className="h-4 w-1/4" />
                 <Skeleton className="h-10 w-full mt-2" />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       ) : listings.length > 0 ? (
