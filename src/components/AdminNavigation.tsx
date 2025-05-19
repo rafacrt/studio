@@ -41,7 +41,9 @@ export function AdminNavigation() {
     <>
       <SidebarHeader className="p-4">
         <div className="flex items-center justify-between">
-            <AppLogo className="h-8 w-auto group-data-[collapsible=icon]:hidden" />
+            <Link href="/admin" aria-label="Painel de Controle Principal">
+              <AppLogo className="h-8 w-auto group-data-[collapsible=icon]:hidden" />
+            </Link>
              <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setOpen(false)}>
                 <PanelLeft />
              </Button>
