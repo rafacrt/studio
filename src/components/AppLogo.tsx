@@ -1,39 +1,25 @@
 
 import * as React from 'react';
+import Image from 'next/image';
 
-interface AppLogoProps extends React.SVGProps<SVGSVGElement> {}
+interface AppLogoProps {
+  className?: string;
+  // Allow any other props that might be passed to an img tag or NextImage
+  [key: string]: any;
+}
 
-const AppLogo: React.FC<AppLogoProps> = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 200 50"
-    className={props.className}
-    {...props}
-    aria-labelledby="appLogoTitle"
-  >
-    <title id="appLogoTitle">WeStudy Logo</title>
-    <style>
-      {`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap');
-        .logo-text {
-          font-family: 'Poppins', sans-serif;
-          font-size: 30px;
-          font-weight: 700;
-          dominant-baseline: central;
-          text-anchor: middle;
-        }
-        .logo-text-w {
-          fill: hsl(var(--primary)); /* Will use the new blue #416ed3 */
-        }
-        .logo-text-s {
-           fill: hsl(var(--foreground)); /* Will use the new dark gray #323233 for light theme */
-        }
-      `}
-    </style>
-    <text x="50%" y="50%" className="logo-text">
-      <tspan className="logo-text-w">We</tspan><tspan className="logo-text-s">Study</tspan>
-    </text>
-  </svg>
+const AppLogo: React.FC<AppLogoProps> = ({ className, ...props }) => (
+  <div className={className} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <Image
+      src="/images/westudy-logo.png" // **USER ACTION REQUIRED**: Place your logo at public/images/westudy-logo.png
+      alt="WeStudy Logo"
+      width={200} // Intrinsic width of the image (can be overridden by CSS if layout="responsive" or "fill")
+      height={50} // Intrinsic height of the image
+      priority // Loads the logo faster, good for LCP
+      data-ai-hint="app logo" // AI hint for the placeholder
+      {...props} // Spread any additional props
+    />
+  </div>
 );
 
 AppLogo.displayName = 'AppLogo';
