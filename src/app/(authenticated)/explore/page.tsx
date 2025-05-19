@@ -6,9 +6,11 @@ import { ListingCard } from '@/components/ListingCard';
 import { fetchListings } from '@/lib/mock-data';
 import type { Listing, ListingFilters } from '@/types';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button'; // Added Button import
+import { Loader2, Search, MapPin, LogOut } from 'lucide-react'; // Added LogOut icon
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/contexts/AuthContext'; // Added useAuth import
 
 const ITEMS_PER_PAGE = 9;
 
@@ -21,6 +23,7 @@ export default function ExplorePage() {
   const [currentFilters, setCurrentFilters] = useState<ListingFilters>({});
   const [searchInput, setSearchInput] = useState('');
 
+  const { logout } = useAuth(); // Added logout from useAuth
   const observer = useRef<IntersectionObserver | null>(null);
   const lastListingElementRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -33,7 +36,7 @@ export default function ExplorePage() {
       });
       if (node) observer.current.observe(node);
     },
-    [isLoading, isLoadingMore, hasMore] // Added missing dependencies: loadMoreListings, currentFilters
+    [isLoading, isLoadingMore, hasMore] 
   );
 
   const { toast } = useToast();
@@ -84,6 +87,10 @@ export default function ExplorePage() {
     setCurrentFilters(filters);
   };
 
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="relative mb-8">
@@ -117,7 +124,7 @@ export default function ExplorePage() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {listings.map((listing, index) => {
-              if (listings.length === index + 1) {
+              if (listings.length === index + 1 && hasMore) { // Only attach ref if there's more to load
                 return <div ref={lastListingElementRef} key={listing.id}><ListingCard listing={listing} /></div>;
               }
               return <ListingCard key={listing.id} listing={listing} />;
@@ -140,6 +147,16 @@ export default function ExplorePage() {
           <p className="text-muted-foreground">Tente ajustar seus filtros ou ampliar sua busca.</p>
         </div>
       )}
+       <div className="mt-12 flex justify-center">
+        <Button
+          variant="outline"
+          onClick={handleLogout}
+          className="border-primary text-primary hover:bg-primary/10"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Sair
+        </Button>
+      </div>
     </div>
   );
 }
