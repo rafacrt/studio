@@ -4,17 +4,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ListingCard } from '@/components/ListingCard';
 import { fetchListings, universityAreas } from '@/lib/mock-data';
-import type { Listing, ListingFilters, UniversityArea } from '@/types';
+import type { Listing, ListingFilters } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Search, FilterX, MapPin } from 'lucide-react';
+import { Loader2, Search, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const ITEMS_PER_PAGE = 9; // Changed from 6 to 9
-const ALL_UNIVERSITIES_VALUE = "__ALL__"; // Special value for "Qualquer uma"
+const ITEMS_PER_PAGE = 9;
 
 export default function ExplorePage() {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -24,9 +22,6 @@ export default function ExplorePage() {
   const [hasMore, setHasMore] = useState(true);
   const [currentFilters, setCurrentFilters] = useState<ListingFilters>({});
   const [searchInput, setSearchInput] = useState('');
-  const [selectedUniversity, setSelectedUniversity] = useState(''); // Default to empty string for placeholder
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
 
   const observer = useRef<IntersectionObserver | null>(null);
   const lastListingElementRef = useCallback(
@@ -85,23 +80,10 @@ export default function ExplorePage() {
   }, [currentFilters, loadInitialListings]);
 
 
-  const handleFilterChange = () => {
+  const handleSearch = () => {
     const filters: ListingFilters = {};
     if (searchInput) filters.searchTerm = searchInput;
-    if (selectedUniversity && selectedUniversity !== ALL_UNIVERSITIES_VALUE) {
-      filters.university = selectedUniversity;
-    }
-    if (minPrice) filters.minPrice = parseFloat(minPrice);
-    if (maxPrice) filters.maxPrice = parseFloat(maxPrice);
     setCurrentFilters(filters);
-  };
-
-  const clearFilters = () => {
-    setSearchInput('');
-    setSelectedUniversity(''); // Reset to empty string to show placeholder
-    setMinPrice('');
-    setMaxPrice('');
-    setCurrentFilters({});
   };
 
   return (
@@ -111,52 +93,22 @@ export default function ExplorePage() {
           <h2 className="text-2xl font-semibold mb-6 text-foreground flex items-center">
             <Search className="mr-3 h-6 w-6 text-primary" /> Encontre seu Quarto Ideal
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-            <div className="lg:col-span-2">
+          <div className="flex items-end gap-4">
+            <div className="flex-grow">
               <label htmlFor="search" className="block text-sm font-medium text-muted-foreground mb-1">Buscar por termo</label>
               <Input
                 id="search"
                 type="text"
-                placeholder="Título, endereço..."
+                placeholder="Título, endereço, universidade..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="h-10"
+                className="h-12 rounded-full px-6 text-base" // Increased height and padding for better visual
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
               />
             </div>
-            <div>
-              <label htmlFor="university" className="block text-sm font-medium text-muted-foreground mb-1">Universidade Próxima</label>
-              <Select value={selectedUniversity} onValueChange={setSelectedUniversity}>
-                <SelectTrigger id="university" className="h-10">
-                  <SelectValue placeholder="Qualquer uma" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL_UNIVERSITIES_VALUE}>Qualquer uma</SelectItem>
-                  {universityAreas.map((uni: UniversityArea) => (
-                    <SelectItem key={uni.acronym} value={uni.acronym}>
-                       {uni.name} ({uni.acronym})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label htmlFor="minPrice" className="block text-sm font-medium text-muted-foreground mb-1">Preço Mín.</label>
-                <Input id="minPrice" type="number" placeholder="R$" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="h-10" />
-              </div>
-              <div>
-                <label htmlFor="maxPrice" className="block text-sm font-medium text-muted-foreground mb-1">Preço Máx.</label>
-                <Input id="maxPrice" type="number" placeholder="R$" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="h-10" />
-              </div>
-            </div>
-            <div className="flex gap-2 lg:col-start-4">
-              <Button onClick={handleFilterChange} className="w-full h-10 bg-primary hover:bg-primary/90">
-                <Search className="mr-2 h-4 w-4" /> Aplicar
-              </Button>
-              <Button onClick={clearFilters} variant="outline" className="w-full h-10">
-                <FilterX className="mr-2 h-4 w-4" /> Limpar
-              </Button>
-            </div>
+            <Button onClick={handleSearch} className="h-12 rounded-full px-8 bg-primary hover:bg-primary/90 text-base">
+              <Search className="mr-2 h-5 w-5" /> Buscar
+            </Button>
           </div>
         </CardContent>
       </Card>
