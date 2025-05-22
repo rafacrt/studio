@@ -1,3 +1,4 @@
+
 // src/lib/auth-edge.ts
 // This file contains authentication logic that is safe to run in the Edge Runtime.
 // It does NOT include database interactions.
@@ -5,14 +6,54 @@
 import type { User } from './types';
 import { SignJWT, jwtVerify } from 'jose';
 
+console.log('[Auth-Edge] Module loaded. Attempting to read JWT_SECRET from process.env');
+
+// Check if process and process.env are available (they should be in Edge Runtime)
+if (typeof process === 'undefined' || typeof process.env === 'undefined') {
+  console.error('[Auth-Edge] CRITICAL: `process` or `process.env` is undefined in this environment. This is unexpected for Edge Runtime and will prevent JWT_SECRET from being read.');
+} else {
+  console.log('[Auth-Edge] `process.env` object keys (first 10 for brevity if many):', Object.keys(process.env).slice(0,10).join(', '));
+  const rawSecretFromEnv = process.env.JWT_SECRET;
+  if (rawSecretFromEnv === undefined) {
+    console.error('[Auth-Edge] DETAILED CHECK: process.env.JWT_SECRET is strictly `undefined`.');
+  } else if (rawSecretFromEnv === null) {
+    console.error('[Auth-Edge] DETAILED CHECK: process.env.JWT_SECRET is `null`.');
+  } else if (typeof rawSecretFromEnv === 'string' && rawSecretFromEnv.trim() === '') {
+    console.error('[Auth-Edge] DETAILED CHECK: process.env.JWT_SECRET is an empty string or contains only whitespace.');
+  } else if (typeof rawSecretFromEnv === 'string') {
+    console.log(`[Auth-Edge] DETAILED CHECK: process.env.JWT_SECRET is present. Length: ${rawSecretFromEnv.length}. Starts with: "${rawSecretFromEnv.substring(0, Math.min(5, rawSecretFromEnv.length))}..." (actual value partially shown for debugging).`);
+  } else {
+    console.warn(`[Auth-Edge] DETAILED CHECK: process.env.JWT_SECRET is of unexpected type: ${typeof rawSecretFromEnv}. Value:`, rawSecretFromEnv);
+  }
+}
+
 const JWT_SECRET_KEY = process.env.JWT_SECRET;
 
-if (!JWT_SECRET_KEY) {
-  throw new Error('JWT_SECRET environment variable is not set. Please add it to your .env.local file.');
+if (!JWT_SECRET_KEY || (typeof JWT_SECRET_KEY === 'string' && JWT_SECRET_KEY.trim() === '')) {
+  console.error('[Auth-Edge] CRITICAL ERROR: JWT_SECRET environment variable is NOT SET or is effectively empty AFTER attempting to read from process.env.');
+  // This error will be thrown, stopping execution. The console logs above should provide clues.
+  throw new Error('JWT_SECRET environment variable is not set or is empty. Please ensure it is correctly defined in your .env.local file at the root of your project and that you have restarted the Next.js development server. Check server logs for more details on what value was read.');
 }
-const key = new TextEncoder().encode(JWT_SECRET_KEY);
+
+let key: Uint8Array;
+try {
+  // Ensure JWT_SECRET_KEY is a string before encoding
+  if (typeof JWT_SECRET_KEY !== 'string') {
+    console.error('[Auth-Edge] CRITICAL ERROR: JWT_SECRET_KEY is not a string before TextEncoder.encode. Type:', typeof JWT_SECRET_KEY);
+    throw new Error('JWT_SECRET_KEY is not a string, cannot encode.');
+  }
+  key = new TextEncoder().encode(JWT_SECRET_KEY);
+  console.log('[Auth-Edge] JWT_SECRET_KEY successfully encoded for JWT operations.');
+} catch (error: any) {
+  console.error('[Auth-Edge] Failed to encode JWT_SECRET_KEY. This should not happen if the key is a valid string. Error:', error.message, error);
+  throw new Error('Failed to process JWT_SECRET. Ensure it is a valid string. Check server logs for details.');
+}
 
 export async function encryptPayload(payload: any) {
+  if (!key) { 
+    console.error("[Auth-Edge encryptPayload] CRITICAL: `key` is not initialized. JWT_SECRET was likely not processed correctly.");
+    throw new Error("JWT key not initialized for encryption. Check server logs for JWT_SECRET issues.");
+  }
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -21,13 +62,17 @@ export async function encryptPayload(payload: any) {
 }
 
 export async function decryptPayload(token: string): Promise<any | null> {
+  if (!key) { 
+    console.error("[Auth-Edge decryptPayload] CRITICAL: `key` is not initialized. JWT_SECRET was likely not processed correctly.");
+    throw new Error("JWT key not initialized for decryption. Check server logs for JWT_SECRET issues.");
+  }
   try {
     const { payload } = await jwtVerify(token, key, {
       algorithms: ['HS256'],
     });
     return payload;
   } catch (error) {
-    console.error('[Auth-Edge decryptPayload] Failed to verify JWT or token expired:', error);
+    console.warn('[Auth-Edge decryptPayload] Failed to verify JWT or token expired/invalid.');
     return null;
   }
 }
