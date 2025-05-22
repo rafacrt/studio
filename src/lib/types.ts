@@ -20,33 +20,26 @@ export interface OS {
   numero: string;
   cliente: string;
   parceiro?: string;
-  clientId: string;
-  partnerId?: string;
+  clientId: string; // ID do cliente no banco
+  partnerId?: string; // ID do parceiro no banco
   projeto: string;
   tarefa: string;
   observacoes: string;
   tempoTrabalhado?: string;
   status: OSStatus;
-  dataAbertura: string;
-  dataFinalizacao?: string;
-  programadoPara?: string;
+  dataAbertura: string; // ISO string
+  dataFinalizacao?: string; // ISO string
+  programadoPara?: string; // YYYY-MM-DD string
   isUrgent: boolean;
-  dataInicioProducao?: string;
+  dataInicioProducao?: string; // ISO string
   tempoProducaoMinutos?: number;
 }
 
 export interface User {
-  id: string; // ID do banco de dados
+  id: string;
   username: string;
   // Não inclua password_hash aqui por segurança
 }
-
-// Para o formulário de login
-export interface LoginFormData {
-  username: string;
-  password_hash: string; // O campo do formulário será 'password', mas a action receberá 'password_hash' para clareza
-}
-
 
 export interface CreateOSData {
   cliente: string;
@@ -56,7 +49,7 @@ export interface CreateOSData {
   observacoes: string;
   tempoTrabalhado?: string;
   status: OSStatus;
-  programadoPara?: string;
+  programadoPara?: string; // YYYY-MM-DD
   isUrgent: boolean;
 }
 
