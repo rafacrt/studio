@@ -31,13 +31,14 @@ export async function login(formData: LoginFormData): Promise<{ error?: string }
     if (error.message?.includes('NEXT_REDIRECT')) { // Não tratar redirect como um erro fatal
       throw error;
     }
+    // Verifica especificamente por erros de conexão com o banco
+    if (error.message && (error.message.includes('ECONNREFUSED') || error.message.toLowerCase().includes('database error'))) {
+        console.error('[AuthAction login] Database connection error detected:', error.message);
+        return { error: 'Falha ao conectar ao banco de dados. Verifique se o servidor MySQL está em execução e configurado corretamente.' };
+    }
     return { error: 'Ocorreu um erro no servidor. Tente novamente.' };
   }
   // Se chegou aqui, o login foi bem-sucedido e a sessão foi criada.
-  // O redirect deve ocorrer no lado do cliente após a action retornar sem erro.
-  // Ou, podemos forçar um redirect aqui, mas isso pode ter implicações com o fluxo do formulário.
-  // Por enquanto, vamos deixar o cliente redirecionar.
-  // Se quisermos redirecionar aqui, seria:
   redirect('/dashboard');
 }
 
@@ -47,14 +48,3 @@ export async function logout(): Promise<void> {
   await clearSession();
   redirect('/login');
 }
-
-// Futuramente, uma action para registrar usuário:
-// export async function registerUser(formData: RegisterFormData): Promise<{ error?: string, success?: boolean }> {
-//   const { username, password }_hash = formData;
-//   // 1. Validar dados (ex: Zod)
-//   // 2. Verificar se usuário já existe
-//   // 3. Gerar hash da senha com bcrypt
-//   // 4. Inserir usuário no banco
-//   // 5. Retornar sucesso ou erro
-//   return { success: true };
-// }
