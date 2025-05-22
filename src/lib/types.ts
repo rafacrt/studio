@@ -20,8 +20,8 @@ export interface OS {
   numero: string;
   cliente: string;
   parceiro?: string;
-  clientId: string; // ID do cliente no banco
-  partnerId?: string; // ID do parceiro no banco
+  clientId: string; 
+  partnerId?: string; 
   projeto: string;
   tarefa: string;
   observacoes: string;
@@ -38,7 +38,9 @@ export interface OS {
 export interface User {
   id: string;
   username: string;
-  // Não inclua password_hash aqui por segurança
+  isAdmin: boolean;
+  isApproved: boolean;
+  // Do not include password_hash here for security when passing user object around
 }
 
 export interface CreateOSData {

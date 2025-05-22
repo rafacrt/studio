@@ -1,16 +1,15 @@
 
-import type {Metadata} from 'next';
+import type { Metadata } from 'next';
 import './globals.css';
 import Providers from '@/components/Providers';
 import Script from 'next/script';
 import ThemeProvider from '@/components/theme/ThemeProvider';
-// Toaster removed as login toasts are no longer needed.
-// If you need toasts for other purposes, you can re-add it.
+// Toaster can be re-added if you plan to use it for form feedback from AuthForm/RegisterForm
 // import { Toaster } from '@/components/ui/toaster'; 
 
 export const metadata: Metadata = {
-  title: 'FreelaOS Minimal',
-  description: 'Aplicativo Mínimo de Gerenciamento de Ordens de Serviço',
+  title: 'FreelaOS', // Updated title
+  description: 'Gerenciamento de Ordens de Serviço e Autenticação',
 };
 
 export default function RootLayout({
@@ -33,12 +32,12 @@ export default function RootLayout({
                 href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
             />
           </head>
-          <body className="antialiased d-flex flex-column min-vh-100">
+          <body className="antialiased d-flex flex-column min-vh-100 bg-body-tertiary">
             <Providers>
-               <div className="page-transition-container">
+               <div className="page-transition-container d-flex flex-column flex-grow-1">
                  {children}
                </div>
-               {/* <Toaster /> */} {/* Toaster removed */}
+               {/* <Toaster /> */}
             </Providers>
             <Script
                 src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
