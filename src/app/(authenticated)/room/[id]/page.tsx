@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Star, Bed, Bath, Users, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, StarHalf, MapPin, ChevronRight, Map as MapIcon, MessageSquareText, FileText, Home, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, Star, Bed, Bath, Users, Loader2, School2 as DefaultUniversityIcon, Share2, Heart, MapPin, ChevronRight, Map as MapIcon, MessageSquareText, FileText, Home, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -115,22 +115,6 @@ export default function RoomDetailPage() {
     }
   };
 
-  const renderStars = (rating: number) => {
-    const stars = [];
-    const totalStars = 5;
-    for (let i = 1; i <= totalStars; i++) {
-      if (i <= rating) {
-        stars.push(<Star key={`star-full-${i}`} className="h-2.5 w-2.5 text-foreground fill-foreground" />);
-      } else if (i - 0.5 <= rating) {
-        stars.push(<StarHalf key={`star-half-${i}`} className="h-2.5 w-2.5 text-foreground fill-foreground" />);
-      } else {
-        stars.push(<Star key={`star-empty-${i}`} className="h-2.5 w-2.5 text-foreground fill-none stroke-current" />);
-      }
-    }
-    return stars;
-  };
-
-
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center p-4 bg-background">
@@ -148,37 +132,12 @@ export default function RoomDetailPage() {
         <div className="w-full mt-14"> {/* Adjusted for fixed header */}
           <Skeleton className="w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] rounded-b-lg" />
           <div className="bg-background rounded-t-3xl p-5 md:p-8 space-y-4 w-full max-w-4xl mx-auto -mt-6 md:-mt-8 relative z-10 shadow-lg">
-            <Skeleton className="h-8 w-3/4 mx-auto" />
-            <Skeleton className="h-4 w-1/2 mx-auto" />
+            <Skeleton className="h-8 w-3/4" /> {/* For Title */}
+            <Skeleton className="h-4 w-1/2 mt-1" /> {/* For Sub-info line */}
             <Separator />
-            <div className="flex justify-center items-center space-x-6 text-center my-4">
-                <div className="flex flex-col items-center">
-                    <Skeleton className="h-5 w-10 mb-1" />
-                    <Skeleton className="h-3 w-20" />
-                </div>
-                <div className="h-8 border-l border-border"></div>
-                <div className="flex flex-col items-center">
-                    <Skeleton className="h-5 w-8" />
-                    <Skeleton className="h-3 w-16" />
-                </div>
-            </div>
+            <Skeleton className="h-4 w-full mt-2" /> {/* For Specs line */}
             <Separator />
-            <div className="space-y-2 text-center">
-              <div className="flex items-center justify-center space-x-2">
-                <Skeleton className="h-5 w-5 rounded-full" />
-                <Skeleton className="h-4 w-1/3" />
-              </div>
-               <div className="flex items-center justify-center space-x-2">
-                <Skeleton className="h-5 w-5 rounded-full" />
-                <Skeleton className="h-4 w-1/3" />
-              </div>
-               <div className="flex items-center justify-center space-x-2">
-                <Skeleton className="h-5 w-5 rounded-full" />
-                <Skeleton className="h-4 w-1/3" />
-              </div>
-            </div>
-            <Separator />
-            <Skeleton className="h-6 w-1/4 mb-2 mx-auto" />
+            <Skeleton className="h-6 w-1/4 mb-2 mt-4" /> {/* For Section Title */}
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-2/3" />
@@ -286,60 +245,51 @@ export default function RoomDetailPage() {
           )}
         </div>
 
-        <div className="bg-background rounded-t-3xl p-5 md:p-8 space-y-6 max-w-full mx-auto -mt-6 md:-mt-8 relative z-10 shadow-lg"> {/* Changed shadow-xl to shadow-lg for softer shadow */}
-          <section className="text-center pt-2"> {/* Added pt-2 for more space */}
-            <h1 className="text-xl md:text-2xl font-semibold text-foreground leading-tight">
-              {room.type} com Ar-condicionado e Wi-Fi – Próximo à {room.university.acronym}
+        <div className="bg-background rounded-t-3xl p-6 md:p-8 space-y-6 max-w-4xl mx-auto -mt-8 md:-mt-10 relative z-10 shadow-lg">
+          
+          <section className="pt-2 space-y-1">
+            <h1 className="text-2xl md:text-3xl font-semibold text-foreground leading-tight">
+              {room.title}
             </h1>
-            <p className="text-xs text-muted-foreground mt-1.5"> {/* Increased mt */}
-              Quarto em {room.university.city}, Brasil
-            </p>
+            <div className="flex items-center text-sm text-muted-foreground space-x-2">
+              {room.rating > 0 && (
+                <>
+                  <Star className="h-4 w-4 text-foreground fill-foreground" />
+                  <span>{room.rating.toFixed(1)}</span>
+                  <span className="hidden sm:inline">·</span> 
+                  <span className="sm:hidden block h-1 w-1 bg-muted-foreground rounded-full"></span>
+                  <span>{room.reviews} avaliações</span>
+                  <span className="hidden sm:inline">·</span>
+                  <span className="sm:hidden block h-1 w-1 bg-muted-foreground rounded-full"></span>
+                </>
+              )}
+              <span>{room.university.city}, Brasil</span>
+            </div>
           </section>
-
-          {room.rating > 0 && (
-            <>
-              <Separator />
-              <section className="flex justify-center items-center space-x-6 text-center py-4">
-                <div className="flex flex-col items-center">
-                  <p className="text-base font-medium text-foreground mb-0.5">{room.rating.toFixed(2)}</p>
-                  <div className="flex items-center space-x-0.5">
-                      {renderStars(room.rating)}
-                  </div>
-                </div>
-                <div className="h-8 border-l border-border"></div> {/* Vertical separator */}
-                <div className="flex flex-col items-center">
-                  <p className="text-base font-medium text-foreground">{room.reviews}</p>
-                  <p className="text-xs text-muted-foreground">avaliações</p>
-                </div>
-              </section>
-            </>
-          )}
 
           <Separator />
 
-          <section className="text-sm text-foreground space-y-2.5 text-center"> {/* Increased space-y */}
-            <div className="flex items-center justify-center space-x-1.5">
-              <Bed className="h-4 w-4 text-primary flex-shrink-0" />
-              <span>{room.beds} cama(s)</span>
-            </div>
-            <div className="flex items-center justify-center space-x-1.5">
-              <Bath className="h-4 w-4 text-primary flex-shrink-0" />
-              <span>Banheiro {room.baths > 0 ? 'privativo' : 'compartilhado'}</span>
-            </div>
-            <div className="flex items-center justify-center space-x-1.5">
-              <Users className="h-4 w-4 text-primary flex-shrink-0" />
-              <span>{room.guests} hóspede(s)</span>
-            </div>
-            <div className="flex items-center justify-center space-x-1.5">
-              <UniversityIcon className="h-4 w-4 text-primary flex-shrink-0" />
-              <span>Próximo à {room.university.acronym}</span>
-            </div>
+          <section className="text-sm text-foreground">
+            <p>
+              {room.guests} hóspede(s)
+              <span className="mx-1.5">·</span>
+              {room.bedrooms} quarto(s)
+              <span className="mx-1.5">·</span>
+              {room.beds} cama(s)
+              <span className="mx-1.5">·</span>
+              {room.baths} banheiro(s)
+              {room.baths > 0 && (room.amenities.some(a => a.id === 'privBathroom') ? ' privativo(s)' : ' compartilhado(s)')}
+            </p>
+            <p className="flex items-center mt-1">
+                <UniversityIcon className="h-4 w-4 text-primary mr-1.5 flex-shrink-0" />
+                <span>Próximo à {room.university.acronym}</span>
+            </p>
           </section>
-
+          
           <Separator />
 
           <section>
-            <h2 className="text-lg font-semibold text-foreground mb-3">Descrição</h2> {/* Increased mb */}
+            <h2 className="text-xl font-semibold text-foreground mb-3">Descrição</h2>
             <p className="text-muted-foreground whitespace-pre-line text-sm leading-relaxed">
               {room.description}
             </p>
@@ -349,8 +299,8 @@ export default function RoomDetailPage() {
             <>
               <Separator />
               <section>
-                <h2 className="text-lg font-semibold text-foreground mb-3">O que este lugar oferece</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4"> {/* Increased gap */}
+                <h2 className="text-xl font-semibold text-foreground mb-4">O que este lugar oferece</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                   {room.amenities.map((amenity: AmenityType) => (
                     <div key={amenity.id} className="flex items-center space-x-3 text-sm">
                       <amenity.icon className="h-5 w-5 text-primary flex-shrink-0" />
@@ -365,23 +315,31 @@ export default function RoomDetailPage() {
           <Separator />
           <section>
             <div className="flex items-center mb-3">
-              <MapIcon className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
-              <h2 className="text-lg font-semibold text-foreground">Onde você estará</h2>
+              <MapIcon className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
+              <h2 className="text-xl font-semibold text-foreground">Onde você estará</h2>
             </div>
             <div className="bg-muted rounded-3xl h-64 flex items-center justify-center text-muted-foreground p-4">
               <p>Espaço reservado para o mapa da localização.</p>
               {/* Map component would go here */}
             </div>
-             <p className="text-xs text-muted-foreground mt-2.5">Localização exata fornecida após a reserva.</p> {/* Increased mt */}
+             <p className="text-xs text-muted-foreground mt-3">Localização exata fornecida após a reserva.</p>
           </section>
-
+          
           <Separator />
           <section>
              <div className="flex items-center mb-3">
-                <MessageSquareText className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
-                <h2 className="text-lg font-semibold text-foreground">Avaliações dos Usuários</h2>
+                <MessageSquareText className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
+                <h2 className="text-xl font-semibold text-foreground">Avaliações</h2>
             </div>
-            <div className="bg-muted rounded-lg p-6 text-center text-muted-foreground">
+             {room.rating > 0 && (
+                <div className="flex items-center space-x-2 mb-4">
+                    <Star className="h-5 w-5 text-foreground fill-foreground" />
+                    <p className="text-lg font-semibold text-foreground">{room.rating.toFixed(1)}</p>
+                    <p className="text-lg text-muted-foreground">·</p>
+                    <p className="text-lg text-muted-foreground">{room.reviews} avaliações</p>
+                </div>
+             )}
+            <div className="bg-muted rounded-xl p-6 text-center text-muted-foreground">
               <p>Carrossel de avaliações dos usuários aparecerá aqui.</p>
               {/* User reviews carousel component would go here */}
             </div>
@@ -389,35 +347,36 @@ export default function RoomDetailPage() {
 
           <Separator />
           <section>
-            <div className="flex items-center mb-3"> {/* Increased mb */}
-                <FileText className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
-                <h2 className="text-lg font-semibold text-foreground">Política de Cancelamento</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-4">Coisas para saber</h2>
+            <div className="space-y-5">
+                <div>
+                    <div className="flex items-center mb-2">
+                        <Home className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
+                        <h3 className="text-md font-semibold text-foreground">Regras da Casa</h3>
+                    </div>
+                    <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 leading-relaxed whitespace-pre-line pl-2">
+                      {room.houseRules.split('\n').map((rule, index) => <li key={index}>{rule}</li>)}
+                    </ul>
+                </div>
+                <div>
+                    <div className="flex items-center mb-2">
+                        <ShieldCheck className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
+                        <h3 className="text-md font-semibold text-foreground">Saúde e segurança</h3>
+                    </div>
+                    <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 leading-relaxed whitespace-pre-line pl-2">
+                      {room.safetyAndProperty.split('\n').map((item, index) => <li key={index}>{item}</li>)}
+                    </ul>
+                </div>
+                <div>
+                    <div className="flex items-center mb-2">
+                        <FileText className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
+                        <h3 className="text-md font-semibold text-foreground">Política de Cancelamento</h3>
+                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line pl-2">
+                      {room.cancellationPolicy}
+                    </p>
+                </div>
             </div>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              {room.cancellationPolicy}
-            </p>
-          </section>
-
-          <Separator />
-          <section>
-             <div className="flex items-center mb-3"> {/* Increased mb */}
-                <Home className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
-                <h2 className="text-lg font-semibold text-foreground">Regras da Casa</h2>
-            </div>
-            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1.5 leading-relaxed whitespace-pre-line"> {/* Increased space-y */}
-              {room.houseRules.split('\n').map((rule, index) => <li key={index}>{rule}</li>)}
-            </ul>
-          </section>
-
-          <Separator />
-          <section>
-            <div className="flex items-center mb-3"> {/* Increased mb */}
-                <ShieldCheck className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
-                <h2 className="text-lg font-semibold text-foreground">Segurança e Propriedade</h2>
-            </div>
-            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1.5 leading-relaxed whitespace-pre-line"> {/* Increased space-y */}
-              {room.safetyAndProperty.split('\n').map((item, index) => <li key={index}>{item}</li>)}
-            </ul>
           </section>
 
         </div>
@@ -446,7 +405,7 @@ export default function RoomDetailPage() {
       <div className="hidden md:block fixed bottom-6 right-6 z-20">
           <Card className="w-96 shadow-xl rounded-xl border">
               <CardHeader className="pb-4">
-                  <CardTitle className="text-2xl">
+                  <CardTitle className="text-xl"> {/* Reduced font size for desktop card title */}
                       R$ {room.pricePerNight.toLocaleString('pt-BR')}
                       <span className="text-sm font-normal text-muted-foreground"> /mês</span>
                   </CardTitle>
