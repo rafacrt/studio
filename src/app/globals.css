@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -33,7 +34,12 @@
     --input: 0 0% 100%; /* White input background */
     --ring: 223 69% 54%; /* User's blue for focus rings */
 
-    --radius: 0.5rem;
+    --radius: 0.5rem; /* Base radius, can be overridden by components */
+    
+    /* Airbnb specific color */
+    --airbnb-primary: 348 100% 61%; /* #FF385C */
+    --airbnb-primary-foreground: 0 0% 100%; /* White */
+
 
     /* Chart colors - suitable for light background */
     --chart-1: 220 70% 50%;
@@ -54,34 +60,38 @@
   }
 
   .dark {
-    /* Dark Theme (Remains available if .dark class is applied to html) */
-    --background: 240 1% 20%; /* #323233 */
-    --foreground: 0 0% 100%; /* #ffffff */
+    /* Dark Theme */
+    --background: 240 1% 10%; /* Darker background for Airbnb dark mode feel */
+    --foreground: 0 0% 95%; /* Off-white text */
 
-    --card: 240 1% 25%;
-    --card-foreground: 0 0% 100%;
+    --card: 240 1% 15%; /* Darker cards */
+    --card-foreground: 0 0% 95%;
 
-    --popover: 240 1% 25%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 240 1% 15%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 223 69% 54%; /* #416ed3 */
+    --primary: 223 69% 60%; /* Slightly lighter blue for dark mode */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 1% 30%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 240 1% 20%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 240 1% 35%;
-    --muted-foreground: 0 0% 80%;
+    --muted: 240 1% 25%;
+    --muted-foreground: 0 0% 60%; /* Lighter muted text */
 
-    --accent: 223 69% 60%;
+    --accent: 223 69% 50%; /* Adjusted accent */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 55%;
+    --destructive: 0 60% 50%; /* Adjusted destructive */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 1% 30%;
-    --input: 240 1% 30%;
-    --ring: 223 69% 54%;
+    --border: 240 1% 25%; /* Darker borders */
+    --input: 240 1% 20%;
+    --ring: 223 69% 60%;
+
+    /* Airbnb specific color for dark mode - can be the same or adjusted */
+    --airbnb-primary: 348 100% 61%; /* #FF385C */
+    --airbnb-primary-foreground: 0 0% 100%;
 
     /* Chart colors for dark theme */
     --chart-1: 220 70% 60%;
@@ -91,14 +101,14 @@
     --chart-5: 340 75% 60%;
 
     /* Sidebar colors for dark theme */
-    --sidebar-background: 240 1% 15%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 223 69% 54%;
+    --sidebar-background: 240 1% 12%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 223 69% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 223 69% 65%;
+    --sidebar-accent: 223 69% 55%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 240 1% 25%;
-    --sidebar-ring: 223 69% 54%;
+    --sidebar-border: 240 1% 20%;
+    --sidebar-ring: 223 69% 60%;
   }
 }
 
@@ -113,4 +123,30 @@
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 0.3s;
   }
+}
+
+/* Custom scrollbar for webkit browsers (Chrome, Safari, Edge new) */
+::-webkit-scrollbar {
+  width: 8px; /* width of the entire scrollbar */
+  height: 8px; /* height of the horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background) / 0.5); /* track color */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.5); /* draggable scrolling handle */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.7); /* slightly darker on hover */
+}
+
+/* For Firefox */
+html {
+  scrollbar-width: thin; /* "auto" or "thin" */
+  scrollbar-color: hsl(var(--muted-foreground) / 0.5) hsl(var(--background) / 0.5); /* thumb and track color */
 }

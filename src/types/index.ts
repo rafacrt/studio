@@ -13,7 +13,7 @@ export interface User {
 }
 
 export interface ListingImage {
-  id: string;
+  id:string;
   url: string;
   alt: string;
 }
@@ -58,6 +58,7 @@ export interface Listing {
   cancellationPolicy: string;
   houseRules: string; // Can be a list of rules separated by newlines
   safetyAndProperty: string; // Can be a list of items separated by newlines
+  category?: string; // Optional: to link with new categories
 }
 
 export interface Booking {
@@ -78,6 +79,7 @@ export interface ListingFilters {
   university?: string;
   minPrice?: number;
   maxPrice?: number;
+  category?: string;
 }
 
 export interface AdminDashboardStats {
@@ -85,4 +87,11 @@ export interface AdminDashboardStats {
   newUsers: number;
   pendingApprovals: number;
   activeBookings: number;
+}
+
+export interface Category {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  description?: string; // Optional description for the category
 }

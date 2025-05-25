@@ -1,6 +1,6 @@
 
-import type { Listing, User, Booking, Amenity, UniversityArea, ListingFilters, AdminDashboardStats, ListingImage } from '@/types';
-import { Bed, Wifi, Tv, Utensils, Snowflake, Car, Bath, Dumbbell, WashingMachine, Trees, LampDesk, CheckSquare, School } from 'lucide-react';
+import type { Listing, User, Booking, Amenity, UniversityArea, ListingFilters, AdminDashboardStats, ListingImage, Category } from '@/types';
+import { Bed, Wifi, Tv, Utensils, Snowflake, Car, Bath, Dumbbell, WashingMachine, Trees, LampDesk, CheckSquare, School, Tent, Waves, MountainSnow, Castle, Palette, Sun, Building, Home } from 'lucide-react';
 import { mockUser, mockAdminUser } from './auth-mocks';
 
 // Helper function to simulate API call delay
@@ -35,6 +35,22 @@ export const universityAreas: UniversityArea[] = [
   { id: 'ufsc-trindade', name: 'Universidade Federal de Santa Catarina', acronym: 'UFSC', city: 'Florianópolis', neighborhood: 'Trindade', lat: -27.5999, lng: -48.5172, icon: School },
 ];
 
+export const roomCategories: Category[] = [
+  { id: 'design', label: 'Design', icon: Palette, description: 'Quartos com decoração e design diferenciados.' },
+  { id: 'prox-campus', label: 'Perto do Campus', icon: School, description: 'Quartos a uma curta distância da universidade.' },
+  { id: 'republica', label: 'Repúblicas', icon: Building, description: 'Vagas em repúblicas estudantis animadas.' },
+  { id: 'kitnet', label: 'Kitnets', icon: Home, description: 'Espaços compactos e independentes.' },
+  { id: 'alto-padrao', label: 'Alto Padrão', icon: Castle, description: 'Quartos com luxo e comodidades premium.' },
+  { id: 'economico', label: 'Econômicos', icon: Bed, description: 'Opções acessíveis para quem quer economizar.' },
+  // Adding some Airbnb-like categories for variety, can be adjusted
+  { id: 'praia', label: 'Praia', icon: Waves, description: 'Perto da praia.' },
+  { id: 'campo', label: 'Campo', icon: Trees, description: 'Refúgios no campo.' },
+  { id: 'montanha', label: 'Montanhas', icon: MountainSnow, description: 'Cabanas e vistas incríveis.' },
+  { id: 'deserto', label: 'Deserto', icon: Sun, description: 'Aventura no deserto.' },
+  { id: 'camping', label: 'Camping', icon: Tent, description: 'Experiências de acampamento.' },
+];
+
+
 const getUniversityByAcronym = (acronym: string): UniversityArea | undefined => {
     return universityAreas.find(uni => uni.acronym === acronym);
 }
@@ -50,9 +66,9 @@ let mockListings: Listing[] = [
     title: 'Quarto Aconchegante Próximo à USP',
     description: 'Quarto individual mobiliado, ideal para estudantes da USP. Ambiente tranquilo e seguro, com área de estudos e internet de alta velocidade. Contas inclusas.',
     images: [
-      { id: 'img1', url: 'https://picsum.photos/seed/quarto1-1/600/400' , alt: 'Vista do quarto aconchegante'},
-      { id: 'img2', url: 'https://picsum.photos/seed/quarto1-2/600/400' , alt: 'Área de estudos do quarto'},
-      { id: 'img3', url: 'https://picsum.photos/seed/quarto1-3/600/400' , alt: 'Banheiro privativo do quarto'},
+      { id: 'img1', url: 'https://placehold.co/800x600.png', alt: 'Vista do quarto aconchegante'},
+      { id: 'img2', url: 'https://placehold.co/800x600.png', alt: 'Área de estudos do quarto'},
+      { id: 'img3', url: 'https://placehold.co/800x600.png', alt: 'Banheiro privativo do quarto'},
     ],
     pricePerNight: 1200, 
     address: 'Rua do Matão, 1010, Butantã, São Paulo - SP',
@@ -69,6 +85,7 @@ let mockListings: Listing[] = [
     university: getUniversityByAcronym('USP')!,
     isAvailable: true,
     type: 'Quarto Individual',
+    category: 'prox-campus',
     cancellationPolicy: defaultCancellationPolicy,
     houseRules: defaultHouseRules,
     safetyAndProperty: defaultSafetyAndProperty,
@@ -78,8 +95,8 @@ let mockListings: Listing[] = [
     title: 'Kitnet Completa na Unicamp',
     description: 'Kitnet para uma pessoa, totalmente equipada, a poucos minutos da Unicamp. Inclui cozinha compacta, banheiro privativo e Wi-Fi. Perfeito para quem busca praticidade.',
     images: [
-      { id: 'img4', url: 'https://picsum.photos/seed/quarto2-1/600/400' , alt: 'Visão geral da kitnet'},
-      { id: 'img5', url: 'https://picsum.photos/seed/quarto2-2/600/400' , alt: 'Cozinha compacta da kitnet'},
+      { id: 'img4', url: 'https://placehold.co/800x600.png', alt: 'Visão geral da kitnet'},
+      { id: 'img5', url: 'https://placehold.co/800x600.png', alt: 'Cozinha compacta da kitnet'},
     ],
     pricePerNight: 950,
     address: 'Av. Albino J. B. de Oliveira, 1500, Barão Geraldo, Campinas - SP',
@@ -96,6 +113,7 @@ let mockListings: Listing[] = [
     university: getUniversityByAcronym('Unicamp')!,
     isAvailable: true, 
     type: 'Kitnet',
+    category: 'kitnet',
     cancellationPolicy: 'Cancelamento moderado: Reembolso total até 15 dias antes do check-in.',
     houseRules: 'Permitido animais de pequeno porte.\nVisitas com aviso prévio.',
     safetyAndProperty: 'Kit de primeiros socorros.',
@@ -105,8 +123,8 @@ let mockListings: Listing[] = [
     title: 'Vaga em República perto da UFMG',
     description: 'Vaga em quarto compartilhado em república estudantil bem localizada na Pampulha, próxima à UFMG. Casa com ótima infraestrutura, incluindo lavanderia e área comum.',
     images: [
-      { id: 'img6', url: 'https://picsum.photos/seed/quarto3-1/600/400', alt: 'Quarto compartilhado na república' },
-      { id: 'img7', url: 'https://picsum.photos/seed/quarto3-2/600/400', alt: 'Área comum da república' },
+      { id: 'img6', url: 'https://placehold.co/800x600.png', alt: 'Quarto compartilhado na república' },
+      { id: 'img7', url: 'https://placehold.co/800x600.png', alt: 'Área comum da república' },
     ],
     pricePerNight: 700,
     address: 'Rua Prof. Baeta Viana, 200, Pampulha, Belo Horizonte - MG',
@@ -123,17 +141,18 @@ let mockListings: Listing[] = [
     university: getUniversityByAcronym('UFMG')!,
     isAvailable: true,
     type: 'Vaga em República',
+    category: 'republica',
     cancellationPolicy: defaultCancellationPolicy,
     houseRules: 'Respeitar os horários dos colegas de quarto.\nLimpeza semanal colaborativa.',
     safetyAndProperty: defaultSafetyAndProperty,
   },
   {
     id: 'quarto4',
-    title: 'Studio Moderno na Gávea (PUC-Rio)',
+    title: 'Studio Design na Gávea (PUC-Rio)',
     description: 'Studio elegante e funcional, perfeito para estudantes da PUC-Rio. Totalmente mobiliado, com design moderno, ar condicionado e cozinha americana. Prédio com portaria 24h.',
     images: [
-      { id: 'img8', url: 'https://picsum.photos/seed/quarto4-1/600/400', alt: 'Interior do studio moderno' },
-      { id: 'img9', url: 'https://picsum.photos/seed/quarto4-2/600/400', alt: 'Detalhe da cozinha americana' },
+      { id: 'img8', url: 'https://placehold.co/800x600.png', alt: 'Interior do studio moderno' },
+      { id: 'img9', url: 'https://placehold.co/800x600.png', alt: 'Detalhe da cozinha americana' },
     ],
     pricePerNight: 1500,
     address: 'Rua Marquês de São Vicente, 225, Gávea, Rio de Janeiro - RJ',
@@ -150,19 +169,20 @@ let mockListings: Listing[] = [
     university: getUniversityByAcronym('PUC-Rio')!,
     isAvailable: true,
     type: 'Studio',
+    category: 'design',
     cancellationPolicy: 'Cancelamento restrito: Sem reembolso após a reserva.',
     houseRules: 'Não são permitidas crianças.\nApenas o hóspede registrado pode pernoitar.',
     safetyAndProperty: 'Portaria 24h com controle de acesso.',
   },
   {
     id: 'quarto5',
-    title: 'Quarto Amplo com Varanda (UFSC)',
+    title: 'Quarto Econômico e Charmoso (UFSC)',
     description: 'Quarto espaçoso em apartamento compartilhado, com varanda privativa e vista para área verde. Localizado no coração da Trindade, ideal para alunos da UFSC.',
     images: [
-      { id: 'img10', url: 'https://picsum.photos/seed/quarto5-1/600/400', alt: 'Quarto amplo com acesso à varanda' },
-      { id: 'img11', url: 'https://picsum.photos/seed/quarto5-2/600/400', alt: 'Vista da varanda privativa' },
+      { id: 'img10', url: 'https://placehold.co/800x600.png', alt: 'Quarto amplo com acesso à varanda' },
+      { id: 'img11', url: 'https://placehold.co/800x600.png', alt: 'Vista da varanda privativa' },
     ],
-    pricePerNight: 1100,
+    pricePerNight: 680, // Adjusted price
     address: 'Rua Lauro Linhares, 1000, Trindade, Florianópolis - SC',
     lat: -27.6015,
     lng: -48.5190,
@@ -171,38 +191,40 @@ let mockListings: Listing[] = [
     beds: 1,
     baths: 1, 
     amenities: [commonAmenities[0], commonAmenities[8], commonAmenities[9], commonAmenities[6]], 
-    rating: 4.75,
-    reviews: 38,
+    rating: 4.35, // Adjusted rating
+    reviews: 18, // Adjusted reviews
     host: mockAdminUser,
     university: getUniversityByAcronym('UFSC')!,
-    isAvailable: false, 
+    isAvailable: true, // Made available
     type: 'Quarto em Apartamento',
+    category: 'economico',
     cancellationPolicy: defaultCancellationPolicy,
     houseRules: defaultHouseRules,
     safetyAndProperty: defaultSafetyAndProperty,
   },
   {
     id: 'quarto6',
-    title: 'Quarto Econômico USP Leste',
-    description: 'Opção mais em conta para estudantes da USP Leste. Quarto simples, funcional, em casa de família. Ambiente seguro e acolhedor.',
+    title: 'Quarto Alto Padrão USP',
+    description: 'Opção de luxo para estudantes da USP. Quarto amplo, totalmente decorado, com todas as contas inclusas e limpeza semanal.',
     images: [
-      { id: 'img12', url: 'https://picsum.photos/seed/quarto6-1/600/400', alt: 'Quarto simples e funcional' },
+      { id: 'img12', url: 'https://placehold.co/800x600.png', alt: 'Quarto alto padrão decorado' },
     ],
-    pricePerNight: 650,
-    address: 'Av. Arlindo Béttio, 1000, Ermelino Matarazzo, São Paulo - SP',
-    lat: -23.5000, 
-    lng: -46.4800,
+    pricePerNight: 1850,
+    address: 'Av. Prof. Luciano Gualberto, 380, Butantã, São Paulo - SP',
+    lat: -23.5600, 
+    lng: -46.7200,
     guests: 1,
     bedrooms: 1,
     beds: 1,
     baths: 1, 
-    amenities: [commonAmenities[0]],
-    rating: 4.01,
-    reviews: 15,
+    amenities: [commonAmenities[0], commonAmenities[1], commonAmenities[2], commonAmenities[3], commonAmenities[5], commonAmenities[10]],
+    rating: 4.95,
+    reviews: 60,
     host: mockAdminUser,
     university: getUniversityByAcronym('USP')!, 
     isAvailable: true,
-    type: 'Quarto Econômico',
+    type: 'Quarto Alto Padrão',
+    category: 'alto-padrao',
     cancellationPolicy: defaultCancellationPolicy,
     houseRules: defaultHouseRules,
     safetyAndProperty: defaultSafetyAndProperty,
@@ -212,8 +234,8 @@ let mockListings: Listing[] = [
     title: 'Suíte Privativa Unicamp (Moradia Estudantil)',
     description: 'Suíte individual em moradia estudantil organizada, próxima à Unicamp. Comodidades incluem cozinha compartilhada e lavanderia. Ideal para foco nos estudos.',
     images: [
-      { id: 'img13', url: 'https://picsum.photos/seed/quarto7-1/600/400', alt: 'Suíte privativa mobiliada' },
-      { id: 'img14', url: 'https://picsum.photos/seed/quarto7-2/600/400', alt: 'Banheiro da suíte' },
+      { id: 'img13', url: 'https://placehold.co/800x600.png', alt: 'Suíte privativa mobiliada' },
+      { id: 'img14', url: 'https://placehold.co/800x600.png', alt: 'Banheiro da suíte' },
     ],
     pricePerNight: 1050,
     address: 'Rua Bertrand Russell, 500, Barão Geraldo, Campinas - SP',
@@ -230,59 +252,62 @@ let mockListings: Listing[] = [
     university: getUniversityByAcronym('Unicamp')!,
     isAvailable: true,
     type: 'Suíte',
+    category: 'prox-campus',
     cancellationPolicy: defaultCancellationPolicy,
     houseRules: defaultHouseRules,
     safetyAndProperty: defaultSafetyAndProperty,
   },
   {
     id: 'quarto8',
-    title: 'Quarto com Vista para Lagoa (UFMG)',
-    description: 'Quarto em apartamento com vista espetacular para a Lagoa da Pampulha. Perto da UFMG, ideal para quem gosta de natureza e tranquilidade. Mobiliado e com Wi-Fi.',
+    title: 'Quarto em República Descolada (UFMG)',
+    description: 'Quarto em república com galera animada e muitas áreas comuns. Perto da UFMG, ideal para quem gosta de socializar. Wi-Fi e contas inclusas.',
     images: [
-      { id: 'img15', url: 'https://picsum.photos/seed/quarto8-1/600/400', alt: 'Quarto com vista para a lagoa' },
+      { id: 'img15', url: 'https://placehold.co/800x600.png', alt: 'Quarto com vista para a lagoa' },
     ],
-    pricePerNight: 900,
-    address: 'Av. Otacílio Negrão de Lima, 16000, Pampulha, Belo Horizonte - MG',
-    lat: -19.8550,
-    lng: -43.9700,
+    pricePerNight: 750,
+    address: 'Rua Flor-de-índio, 123, Ouro Preto, Belo Horizonte - MG',
+    lat: -19.9000,
+    lng: -43.9500,
     guests: 1,
     bedrooms: 1,
     beds: 1,
-    baths: 1, 
-    amenities: [commonAmenities[0], commonAmenities[2], commonAmenities[9]],
-    rating: 4.33,
-    reviews: 19,
+    baths: 2, 
+    amenities: [commonAmenities[0], commonAmenities[2], commonAmenities[9], commonAmenities[10]],
+    rating: 4.40,
+    reviews: 25,
     host: mockAdminUser,
     university: getUniversityByAcronym('UFMG')!,
     isAvailable: true,
-    type: 'Quarto com Vista',
+    type: 'Quarto em República',
+    category: 'republica',
     cancellationPolicy: defaultCancellationPolicy,
     houseRules: defaultHouseRules,
     safetyAndProperty: defaultSafetyAndProperty,
   },
   {
     id: 'quarto9',
-    title: 'Apartamento Completo 2 Quartos (PUC-Rio)',
-    description: 'Apartamento de 2 quartos na Gávea, ideal para dividir com um amigo. Totalmente mobiliado, próximo à PUC-Rio e comércio local. Contas não inclusas.',
+    title: 'Kitnet Funcional Próx. PUC-Rio',
+    description: 'Kitnet compacta e funcional, ideal para um estudante. Totalmente mobiliada, próxima à PUC-Rio e comércio local. Contas não inclusas.',
     images: [
-      { id: 'img16', url: 'https://picsum.photos/seed/quarto9-1/600/400', alt: 'Sala de estar do apartamento' },
-      { id: 'img17', url: 'https://picsum.photos/seed/quarto9-2/600/400', alt: 'Um dos quartos do apartamento' },
+      { id: 'img16', url: 'https://placehold.co/800x600.png', alt: 'Visão geral da kitnet' },
+      { id: 'img17', url: 'https://placehold.co/800x600.png', alt: 'Cozinha da kitnet' },
     ],
-    pricePerNight: 2800, 
-    address: 'Rua Artur Araripe, 100, Gávea, Rio de Janeiro - RJ',
-    lat: -22.9790,
-    lng: -43.2350,
-    guests: 2,
-    bedrooms: 2,
-    beds: 2,
-    baths: 2,
-    amenities: [commonAmenities[0], commonAmenities[1], commonAmenities[2], commonAmenities[3], commonAmenities[7]],
-    rating: 4.78,
-    reviews: 40,
+    pricePerNight: 1300, 
+    address: 'Rua Vice-Governador Rubens Berardo, 50, Gávea, Rio de Janeiro - RJ',
+    lat: -22.9760,
+    lng: -43.2320,
+    guests: 1,
+    bedrooms: 1,
+    beds: 1,
+    baths: 1,
+    amenities: [commonAmenities[0], commonAmenities[1], commonAmenities[2], commonAmenities[3]],
+    rating: 4.60,
+    reviews: 33,
     host: mockAdminUser,
     university: getUniversityByAcronym('PUC-Rio')!,
     isAvailable: true,
-    type: 'Apartamento 2 Quartos',
+    type: 'Kitnet',
+    category: 'kitnet',
     cancellationPolicy: defaultCancellationPolicy,
     houseRules: defaultHouseRules,
     safetyAndProperty: defaultSafetyAndProperty,
@@ -337,7 +362,7 @@ export const fetchListings = async (page: number, limit: number, filters: Listin
         return false;
       }
 
-      if (filters.university) {
+      if (filters.university && filters.university !== "__ALL__") {
         if (!listing.university || typeof listing.university.acronym !== 'string' || listing.university.acronym !== filters.university) {
           return false;
         }
@@ -352,11 +377,18 @@ export const fetchListings = async (page: number, limit: number, filters: Listin
           return false;
         }
       }
+       if (filters.category && filters.category !== "__ALL__") {
+        if (!listing.category || listing.category !== filters.category) {
+          return false;
+        }
+      }
       if (filters.searchTerm) {
         const searchTermLower = filters.searchTerm.toLowerCase();
         const titleMatch = listing.title && typeof listing.title === 'string' && listing.title.toLowerCase().includes(searchTermLower);
         const addressMatch = listing.address && typeof listing.address === 'string' && listing.address.toLowerCase().includes(searchTermLower);
-        if (!titleMatch && !addressMatch) {
+        const universityMatch = listing.university && listing.university.name.toLowerCase().includes(searchTermLower);
+        const cityMatch = listing.university && listing.university.city.toLowerCase().includes(searchTermLower);
+        if (!titleMatch && !addressMatch && !universityMatch && !cityMatch) {
           return false;
         }
       }
@@ -428,10 +460,11 @@ export const fetchUserBookings = async (userId: string): Promise<Booking[]> => {
 };
 
 export const addMockListing = async (
-  newListingData: Omit<Listing, 'id' | 'rating' | 'reviews' | 'host' | 'amenities' | 'images' | 'university'> & { 
+  newListingData: Omit<Listing, 'id' | 'rating' | 'reviews' | 'host' | 'amenities' | 'images' | 'university' | 'category'> & { 
     imageUrls: string[]; 
     selectedAmenityIds: string[]; 
     universityAcronym: string;
+    category: string;
     cancellationPolicy: string;
     houseRules: string;
     safetyAndProperty: string;
@@ -441,7 +474,7 @@ export const addMockListing = async (
     await simulateApiCall(null, 300); 
     const newId = `quarto${mockListings.length + 1}${Date.now().toString().slice(-4)}`;
     
-    let images: ListingImage[] = []; // Changed from Image[] to ListingImage[]
+    let images: ListingImage[] = [];
     if (Array.isArray(newListingData.imageUrls)) {
       images = newListingData.imageUrls.map((url, index) => ({ 
         id: `img${newId}-${index}`, 
@@ -485,7 +518,8 @@ export const addMockListing = async (
       host: mockAdminUser, 
       university: universityDetails || universityAreas[0], 
       isAvailable: true,
-      type: 'Quarto Individual', // Default or could be part of form
+      type: newListingData.type || 'Quarto Individual',
+      category: newListingData.category,
       cancellationPolicy: newListingData.cancellationPolicy || defaultCancellationPolicy,
       houseRules: newListingData.houseRules || defaultHouseRules,
       safetyAndProperty: newListingData.safetyAndProperty || defaultSafetyAndProperty,

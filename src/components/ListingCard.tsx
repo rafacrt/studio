@@ -4,81 +4,83 @@
 import type { Listing } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Bed, Bath, Users, Star, School } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { Heart, Star } from 'lucide-react'; // Removed MapPin, Bed, Bath, Users
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface ListingCardProps {
   listing: Listing;
 }
 
 export function ListingCard({ listing }: ListingCardProps) {
-  const UniversityIcon: LucideIcon = listing.university?.icon || School;
+  const [isFavorited, setIsFavorited] = useState(false);
+  // For now, show only the first image. Carousel dots can be a future enhancement.
+  const currentImage = listing.images[0]?.url || `https://placehold.co/800x600.png?text=${encodeURIComponent(listing.title)}`;
+  const currentImageAlt = listing.images[0]?.alt || listing.title;
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent link navigation when clicking favorite
+    setIsFavorited(!isFavorited);
+    // TODO: Add logic to update favorite status in backend/context
+  };
+
+  // Mocked data for now, as per request
+  const suggestedDate = "20 - 25 de out";
 
   return (
-    <Link href={`/room/${listing.id}`} className="block group">
-      <Card className="overflow-hidden shadow-lg rounded-xl h-full flex flex-col transition-all duration-300 hover:shadow-2xl">
-        <div className="relative w-full aspect-[4/3] overflow-hidden">
+    <Link href={`/room/${listing.id}`} className="block group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl">
+      <div className="flex flex-col h-full overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 bg-card">
+        <div className="relative w-full aspect-[1/1] md:aspect-[4/3.5] overflow-hidden rounded-t-xl"> {/* Adjusted aspect ratio for more vertical space */}
           <Image
-            src={listing.images[0]?.url || `https://placehold.co/600x400.png?text=${encodeURIComponent(listing.title)}`}
-            alt={listing.images[0]?.alt || listing.title}
+            src={currentImage}
+            alt={currentImageAlt}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            data-ai-hint="apartment room"
+            data-ai-hint="apartment room interior"
           />
-          {listing.university && (
-            <Badge
-              variant="secondary"
-              className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm text-foreground py-1 px-2.5 rounded-full flex items-center shadow-md"
-            >
-              <UniversityIcon className="h-4 w-4 mr-1.5 text-primary" />
-              <span className="text-xs font-medium">{listing.university.acronym}</span>
-            </Badge>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleFavoriteClick}
+            className="absolute top-3 right-3 z-10 h-8 w-8 p-0 rounded-full bg-background/70 hover:bg-background text-foreground hover:text-airbnb-primary"
+            aria-label={isFavorited ? "Desfavoritar" : "Favoritar"}
+          >
+            <Heart className={cn("h-4 w-4", isFavorited ? "fill-airbnb-primary text-airbnb-primary" : "text-current")} />
+          </Button>
+          {/* Image pagination dots - placeholder for future */}
+          {/* <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex space-x-1.5">
+            {listing.images.slice(0, 5).map((_, i) => (
+              <div key={i} className={cn("h-1.5 w-1.5 rounded-full", i === 0 ? "bg-white" : "bg-white/50")}></div>
+            ))}
+          </div> */}
         </div>
-        <CardHeader className="p-4 pb-2">
-          <CardTitle className="text-lg font-semibold leading-tight truncate group-hover:text-primary transition-colors">
-            {listing.title}
-          </CardTitle>
-          <div className="flex items-center text-xs text-muted-foreground mt-1">
-            <MapPin className="h-3 w-3 mr-1" />
-            <span>{listing.university?.city || 'Localização não informada'}</span>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4 pt-0 pb-3 flex-grow">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xl font-bold text-primary">
-              R$ {listing.pricePerNight.toLocaleString('pt-BR')}
-              <span className="text-xs font-normal text-muted-foreground">/mês</span>
-            </p>
+        
+        <div className="p-3 flex flex-col flex-grow">
+          <div className="flex justify-between items-start mb-1">
+            <h3 className="text-sm font-semibold leading-tight text-foreground truncate group-hover:underline">
+              {listing.university.city}, {listing.university.name}
+            </h3>
             {listing.rating > 0 && (
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Star className="h-3.5 w-3.5 text-foreground fill-foreground" />
-                    <span>{listing.rating.toFixed(1)}</span>
-                </div>
+              <div className="flex items-center gap-1 text-xs text-foreground whitespace-nowrap shrink-0 ml-2">
+                <Star className="h-3.5 w-3.5 text-foreground fill-current" /> 
+                <span>{listing.rating.toFixed(2)}</span>
+              </div>
             )}
           </div>
-          <div className="text-xs text-muted-foreground space-y-1">
-            <div className="flex items-center">
-              <Bed className="h-3.5 w-3.5 mr-1.5" /> {listing.beds} cama(s)
-            </div>
-            <div className="flex items-center">
-              <Bath className="h-3.5 w-3.5 mr-1.5" /> {listing.baths} banheiro(s)
-            </div>
-             <div className="flex items-center">
-              <Users className="h-3.5 w-3.5 mr-1.5" /> Para {listing.guests} pessoa(s)
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="p-4 pt-0 border-t mt-auto">
-           <Button variant="outline" className="w-full mt-3 text-primary border-primary hover:bg-primary/10 hover:text-primary">
-            Ver detalhes
-          </Button>
-        </CardFooter>
-      </Card>
+          <p className="text-xs text-muted-foreground mb-1 truncate">
+            {listing.type} {/* Ex: Quarto Individual, Studio */}
+          </p>
+          <p className="text-xs text-muted-foreground mb-2">
+            {suggestedDate}
+          </p>
+          <p className="text-sm font-semibold text-foreground mt-auto">
+            R$ {listing.pricePerNight.toLocaleString('pt-BR')}
+            <span className="font-normal text-xs"> /mês</span>
+          </p>
+        </div>
+      </div>
     </Link>
   );
 }
