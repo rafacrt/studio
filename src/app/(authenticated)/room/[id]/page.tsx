@@ -10,12 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getRoomById, bookMockRoom } from '@/lib/mock-data';
+import { getRoomById, bookMockRoom, roomCategories } from '@/lib/mock-data'; // Added roomCategories
 import type { Listing, Amenity as AmenityType, UniversityArea, ListingImage } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-
+import { ExploreSearchBar } from '@/components/ExploreSearchBar'; // Import new component
+import { CategoryMenu } from '@/components/CategoryMenu'; // Import new component
 
 export default function RoomDetailPage() {
   const params = useParams();
@@ -97,51 +98,33 @@ export default function RoomDetailPage() {
       setCurrentImageIndex((prevIndex) => (prevIndex - 1 + room.images.length) % room.images.length);
     }
   };
-
-  const handleFavorite = () => {
-    // TODO: Implement favorite functionality
-    toast({ title: "Favoritos", description: "Funcionalidade de favoritar em desenvolvimento." });
-  };
-
-  const handleShare = () => {
-    if (navigator.share && room) {
-      navigator.share({
-        title: room.title,
-        text: `Confira este quarto: ${room.title}`,
-        url: window.location.href,
-      }).catch(error => console.log('Erro ao compartilhar', error));
-    } else {
-      toast({ title: "Compartilhar", description: "Navegador não suporta compartilhamento ou quarto não carregado." });
+  
+  const handleFavoriteToggle = () => {
+    // TODO: Implement actual favorite logic
+    // For now, just toast
+    if (room) {
+       toast({ title: "Favoritos", description: `${room.title} ${ (Math.random() > 0.5) ? "adicionado aos" : "removido dos"} favoritos (mock).`});
     }
   };
 
+
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-screen items-center justify-center p-4 bg-background">
-        <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50 p-3 flex items-center justify-between border-b h-14">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <Skeleton className="h-6 w-1/3" />
-           <div className="flex items-center space-x-2">
-            <Skeleton className="h-8 w-8 rounded-full" />
-            <Skeleton className="h-8 w-8 rounded-full" />
-          </div>
-        </header>
-
-        <div className="w-full mt-14"> {/* Adjusted for fixed header */}
-          <Skeleton className="w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] rounded-b-lg" />
-          <div className="bg-background rounded-t-3xl p-5 md:p-8 space-y-4 w-full max-w-4xl mx-auto -mt-6 md:-mt-8 relative z-10 shadow-lg">
-            <Skeleton className="h-8 w-3/4" /> {/* For Title */}
-            <Skeleton className="h-4 w-1/2 mt-1" /> {/* For Sub-info line */}
-            <Separator />
-            <Skeleton className="h-4 w-full mt-2" /> {/* For Specs line */}
-            <Separator />
-            <Skeleton className="h-6 w-1/4 mb-2 mt-4" /> {/* For Section Title */}
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-2/3" />
-          </div>
+      <div className="flex flex-col min-h-screen bg-background">
+        <ExploreSearchBar showFilterButton={false} /> 
+        <div className="w-full px-4 md:px-6 lg:px-8 pt-6">
+            <Skeleton className="w-full aspect-[4/3] md:aspect-video lg:aspect-[16/7] rounded-2xl" />
+        </div>
+        <div className="p-6 md:p-8 space-y-4 w-full max-w-4xl mx-auto">
+          <Skeleton className="h-8 w-3/4" />
+          <Skeleton className="h-4 w-1/2 mt-1" />
+          <Separator />
+          <Skeleton className="h-4 w-full mt-2" />
+          <Separator />
+          <Skeleton className="h-6 w-1/4 mb-2 mt-4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
         </div>
         <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 shadow-top-md z-20 md:hidden">
            <div className="flex items-center justify-between">
@@ -149,27 +132,15 @@ export default function RoomDetailPage() {
             <Skeleton className="h-12 w-1/2 rounded-lg" />
            </div>
         </div>
-         <div className="hidden md:block fixed bottom-6 right-6 z-20">
-            <Card className="w-96 shadow-xl rounded-xl border">
-                <CardHeader className="pb-4"> <Skeleton className="h-8 w-1/2" /> <Skeleton className="h-4 w-3/4 mt-1" /> </CardHeader>
-                <CardContent className="pt-2"> <Skeleton className="h-12 w-full rounded-lg" /> </CardContent>
-            </Card>
-        </div>
       </div>
     );
   }
 
   if (!room) {
     return (
-      <div className="flex flex-col min-h-screen items-center justify-center p-4 text-center bg-background">
-         <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50 p-3 flex items-center justify-between border-b h-14">
-            <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
-                <ChevronLeft className="h-6 w-6" />
-            </Button>
-            <h1 className="text-lg font-semibold">Quarto Não Encontrado</h1>
-             <div className="w-16"></div> {/* Spacer */}
-        </header>
-        <div className="mt-14"> {/* Adjusted for fixed header */}
+      <div className="flex flex-col min-h-screen bg-background">
+        <ExploreSearchBar showFilterButton={false} />
+        <div className="flex-grow flex flex-col items-center justify-center p-4 text-center">
             <h1 className="text-2xl font-semibold mb-2">Quarto não encontrado</h1>
             <p className="text-muted-foreground mb-4">O quarto que você está procurando não existe ou foi removido.</p>
             <Button onClick={() => router.push('/explore')} variant="outline">Voltar para Exploração</Button>
@@ -182,88 +153,101 @@ export default function RoomDetailPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="fixed top-0 left-0 right-0 z-50 p-3 bg-background border-b flex items-center justify-between h-14">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-foreground">
-          <ChevronLeft className="h-6 w-6" />
-        </Button>
-        <div className="flex items-center space-x-1">
-          <Button variant="ghost" size="icon" onClick={handleShare} className="text-foreground">
-            <Share2 className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={handleFavorite} className="text-foreground">
-            <Heart className="h-5 w-5" /> {/* TODO: Add active state for favorite */}
-          </Button>
-        </div>
-      </header>
+      {/* Search Bar and Category Menu (mostly visual on this page) */}
+      <ExploreSearchBar 
+        onSearch={(term) => router.push(`/explore?search=${term}`)} 
+        initialSearchTerm={room.university.city || room.title.substring(0,20)}
+        showFilterButton={false} 
+      />
+      <CategoryMenu 
+        categories={roomCategories} 
+        selectedCategory={room.category || null} 
+        // onSelectCategory={(catId) => router.push(`/explore?category=${catId}`)} // Example navigation
+      />
 
-      <main className="flex-grow pb-32 md:pb-10 pt-14">
-        <div className="relative w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] group overflow-hidden md:rounded-b-lg">
-          {room.images.length > 0 ? (
-            <Image
-              src={room.images[currentImageIndex]?.url || `https://picsum.photos/seed/${room.id}_${currentImageIndex}/1200/600`}
-              alt={room.images[currentImageIndex]?.alt || room.title}
-              fill
-              className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
-              priority
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-              data-ai-hint="apartment interior"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
-              <MapPin className="h-16 w-16" />
-            </div>
-          )}
-          {room.images.length > 0 && (
-            <Badge
-              variant="secondary"
-              className="absolute bottom-4 right-4 z-10 bg-black/60 text-white px-2.5 py-1 text-xs rounded-full shadow-md"
+      {/* Main content with padding for sticky elements */}
+      <main className="flex-grow pb-32 md:pb-10 pt-6"> {/* Adjusted pt-6 for content below category menu */}
+        {/* Image Section */}
+        <div className="px-4 md:px-6 lg:px-8"> {/* Horizontal margins for the image container */}
+          <div className="relative w-full aspect-[4/3] md:aspect-video lg:aspect-[16/7] group overflow-hidden rounded-2xl shadow-lg"> {/* 16px border-radius */}
+            {room.images.length > 0 ? (
+              <Image
+                src={room.images[currentImageIndex]?.url || `https://placehold.co/1200x600.png?text=Imagem+Indisponível`}
+                alt={room.images[currentImageIndex]?.alt || room.title}
+                fill
+                className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+                priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                data-ai-hint="apartment interior detail"
+              />
+            ) : (
+              <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
+                <MapPin className="h-16 w-16" />
+              </div>
+            )}
+            
+            {/* Favorite Button on Image */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleFavoriteToggle}
+              className="absolute top-4 right-4 z-10 bg-black/30 hover:bg-black/50 p-1.5 rounded-full"
+              aria-label="Favoritar"
             >
-              {currentImageIndex + 1} / {room.images.length}
-            </Badge>
-          )}
-          {room.images.length > 1 && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={prevImage}
-                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 shadow-md"
-                aria-label="Imagem anterior"
+              <Heart className="h-5 w-5 text-white" fill="transparent" />
+            </Button>
+
+            {room.images.length > 0 && (
+              <Badge
+                variant="secondary"
+                className="absolute bottom-4 right-4 z-10 bg-black/60 text-white px-2.5 py-1 text-xs rounded-full shadow-md"
               >
-                <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={nextImage}
-                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 shadow-md"
-                aria-label="Próxima imagem"
-              >
-                <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
-              </Button>
-            </>
-          )}
+                {currentImageIndex + 1} / {room.images.length}
+              </Badge>
+            )}
+            {room.images.length > 1 && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={prevImage}
+                  className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 shadow-md opacity-80 hover:opacity-100 transition-opacity"
+                  aria-label="Imagem anterior"
+                >
+                  <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={nextImage}
+                  className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 shadow-md opacity-80 hover:opacity-100 transition-opacity"
+                  aria-label="Próxima imagem"
+                >
+                  <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
-        <div className="bg-background rounded-t-3xl p-6 md:p-8 space-y-6 max-w-4xl mx-auto -mt-8 md:-mt-10 relative z-10 shadow-lg">
+        {/* Content Section - No top border radius, starts below image */}
+        <div className="bg-background p-6 md:p-8 space-y-6 max-w-4xl mx-auto relative z-10 mt-6"> {/* Removed rounded-t-xx and negative margin, added mt-6 */}
           
-          <section className="pt-2 space-y-1">
+          <section className="space-y-1">
             <h1 className="text-2xl md:text-3xl font-semibold text-foreground leading-tight">
               {room.title}
             </h1>
-            <div className="flex items-center text-sm text-muted-foreground space-x-2">
+            <div className="flex items-center text-sm text-muted-foreground space-x-2 flex-wrap">
               {room.rating > 0 && (
-                <>
-                  <Star className="h-4 w-4 text-foreground fill-foreground" />
+                <div className="flex items-center">
+                  <Star className="h-4 w-4 text-foreground fill-current mr-1" /> 
                   <span>{room.rating.toFixed(1)}</span>
-                  <span className="hidden sm:inline">·</span> 
-                  <span className="sm:hidden block h-1 w-1 bg-muted-foreground rounded-full"></span>
-                  <span>{room.reviews} avaliações</span>
-                  <span className="hidden sm:inline">·</span>
-                  <span className="sm:hidden block h-1 w-1 bg-muted-foreground rounded-full"></span>
-                </>
+                  <span className="mx-1.5">·</span>
+                  <span className="hover:underline cursor-pointer">{room.reviews} avaliações</span>
+                </div>
               )}
-              <span>{room.university.city}, Brasil</span>
+               {room.rating > 0 && <span className="hidden sm:inline mx-1.5">·</span>}
+              <span className="hover:underline cursor-pointer">{room.university.city}, Brasil</span>
             </div>
           </section>
 
@@ -318,9 +302,8 @@ export default function RoomDetailPage() {
               <MapIcon className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
               <h2 className="text-xl font-semibold text-foreground">Onde você estará</h2>
             </div>
-            <div className="bg-muted rounded-3xl h-64 flex items-center justify-center text-muted-foreground p-4">
+            <div className="bg-muted rounded-3xl h-64 flex items-center justify-center text-muted-foreground p-4"> {/* rounded-3xl for 24px */}
               <p>Espaço reservado para o mapa da localização.</p>
-              {/* Map component would go here */}
             </div>
              <p className="text-xs text-muted-foreground mt-3">Localização exata fornecida após a reserva.</p>
           </section>
@@ -334,14 +317,13 @@ export default function RoomDetailPage() {
              {room.rating > 0 && (
                 <div className="flex items-center space-x-2 mb-4">
                     <Star className="h-5 w-5 text-foreground fill-foreground" />
-                    <p className="text-lg font-semibold text-foreground">{room.rating.toFixed(1)}</p>
+                    <p className="text-lg font-semibold text-foreground">{room.rating.toFixed(1)}</p> {/* Changed to .toFixed(1) for consistency */}
                     <p className="text-lg text-muted-foreground">·</p>
-                    <p className="text-lg text-muted-foreground">{room.reviews} avaliações</p>
+                    <p className="text-lg text-muted-foreground hover:underline cursor-pointer">{room.reviews} avaliações</p>
                 </div>
              )}
             <div className="bg-muted rounded-xl p-6 text-center text-muted-foreground">
               <p>Carrossel de avaliações dos usuários aparecerá aqui.</p>
-              {/* User reviews carousel component would go here */}
             </div>
           </section>
 
@@ -382,6 +364,7 @@ export default function RoomDetailPage() {
         </div>
       </main>
 
+      {/* Bottom action bar for mobile */}
       <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 shadow-top-lg z-20 md:hidden">
         <div className="flex items-center justify-between gap-4">
             <div>
@@ -402,10 +385,11 @@ export default function RoomDetailPage() {
         </div>
       </div>
 
+      {/* Floating action card for desktop */}
       <div className="hidden md:block fixed bottom-6 right-6 z-20">
           <Card className="w-96 shadow-xl rounded-xl border">
               <CardHeader className="pb-4">
-                  <CardTitle className="text-xl"> {/* Reduced font size for desktop card title */}
+                  <CardTitle className="text-xl">
                       R$ {room.pricePerNight.toLocaleString('pt-BR')}
                       <span className="text-sm font-normal text-muted-foreground"> /mês</span>
                   </CardTitle>
@@ -430,5 +414,3 @@ export default function RoomDetailPage() {
     </div>
   );
 }
-
-    
