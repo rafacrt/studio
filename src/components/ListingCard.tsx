@@ -5,7 +5,7 @@ import type { Listing } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Heart, Star } from 'lucide-react'; // Removed MapPin, Bed, Bath, Users
+import { Heart, Star } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -25,19 +25,19 @@ export function ListingCard({ listing }: ListingCardProps) {
     // TODO: Add logic to update favorite status in backend/context
   };
 
-  // Mocked data for now, as per request
+  // Mocked data for now
   const suggestedDate = "20 - 25 de out";
 
   return (
-    <Link href={`/room/${listing.id}`} className="block group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl">
-      <div className="flex flex-col h-full overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 bg-card">
-        <div className="relative w-full aspect-[1/1] md:aspect-[4/3.5] overflow-hidden rounded-t-xl"> {/* Adjusted aspect ratio for more vertical space */}
+    <Link href={`/room/${listing.id}`} className="block group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-2xl">
+      <div className="flex flex-col h-full overflow-hidden rounded-2xl shadow-sm bg-card transition-shadow duration-300">
+        <div className="relative w-full aspect-[1/1] md:aspect-[4/3.5] overflow-hidden rounded-2xl"> {/* Image container with rounded corners */}
           <Image
             src={currentImage}
             alt={currentImageAlt}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover" // Removed group-hover:scale-105
             data-ai-hint="apartment room interior"
           />
           <Button
@@ -49,23 +49,31 @@ export function ListingCard({ listing }: ListingCardProps) {
           >
             <Heart className={cn("h-4 w-4", isFavorited ? "fill-airbnb-primary text-airbnb-primary" : "text-current")} />
           </Button>
-          {/* Image pagination dots - placeholder for future */}
-          {/* <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex space-x-1.5">
-            {listing.images.slice(0, 5).map((_, i) => (
-              <div key={i} className={cn("h-1.5 w-1.5 rounded-full", i === 0 ? "bg-white" : "bg-white/50")}></div>
-            ))}
-          </div> */}
+          {/* Image pagination dots */}
+          {listing.images && listing.images.length > 1 && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex space-x-1.5">
+              {listing.images.slice(0, 5).map((_, i) => ( // Show up to 5 dots
+                <div 
+                  key={i} 
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full transition-colors duration-300",
+                    i === 0 ? "bg-white" : "bg-white/50" // Active dot is fully white
+                  )}
+                />
+              ))}
+            </div>
+          )}
         </div>
         
         <div className="p-3 flex flex-col flex-grow">
           <div className="flex justify-between items-start mb-1">
-            <h3 className="text-sm font-semibold leading-tight text-foreground truncate group-hover:underline">
+            <h3 className="text-sm font-semibold leading-tight text-foreground truncate">
               {listing.university.city}, {listing.university.name}
             </h3>
             {listing.rating > 0 && (
               <div className="flex items-center gap-1 text-xs text-foreground whitespace-nowrap shrink-0 ml-2">
-                <Star className="h-3.5 w-3.5 text-foreground fill-current" /> 
-                <span>{listing.rating.toFixed(2)}</span>
+                <Star className="h-3 w-3 text-foreground fill-current" /> 
+                <span>{listing.rating.toFixed(1)}</span>
               </div>
             )}
           </div>
