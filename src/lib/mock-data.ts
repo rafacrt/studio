@@ -42,7 +42,6 @@ export const roomCategories: Category[] = [
   { id: 'kitnet', label: 'Kitnets', icon: Home, description: 'Espaços compactos e independentes.' },
   { id: 'alto-padrao', label: 'Alto Padrão', icon: Castle, description: 'Quartos com luxo e comodidades premium.' },
   { id: 'economico', label: 'Econômicos', icon: Bed, description: 'Opções acessíveis para quem quer economizar.' },
-  // Adding some Airbnb-like categories for variety, can be adjusted
   { id: 'praia', label: 'Praia', icon: Waves, description: 'Perto da praia.' },
   { id: 'campo', label: 'Campo', icon: Trees, description: 'Refúgios no campo.' },
   { id: 'montanha', label: 'Montanhas', icon: MountainSnow, description: 'Cabanas e vistas incríveis.' },
@@ -66,9 +65,8 @@ let mockListings: Listing[] = [
     title: 'Quarto Aconchegante Próximo à USP',
     description: 'Quarto individual mobiliado, ideal para estudantes da USP. Ambiente tranquilo e seguro, com área de estudos e internet de alta velocidade. Contas inclusas.',
     images: [
-      { id: 'img1', url: 'https://placehold.co/800x600.png', alt: 'Vista do quarto aconchegante'},
-      { id: 'img2', url: 'https://placehold.co/800x600.png', alt: 'Área de estudos do quarto'},
-      { id: 'img3', url: 'https://placehold.co/800x600.png', alt: 'Banheiro privativo do quarto'},
+      { id: 'img1-1', url: 'https://picsum.photos/seed/quarto1_img1/800/600', alt: 'Vista do quarto aconchegante'},
+      { id: 'img1-2', url: 'https://picsum.photos/seed/quarto1_img2/800/600', alt: 'Área de estudos do quarto'},
     ],
     pricePerNight: 1200, 
     address: 'Rua do Matão, 1010, Butantã, São Paulo - SP',
@@ -95,8 +93,9 @@ let mockListings: Listing[] = [
     title: 'Kitnet Completa na Unicamp',
     description: 'Kitnet para uma pessoa, totalmente equipada, a poucos minutos da Unicamp. Inclui cozinha compacta, banheiro privativo e Wi-Fi. Perfeito para quem busca praticidade.',
     images: [
-      { id: 'img4', url: 'https://placehold.co/800x600.png', alt: 'Visão geral da kitnet'},
-      { id: 'img5', url: 'https://placehold.co/800x600.png', alt: 'Cozinha compacta da kitnet'},
+      { id: 'img2-1', url: 'https://picsum.photos/seed/quarto2_img1/800/600', alt: 'Visão geral da kitnet'},
+      { id: 'img2-2', url: 'https://picsum.photos/seed/quarto2_img2/800/600', alt: 'Cozinha compacta da kitnet'},
+      { id: 'img2-3', url: 'https://picsum.photos/seed/quarto2_img3/800/600', alt: 'Banheiro da kitnet'},
     ],
     pricePerNight: 950,
     address: 'Av. Albino J. B. de Oliveira, 1500, Barão Geraldo, Campinas - SP',
@@ -123,8 +122,7 @@ let mockListings: Listing[] = [
     title: 'Vaga em República perto da UFMG',
     description: 'Vaga em quarto compartilhado em república estudantil bem localizada na Pampulha, próxima à UFMG. Casa com ótima infraestrutura, incluindo lavanderia e área comum.',
     images: [
-      { id: 'img6', url: 'https://placehold.co/800x600.png', alt: 'Quarto compartilhado na república' },
-      { id: 'img7', url: 'https://placehold.co/800x600.png', alt: 'Área comum da república' },
+      { id: 'img3-1', url: 'https://picsum.photos/seed/quarto3_img1/800/600', alt: 'Quarto compartilhado na república' },
     ],
     pricePerNight: 700,
     address: 'Rua Prof. Baeta Viana, 200, Pampulha, Belo Horizonte - MG',
@@ -151,8 +149,8 @@ let mockListings: Listing[] = [
     title: 'Studio Design na Gávea (PUC-Rio)',
     description: 'Studio elegante e funcional, perfeito para estudantes da PUC-Rio. Totalmente mobiliado, com design moderno, ar condicionado e cozinha americana. Prédio com portaria 24h.',
     images: [
-      { id: 'img8', url: 'https://placehold.co/800x600.png', alt: 'Interior do studio moderno' },
-      { id: 'img9', url: 'https://placehold.co/800x600.png', alt: 'Detalhe da cozinha americana' },
+      { id: 'img4-1', url: 'https://picsum.photos/seed/quarto4_img1/800/600', alt: 'Interior do studio moderno' },
+      { id: 'img4-2', url: 'https://picsum.photos/seed/quarto4_img2/800/600', alt: 'Detalhe da cozinha americana' },
     ],
     pricePerNight: 1500,
     address: 'Rua Marquês de São Vicente, 225, Gávea, Rio de Janeiro - RJ',
@@ -179,10 +177,9 @@ let mockListings: Listing[] = [
     title: 'Quarto Econômico e Charmoso (UFSC)',
     description: 'Quarto espaçoso em apartamento compartilhado, com varanda privativa e vista para área verde. Localizado no coração da Trindade, ideal para alunos da UFSC.',
     images: [
-      { id: 'img10', url: 'https://placehold.co/800x600.png', alt: 'Quarto amplo com acesso à varanda' },
-      { id: 'img11', url: 'https://placehold.co/800x600.png', alt: 'Vista da varanda privativa' },
+      { id: 'img5-1', url: 'https://picsum.photos/seed/quarto5_img1/800/600', alt: 'Quarto amplo com acesso à varanda' },
     ],
-    pricePerNight: 680, // Adjusted price
+    pricePerNight: 680,
     address: 'Rua Lauro Linhares, 1000, Trindade, Florianópolis - SC',
     lat: -27.6015,
     lng: -48.5190,
@@ -191,11 +188,11 @@ let mockListings: Listing[] = [
     beds: 1,
     baths: 1, 
     amenities: [commonAmenities[0], commonAmenities[8], commonAmenities[9], commonAmenities[6]], 
-    rating: 4.35, // Adjusted rating
-    reviews: 18, // Adjusted reviews
+    rating: 4.35,
+    reviews: 18,
     host: mockAdminUser,
     university: getUniversityByAcronym('UFSC')!,
-    isAvailable: true, // Made available
+    isAvailable: true,
     type: 'Quarto em Apartamento',
     category: 'economico',
     cancellationPolicy: defaultCancellationPolicy,
@@ -207,7 +204,8 @@ let mockListings: Listing[] = [
     title: 'Quarto Alto Padrão USP',
     description: 'Opção de luxo para estudantes da USP. Quarto amplo, totalmente decorado, com todas as contas inclusas e limpeza semanal.',
     images: [
-      { id: 'img12', url: 'https://placehold.co/800x600.png', alt: 'Quarto alto padrão decorado' },
+      { id: 'img6-1', url: 'https://picsum.photos/seed/quarto6_img1/800/600', alt: 'Quarto alto padrão decorado' },
+      { id: 'img6-2', url: 'https://picsum.photos/seed/quarto6_img2/800/600', alt: 'Banheiro do quarto alto padrão' },
     ],
     pricePerNight: 1850,
     address: 'Av. Prof. Luciano Gualberto, 380, Butantã, São Paulo - SP',
@@ -234,8 +232,7 @@ let mockListings: Listing[] = [
     title: 'Suíte Privativa Unicamp (Moradia Estudantil)',
     description: 'Suíte individual em moradia estudantil organizada, próxima à Unicamp. Comodidades incluem cozinha compartilhada e lavanderia. Ideal para foco nos estudos.',
     images: [
-      { id: 'img13', url: 'https://placehold.co/800x600.png', alt: 'Suíte privativa mobiliada' },
-      { id: 'img14', url: 'https://placehold.co/800x600.png', alt: 'Banheiro da suíte' },
+      { id: 'img7-1', url: 'https://picsum.photos/seed/quarto7_img1/800/600', alt: 'Suíte privativa mobiliada' },
     ],
     pricePerNight: 1050,
     address: 'Rua Bertrand Russell, 500, Barão Geraldo, Campinas - SP',
@@ -262,7 +259,8 @@ let mockListings: Listing[] = [
     title: 'Quarto em República Descolada (UFMG)',
     description: 'Quarto em república com galera animada e muitas áreas comuns. Perto da UFMG, ideal para quem gosta de socializar. Wi-Fi e contas inclusas.',
     images: [
-      { id: 'img15', url: 'https://placehold.co/800x600.png', alt: 'Quarto com vista para a lagoa' },
+      { id: 'img8-1', url: 'https://picsum.photos/seed/quarto8_img1/800/600', alt: 'Quarto com vista para a lagoa' },
+      { id: 'img8-2', url: 'https://picsum.photos/seed/quarto8_img2/800/600', alt: 'Área comum da república' },
     ],
     pricePerNight: 750,
     address: 'Rua Flor-de-índio, 123, Ouro Preto, Belo Horizonte - MG',
@@ -289,8 +287,7 @@ let mockListings: Listing[] = [
     title: 'Kitnet Funcional Próx. PUC-Rio',
     description: 'Kitnet compacta e funcional, ideal para um estudante. Totalmente mobiliada, próxima à PUC-Rio e comércio local. Contas não inclusas.',
     images: [
-      { id: 'img16', url: 'https://placehold.co/800x600.png', alt: 'Visão geral da kitnet' },
-      { id: 'img17', url: 'https://placehold.co/800x600.png', alt: 'Cozinha da kitnet' },
+      { id: 'img9-1', url: 'https://picsum.photos/seed/quarto9_img1/800/600', alt: 'Visão geral da kitnet' },
     ],
     pricePerNight: 1300, 
     address: 'Rua Vice-Governador Rubens Berardo, 50, Gávea, Rio de Janeiro - RJ',
@@ -410,6 +407,10 @@ export const fetchListings = async (page: number, limit: number, filters: Listin
 export const getRoomById = async (id: string): Promise<Listing | undefined> => {
  try {
     const room = mockListings.find(listing => listing && listing.id === id);
+    // Ensure images always have a placeholder if empty for this room
+    if (room && (!room.images || room.images.length === 0)) {
+        room.images = [{ id: 'placeholder', url: `https://picsum.photos/seed/${id}_placeholder/800/600`, alt: 'Imagem do quarto indisponível' }];
+    }
     return simulateApiCall(room);
   } catch (error) {
     console.error("Error in getRoomById:", error);
@@ -460,11 +461,11 @@ export const fetchUserBookings = async (userId: string): Promise<Booking[]> => {
 };
 
 export const addMockListing = async (
-  newListingData: Omit<Listing, 'id' | 'rating' | 'reviews' | 'host' | 'amenities' | 'images' | 'university' | 'category'> & { 
+  newListingData: Omit<Listing, 'id' | 'rating' | 'reviews' | 'host' | 'amenities' | 'images' | 'university'> & { 
     imageUrls: string[]; 
     selectedAmenityIds: string[]; 
     universityAcronym: string;
-    category: string;
+    // category: string; // Category will be derived or set to a default if not explicitly part of form
     cancellationPolicy: string;
     houseRules: string;
     safetyAndProperty: string;
@@ -478,18 +479,17 @@ export const addMockListing = async (
     if (Array.isArray(newListingData.imageUrls)) {
       images = newListingData.imageUrls.map((url, index) => ({ 
         id: `img${newId}-${index}`, 
-        url: typeof url === 'string' ? url : `https://placehold.co/600x400.png?text=Imagem+Inválida`, 
+        url: typeof url === 'string' && url.startsWith('http') ? url : `https://picsum.photos/seed/${newId}_img${index + 1}/800/600`, 
         alt: `${newListingData.title || 'Anúncio'} - Imagem ${index + 1}` 
       }));
-    } else {
-      console.warn("addMockListing: imageUrls was not an array.", newListingData.imageUrls);
+    }
+    if (images.length === 0) { // Ensure at least one placeholder image
+        images.push({ id: `img${newId}-placeholder`, url: `https://picsum.photos/seed/${newId}_placeholder/800/600`, alt: `${newListingData.title || 'Anúncio'} - Imagem Padrão` });
     }
     
     let selectedAmenities: Amenity[] = [];
     if(Array.isArray(newListingData.selectedAmenityIds)) {
       selectedAmenities = commonAmenities.filter(amenity => newListingData.selectedAmenityIds.includes(amenity.id));
-    } else {
-      console.warn("addMockListing: selectedAmenityIds was not an array.", newListingData.selectedAmenityIds);
     }
 
 
@@ -497,6 +497,11 @@ export const addMockListing = async (
     if (!universityDetails) {
       console.warn(`University with acronym ${newListingData.universityAcronym} not found. Defaulting.`);
     }
+    
+    // Determine category (example logic, can be refined)
+    let listingCategory = roomCategories.find(cat => cat.id === 'prox-campus')?.id || roomCategories[0].id; // Default
+    if (newListingData.title.toLowerCase().includes('kitnet')) listingCategory = 'kitnet';
+    else if (newListingData.title.toLowerCase().includes('república')) listingCategory = 'republica';
 
 
     const newListing: Listing = {
@@ -518,8 +523,8 @@ export const addMockListing = async (
       host: mockAdminUser, 
       university: universityDetails || universityAreas[0], 
       isAvailable: true,
-      type: newListingData.type || 'Quarto Individual',
-      category: newListingData.category,
+      type: newListingData.type || 'Quarto Individual', // Ensure type is present
+      category: listingCategory,
       cancellationPolicy: newListingData.cancellationPolicy || defaultCancellationPolicy,
       houseRules: newListingData.houseRules || defaultHouseRules,
       safetyAndProperty: newListingData.safetyAndProperty || defaultSafetyAndProperty,
@@ -586,3 +591,4 @@ export const getBookingStatusData = async (): Promise<{ status: string; count: n
 };
 
 export { mockUser, mockAdminUser };
+

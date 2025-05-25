@@ -71,7 +71,7 @@ export default function RoomDetailPage() {
         title: "Reserva Solicitada!",
         description: `Sua solicitação para "${room.title}" foi enviada.`,
         variant: "default",
-        className: "bg-accent text-accent-foreground",
+        className: "bg-airbnb-primary text-airbnb-primary-foreground",
       });
       setRoom(prevRoom => prevRoom ? { ...prevRoom, isAvailable: false } : null);
     } catch (error: any) {
@@ -220,7 +220,7 @@ export default function RoomDetailPage() {
   const UniversityIcon = room.university?.icon || DefaultUniversityIcon;
 
   return (
-    <div className="flex flex-col min-h-screen bg-muted/40"> {/* Page background */}
+    <div className="flex flex-col min-h-screen bg-background"> {/* Changed to bg-background for a lighter theme */}
       <header className="fixed top-0 left-0 right-0 z-50 p-3 bg-background border-b flex items-center justify-between h-14">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-foreground">
           <ChevronLeft className="h-6 w-6" />
@@ -230,7 +230,7 @@ export default function RoomDetailPage() {
             <Share2 className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon" onClick={handleFavorite} className="text-foreground">
-            <Heart className="h-5 w-5" />
+            <Heart className="h-5 w-5" /> {/* TODO: Add active state for favorite */}
           </Button>
         </div>
       </header>
@@ -239,7 +239,7 @@ export default function RoomDetailPage() {
         <div className="relative w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] group overflow-hidden md:rounded-b-lg">
           {room.images.length > 0 ? (
             <Image
-              src={room.images[currentImageIndex]?.url || `https://placehold.co/1200x600.png?text=${encodeURIComponent(room.title)}`}
+              src={room.images[currentImageIndex]?.url || `https://picsum.photos/seed/${room.id}_${currentImageIndex}/1200/600`}
               alt={room.images[currentImageIndex]?.alt || room.title}
               fill
               className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
@@ -392,7 +392,7 @@ export default function RoomDetailPage() {
                 <h2 className="text-lg font-semibold text-foreground">Política de Cancelamento</h2>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Detalhes sobre a política de cancelamento serão exibidos aqui. Por exemplo: Cancelamento gratuito até X dias antes do check-in. Após esse período, uma taxa pode ser aplicada.
+              {room.cancellationPolicy}
             </p>
           </section>
 
@@ -402,11 +402,8 @@ export default function RoomDetailPage() {
                 <Home className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
                 <h2 className="text-lg font-semibold text-foreground">Regras da Casa</h2>
             </div>
-            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 leading-relaxed">
-              <li>Não são permitidas festas ou eventos.</li>
-              <li>Horário de silêncio após as 22:00.</li>
-              <li>Não fumar dentro do quarto ou áreas comuns.</li>
-              <li>Mantenha as áreas comuns limpas e organizadas.</li>
+            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 leading-relaxed whitespace-pre-line">
+              {room.houseRules.split('\n').map((rule, index) => <li key={index}>{rule}</li>)}
             </ul>
           </section>
 
@@ -416,10 +413,8 @@ export default function RoomDetailPage() {
                 <ShieldCheck className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
                 <h2 className="text-lg font-semibold text-foreground">Segurança e Propriedade</h2>
             </div>
-            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 leading-relaxed">
-              <li>Detector de fumaça instalado.</li>
-              <li>Extintor de incêndio disponível.</li>
-              <li>Câmeras de segurança nas áreas comuns externas.</li>
+            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 leading-relaxed whitespace-pre-line">
+              {room.safetyAndProperty.split('\n').map((item, index) => <li key={index}>{item}</li>)}
             </ul>
           </section>
 
@@ -438,7 +433,8 @@ export default function RoomDetailPage() {
               onClick={handleBookRoom}
               disabled={isBooking || !room.isAvailable}
               size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg shadow-md flex-grow text-base py-3"
+              className="bg-airbnb-primary hover:bg-airbnb-primary/90 text-airbnb-primary-foreground font-semibold rounded-lg shadow-md flex-grow text-base py-3"
+              style={{ backgroundColor: "hsl(var(--airbnb-primary))", color: "hsl(var(--airbnb-primary-foreground))"}}
             >
               {isBooking ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (room.isAvailable ? 'Conferir disponibilidade' : 'Indisponível')}
             </Button>
@@ -459,7 +455,8 @@ export default function RoomDetailPage() {
                       onClick={handleBookRoom}
                       disabled={isBooking || !room.isAvailable}
                       size="lg"
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg shadow-md py-3 text-base"
+                      className="w-full bg-airbnb-primary hover:bg-airbnb-primary/90 text-airbnb-primary-foreground font-semibold rounded-lg shadow-md py-3 text-base"
+                      style={{ backgroundColor: "hsl(var(--airbnb-primary))", color: "hsl(var(--airbnb-primary-foreground))"}}
                   >
                       {isBooking ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (room.isAvailable ? 'Conferir disponibilidade' : 'Indisponível')}
                   </Button>
