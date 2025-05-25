@@ -14,6 +14,7 @@ import { getRoomById, bookMockRoom } from '@/lib/mock-data';
 import type { Listing, Amenity as AmenityType, UniversityArea, ListingImage } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 
 export default function RoomDetailPage() {
@@ -98,6 +99,7 @@ export default function RoomDetailPage() {
   };
 
   const handleFavorite = () => {
+    // TODO: Implement favorite functionality
     toast({ title: "Favoritos", description: "Funcionalidade de favoritar em desenvolvimento." });
   };
 
@@ -145,7 +147,7 @@ export default function RoomDetailPage() {
 
         <div className="w-full mt-14"> {/* Adjusted for fixed header */}
           <Skeleton className="w-full aspect-[16/10] md:aspect-[16/9] lg:aspect-[2/1] rounded-b-lg" />
-          <div className="bg-background rounded-t-3xl p-5 md:p-8 space-y-4 w-full max-w-4xl mx-auto -mt-6 md:-mt-8 relative z-10 shadow-xl">
+          <div className="bg-background rounded-t-3xl p-5 md:p-8 space-y-4 w-full max-w-4xl mx-auto -mt-6 md:-mt-8 relative z-10 shadow-lg">
             <Skeleton className="h-8 w-3/4 mx-auto" />
             <Skeleton className="h-4 w-1/2 mx-auto" />
             <Separator />
@@ -220,7 +222,7 @@ export default function RoomDetailPage() {
   const UniversityIcon = room.university?.icon || DefaultUniversityIcon;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background"> {/* Changed to bg-background for a lighter theme */}
+    <div className="flex flex-col min-h-screen bg-background">
       <header className="fixed top-0 left-0 right-0 z-50 p-3 bg-background border-b flex items-center justify-between h-14">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-foreground">
           <ChevronLeft className="h-6 w-6" />
@@ -284,12 +286,12 @@ export default function RoomDetailPage() {
           )}
         </div>
 
-        <div className="bg-background rounded-t-3xl p-5 md:p-8 space-y-6 max-w-full mx-auto -mt-6 md:-mt-8 relative z-10 shadow-xl">
-          <section className="text-center">
+        <div className="bg-background rounded-t-3xl p-5 md:p-8 space-y-6 max-w-full mx-auto -mt-6 md:-mt-8 relative z-10 shadow-lg"> {/* Changed shadow-xl to shadow-lg for softer shadow */}
+          <section className="text-center pt-2"> {/* Added pt-2 for more space */}
             <h1 className="text-xl md:text-2xl font-semibold text-foreground leading-tight">
               {room.type} com Ar-condicionado e Wi-Fi – Próximo à {room.university.acronym}
             </h1>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1.5"> {/* Increased mt */}
               Quarto em {room.university.city}, Brasil
             </p>
           </section>
@@ -315,7 +317,7 @@ export default function RoomDetailPage() {
 
           <Separator />
 
-          <section className="text-sm text-foreground space-y-2 text-center">
+          <section className="text-sm text-foreground space-y-2.5 text-center"> {/* Increased space-y */}
             <div className="flex items-center justify-center space-x-1.5">
               <Bed className="h-4 w-4 text-primary flex-shrink-0" />
               <span>{room.beds} cama(s)</span>
@@ -337,7 +339,7 @@ export default function RoomDetailPage() {
           <Separator />
 
           <section>
-            <h2 className="text-lg font-semibold text-foreground mb-2">Descrição</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-3">Descrição</h2> {/* Increased mb */}
             <p className="text-muted-foreground whitespace-pre-line text-sm leading-relaxed">
               {room.description}
             </p>
@@ -348,7 +350,7 @@ export default function RoomDetailPage() {
               <Separator />
               <section>
                 <h2 className="text-lg font-semibold text-foreground mb-3">O que este lugar oferece</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4"> {/* Increased gap */}
                   {room.amenities.map((amenity: AmenityType) => (
                     <div key={amenity.id} className="flex items-center space-x-3 text-sm">
                       <amenity.icon className="h-5 w-5 text-primary flex-shrink-0" />
@@ -370,7 +372,7 @@ export default function RoomDetailPage() {
               <p>Espaço reservado para o mapa da localização.</p>
               {/* Map component would go here */}
             </div>
-             <p className="text-xs text-muted-foreground mt-2">Localização exata fornecida após a reserva.</p>
+             <p className="text-xs text-muted-foreground mt-2.5">Localização exata fornecida após a reserva.</p> {/* Increased mt */}
           </section>
 
           <Separator />
@@ -387,7 +389,7 @@ export default function RoomDetailPage() {
 
           <Separator />
           <section>
-            <div className="flex items-center mb-2">
+            <div className="flex items-center mb-3"> {/* Increased mb */}
                 <FileText className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
                 <h2 className="text-lg font-semibold text-foreground">Política de Cancelamento</h2>
             </div>
@@ -398,22 +400,22 @@ export default function RoomDetailPage() {
 
           <Separator />
           <section>
-             <div className="flex items-center mb-2">
+             <div className="flex items-center mb-3"> {/* Increased mb */}
                 <Home className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
                 <h2 className="text-lg font-semibold text-foreground">Regras da Casa</h2>
             </div>
-            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 leading-relaxed whitespace-pre-line">
+            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1.5 leading-relaxed whitespace-pre-line"> {/* Increased space-y */}
               {room.houseRules.split('\n').map((rule, index) => <li key={index}>{rule}</li>)}
             </ul>
           </section>
 
           <Separator />
           <section>
-            <div className="flex items-center mb-2">
+            <div className="flex items-center mb-3"> {/* Increased mb */}
                 <ShieldCheck className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
                 <h2 className="text-lg font-semibold text-foreground">Segurança e Propriedade</h2>
             </div>
-            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 leading-relaxed whitespace-pre-line">
+            <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1.5 leading-relaxed whitespace-pre-line"> {/* Increased space-y */}
               {room.safetyAndProperty.split('\n').map((item, index) => <li key={index}>{item}</li>)}
             </ul>
           </section>
@@ -469,6 +471,5 @@ export default function RoomDetailPage() {
     </div>
   );
 }
-
 
     
