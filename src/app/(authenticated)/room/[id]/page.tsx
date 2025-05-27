@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Star, Users, Loader2, School2 as DefaultUniversityIcon, MapPin, ChevronRight, Heart, Map as MapIcon, MessageSquareText, FileText, Home, ShieldCheck, Bed, Bath } from 'lucide-react';
+import { ChevronLeft, Star, Users, Loader2, School2 as DefaultUniversityIcon, MapPin, ChevronRight, FileText, Home, ShieldCheck, Bed, Bath, MessageSquareText, Map as MapIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +30,7 @@ export default function RoomDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false); // Mock state for favorite
+  // const [isFavorite, setIsFavorite] = useState(false); // Mock state for favorite removed
 
   useEffect(() => {
     if (id) {
@@ -100,13 +100,14 @@ export default function RoomDetailPage() {
     }
   }, [room]);
   
-  const handleFavoriteToggle = () => {
-    setIsFavorite(!isFavorite);
-    toast({ 
-      title: "Favoritos", 
-      description: `${room?.title || 'Quarto'} ${!isFavorite ? "adicionado aos" : "removido dos"} favoritos (mock).`
-    });
-  };
+  // Favorite toggle removed
+  // const handleFavoriteToggle = () => {
+  //   setIsFavorite(!isFavorite);
+  //   toast({ 
+  //     title: "Favoritos", 
+  //     description: `${room?.title || 'Quarto'} ${!isFavorite ? "adicionado aos" : "removido dos"} favoritos (mock).`
+  //   });
+  // };
 
 
   if (isLoading) {
@@ -188,16 +189,7 @@ export default function RoomDetailPage() {
                 </div>
               )}
               
-              {/* Favorite Button on Image Removed based on prior request, re-adding per latest context */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleFavoriteToggle}
-                className="absolute top-4 right-4 z-10 bg-black/30 hover:bg-black/50 text-white p-1.5 rounded-full"
-                aria-label="Favoritar"
-              >
-                <Heart className={cn("h-5 w-5", isFavorite ? "fill-white" : "fill-transparent stroke-white")} />
-              </Button>
+              {/* Favorite Button on Image Removed */}
 
               {room.images.length > 0 && (
                 <Badge
