@@ -70,5 +70,3 @@ export function ListingCard({ listing }: ListingCardProps) {
     </Link>
   );
 }
-
-```
