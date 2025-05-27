@@ -4,9 +4,8 @@
 import type { Booking } from '@/types';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { UnlockDoorAnimation } from '@/components/UnlockDoorAnimation';
-import { useState } from 'react';
-import { CalendarDays, MapPin, Users, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation'; // Importar useRouter
+import { CalendarDays, MapPin, Users, CheckCircle, AlertTriangle, XCircle, KeyRound } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -18,25 +17,10 @@ interface BookingCardProps {
 }
 
 export function BookingCard({ booking }: BookingCardProps) {
-  const [isUnlocking, setIsUnlocking] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [showUnlockMessage, setShowUnlockMessage] = useState(false);
+  const router = useRouter(); // Inicializar o router
 
-  const handleUnlockDoor = async () => {
-    if (isUnlocked || isUnlocking) return;
-
-    setIsUnlocking(true);
-    setShowUnlockMessage(false); // Reset message
-
-    // Simulate unlock process
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsUnlocking(false);
-    setIsUnlocked(true);
-    setShowUnlockMessage(true);
-
-    // Hide message after a few seconds
-    setTimeout(() => setShowUnlockMessage(false), 3000);
+  const handleNavigateToUnlock = () => {
+    router.push(`/unlock-door/${booking.id}`);
   };
 
   const formatDate = (dateString: string) => {
@@ -116,19 +100,13 @@ export function BookingCard({ booking }: BookingCardProps) {
             <CardFooter className="pt-0">
               <div className="flex flex-col items-center w-full">
                 <Button 
-                  onClick={handleUnlockDoor} 
-                  disabled={isUnlocking || isUnlocked}
+                  onClick={handleNavigateToUnlock} 
                   className="w-full max-w-xs bg-[hsl(var(--airbnb-primary))] hover:bg-[hsl(var(--airbnb-primary))] text-[hsl(var(--airbnb-primary-foreground))] font-semibold shadow-md"
                   style={{ backgroundColor: "hsl(var(--airbnb-primary))", color: "hsl(var(--airbnb-primary-foreground))"}}
                 >
-                  <UnlockDoorAnimation isUnlocking={isUnlocking} isUnlocked={isUnlocked} />
+                  <KeyRound className="mr-2 h-5 w-5" />
+                  Destrancar Porta
                 </Button>
-                {showUnlockMessage && isUnlocked && (
-                  <p className="text-sm text-green-600 mt-2">Porta destrancada com sucesso!</p>
-                )}
-                 {isUnlocking && (
-                  <p className="text-sm text-muted-foreground mt-2">Aguarde, destrancando...</p>
-                )}
               </div>
             </CardFooter>
           )}
