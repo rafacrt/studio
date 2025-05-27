@@ -9,9 +9,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Loader2, Send, MessageSquareText, UserCircle2 } from 'lucide-react';
+// Card components are not directly used for the main layout anymore, but might be for inner parts if any.
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; 
+// Separator is not used directly here
+// import { Separator } from '@/components/ui/separator';
+import { Loader2, Send, MessageSquareText, UserCircle2, ArrowLeft } from 'lucide-react'; // Added ArrowLeft
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -122,7 +124,6 @@ export default function MessagesPage() {
       const loadedMessages = loadMockMessagesFromStorage(selectedConversation.id);
       setMessages(loadedMessages);
       setIsLoadingMessages(false);
-      // For new conversations, or if localStorage is empty, fetch from mock data
       if (loadedMessages.length === 0) {
         fetchMessagesForConversation(selectedConversation.id)
           .then(setMessages)
@@ -142,7 +143,6 @@ export default function MessagesPage() {
     const conversation = conversations.find(c => c.id === conversationId);
     setSelectedConversation(conversation || null);
     if (conversation) {
-      // Mark conversation as read (mock)
       setConversations(prev => prev.map(c => c.id === conversationId ? {...c, unreadCount: 0} : c));
     }
   };
@@ -165,23 +165,27 @@ export default function MessagesPage() {
     try {
       const sentMessage = await sendMockMessage(selectedConversation.id, user.id, newMessage.trim());
       setMessages(prev => prev.map(m => m.id === tempMessageId ? sentMessage : m));
-      // Update conversation list with new last message
       setConversations(prevConvs => prevConvs.map(c => 
         c.id === selectedConversation.id ? {...c, lastMessage: sentMessage } : c
       ).sort((a,b) => new Date(b.lastMessage?.timestamp || 0).getTime() - new Date(a.lastMessage?.timestamp || 0).getTime())
       );
     } catch (error) {
       console.error("Falha ao enviar mensagem mockada:", error);
-      setMessages(prev => prev.filter(m => m.id !== tempMessageId)); // Rollback optimistic update
+      setMessages(prev => prev.filter(m => m.id !== tempMessageId)); 
     }
   };
   
   const otherParticipant = selectedConversation?.participants.find(p => p.id !== user?.id);
 
   return (
-    <div className="flex h-[calc(100vh-var(--bottom-nav-height,4rem))] bg-background"> {/* Adjust height for bottom nav */}
+    <div className="flex h-[calc(100vh-var(--bottom-nav-height,4rem))] bg-background">
       {/* Sidebar de Conversas */}
-      <aside className="w-full md:w-1/3 lg:w-1/4 border-r border-border flex flex-col">
+      <aside className={cn(
+        "border-r border-border flex flex-col",
+        // If a conversation IS selected: hide on mobile, show on desktop.
+        // If NO conversation is selected: show full width on mobile, show as sidebar on desktop.
+        selectedConversation ? "hidden md:flex md:w-1/3 lg:w-1/4" : "w-full md:flex md:w-1/3 lg:w-1/4"
+      )}>
         <div className="p-4 border-b border-border">
           <h2 className="text-xl font-semibold text-foreground">Mensagens</h2>
         </div>
@@ -207,10 +211,18 @@ export default function MessagesPage() {
       </aside>
 
       {/* Área de Chat Principal */}
-      <main className="flex-1 flex flex-col bg-muted/30">
+      <main className={cn(
+        "flex flex-col bg-muted/30",
+        // If a conversation IS selected: show (will take full width on mobile because aside is hidden).
+        // If NO conversation is selected: hide on mobile, show on desktop (shows "Selecione uma conversa" placeholder).
+        selectedConversation ? "flex flex-1" : "hidden md:flex md:flex-1"
+      )}>
         {selectedConversation && otherParticipant ? (
           <>
             <header className="p-4 border-b border-border bg-background flex items-center shadow-sm">
+              <Button variant="ghost" size="icon" className="mr-2 md:hidden" onClick={() => setSelectedConversation(null)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
               <Avatar className="h-9 w-9 mr-3">
                  <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.name} data-ai-hint="person avatar" />
                  <AvatarFallback>{otherParticipant.name.charAt(0).toUpperCase()}</AvatarFallback>
@@ -254,6 +266,7 @@ export default function MessagesPage() {
             </div>
           </>
         ) : (
+          // This placeholder is now effectively only shown on md+ screens when no conversation is selected.
           <div className="flex-grow flex flex-col items-center justify-center text-center p-8">
             <MessageSquareText className="h-24 w-24 text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold text-foreground">Selecione uma conversa</h2>
