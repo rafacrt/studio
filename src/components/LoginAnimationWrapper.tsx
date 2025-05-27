@@ -1,38 +1,38 @@
+
 "use client";
 import { useAuth } from '@/contexts/AuthContext';
-import AppLogo from '@/components/AppLogo'; 
+import AppLogo from '@/components/AppLogo';
 import { useEffect, useState } from 'react';
 
-export function LoginAnimationWrapper() {
-  const { isAnimatingLogin, user } = useAuth();
+export function LoginAnimationWrapper() { // O nome do arquivo e da função será mantido por enquanto para evitar quebra de importações, mas o propósito é mais amplo.
+  const { isAnimatingLogin, user, isPageLoading } = useAuth();
   const [internalShow, setInternalShow] = useState(false);
 
+  const shouldShowOverlay = isAnimatingLogin || isPageLoading;
+
   useEffect(() => {
-    if (isAnimatingLogin) {
+    if (shouldShowOverlay) {
       setInternalShow(true);
     } else {
-      // When isAnimatingLogin becomes false, start a timer to hide after animation.
-      // This ensures the fade-out transition can complete.
       const timer = setTimeout(() => {
         setInternalShow(false);
-      }, 500); // Match CSS transition duration (or slightly longer)
+      }, 500); // Duração da animação de fade-out
       return () => clearTimeout(timer);
     }
-  }, [isAnimatingLogin]);
+  }, [shouldShowOverlay]);
 
-  // Only render if the animation is active or fading out
-  if (!isAnimatingLogin && !internalShow) {
+  if (!shouldShowOverlay && !internalShow) {
     return null;
   }
 
   return (
     <div
       className={`fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background transition-opacity duration-500 ease-in-out
-                  ${ (isAnimatingLogin || internalShow) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-      aria-hidden={!(isAnimatingLogin || internalShow)} // For accessibility
+                  ${ (shouldShowOverlay || internalShow) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      aria-hidden={!(shouldShowOverlay || internalShow)}
     >
       <AppLogo className="h-24 w-auto animate-pulse" />
-      { (isAnimatingLogin || internalShow) && user && (
+      { (isAnimatingLogin && internalShow) && user && ( // Mostrar nome apenas durante animação de LOGIN
         <p className="mt-4 text-xl font-semibold text-foreground">Bem-vindo, {user.name}!</p>
       )}
     </div>
