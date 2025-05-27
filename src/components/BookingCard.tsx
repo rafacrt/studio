@@ -137,4 +137,3 @@ export function BookingCard({ booking }: BookingCardProps) {
     </Card>
   );
 }
-```
