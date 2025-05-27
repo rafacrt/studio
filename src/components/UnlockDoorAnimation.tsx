@@ -34,4 +34,3 @@ export function UnlockDoorAnimation({ isUnlocking, isUnlocked }: UnlockDoorAnima
     </div>
   );
 }
-```
