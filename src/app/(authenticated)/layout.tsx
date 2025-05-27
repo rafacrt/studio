@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Search, Briefcase, MessageSquare, CircleUser } from 'lucide-react'; // Updated icons, removed Heart
+import { Loader2, Search, CalendarCheck, MessageSquare, CircleUser } from 'lucide-react'; // Changed Briefcase to CalendarCheck
 import { cn } from '@/lib/utils';
 
 export default function AuthenticatedLayout({
@@ -13,7 +13,7 @@ export default function AuthenticatedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoadingAuth, user } = useAuth(); 
+  const { isAuthenticated, isLoadingAuth } = useAuth(); 
   const router = useRouter();
   const pathname = usePathname();
 
@@ -33,13 +33,12 @@ export default function AuthenticatedLayout({
   
   const navItems = [
     { href: '/explore', label: 'Explorar', icon: Search },
-    // { href: '/favorites', label: 'Favoritos', icon: Heart }, // Removed Favorites
-    { href: '/trips', label: 'Viagens', icon: Briefcase },
+    { href: '/reservations', label: 'Reservas', icon: CalendarCheck }, // Changed from Viagens/Briefcase to Reservas/CalendarCheck
     { href: '/messages', label: 'Mensagens', icon: MessageSquare },
     { href: '/profile', label: 'Perfil', icon: CircleUser },
   ];
   
-  const airbnbPrimaryColor = "hsl(var(--airbnb-primary))"; 
+  const activeColor = "hsl(var(--airbnb-primary))"; 
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -50,18 +49,20 @@ export default function AuthenticatedLayout({
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background md:hidden">
         <div className="flex h-16 items-center justify-around px-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href === "/explore" && pathname.startsWith("/room/"));
+            const isActive = pathname === item.href || 
+                             (item.href === "/explore" && pathname.startsWith("/room/")) ||
+                             (item.href === "/reservations" && pathname.startsWith("/reservations")); // Added check for reservation detail if any
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center justify-center text-center p-1 rounded-md w-1/4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background", // Adjusted width to w-1/4 for 4 items
-                  isActive ? `text-[${airbnbPrimaryColor}]` : "text-muted-foreground hover:text-foreground"
+                  "flex flex-col items-center justify-center text-center p-1 rounded-md w-1/4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+                  isActive ? `text-[${activeColor}]` : "text-muted-foreground hover:text-foreground"
                 )}
-                style={isActive ? { color: airbnbPrimaryColor } : {}}
+                style={isActive ? { color: activeColor } : {}}
               >
-                <item.icon className={cn("h-5 w-5 mb-0.5", isActive ? `text-[${airbnbPrimaryColor}]` : "")} strokeWidth={isActive ? 2.5 : 2} />
+                <item.icon className={cn("h-5 w-5 mb-0.5", isActive ? `text-[${activeColor}]` : "")} strokeWidth={isActive ? 2.5 : 2} />
                 <span className="text-[10px] font-medium leading-tight">{item.label}</span>
               </Link>
             );

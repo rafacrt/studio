@@ -323,6 +323,7 @@ let mockBookings: Booking[] = [
     totalPrice: mockListings.find(l => l.id === 'quarto2')!.pricePerNight * 4.5, 
     status: 'Confirmada',
     guests: 1,
+    bookedAt: '2024-07-15',
   },
   {
     id: 'booking2',
@@ -335,6 +336,20 @@ let mockBookings: Booking[] = [
     totalPrice: mockListings.find(l => l.id === 'quarto5')!.pricePerNight * 4.5,
     status: 'Concluída',
     guests: 1,
+    bookedAt: '2024-02-20',
+  },
+    {
+    id: 'booking3',
+    listingId: 'quarto1', // Assuming 'quarto1' exists in mockListings
+    listing: mockListings.find(l => l.id === 'quarto1')!,
+    userId: mockUser.id, // Belongs to the mockUser
+    user: mockUser,
+    checkInDate: '2024-09-01', // Future booking
+    checkOutDate: '2025-01-15',
+    totalPrice: mockListings.find(l => l.id === 'quarto1')!.pricePerNight * 4.5, // Example price calculation
+    status: 'Confirmada',
+    guests: 1,
+    bookedAt: new Date().toISOString().split('T')[0], // Booked today
   },
 ];
 
@@ -441,6 +456,7 @@ export const bookMockRoom = async (listingId: string, userId: string, checkInDat
       totalPrice: listing.pricePerNight * 30, 
       status: 'Confirmada',
       guests,
+      bookedAt: new Date().toISOString().split('T')[0],
     };
     mockBookings.push(newBooking);
     return simulateApiCall(newBooking, 1000); 
@@ -453,6 +469,29 @@ export const bookMockRoom = async (listingId: string, userId: string, checkInDat
 export const fetchUserBookings = async (userId: string): Promise<Booking[]> => {
   try {
     const userBookings = mockBookings.filter(booking => booking && booking.userId === userId);
+    // Ensure each booking has a valid listing object
+    userBookings.forEach(booking => {
+        if (!booking.listing) {
+            const foundListing = mockListings.find(l => l.id === booking.listingId);
+            if (foundListing) {
+                booking.listing = foundListing;
+            } else {
+                // Fallback if listing somehow not found (should not happen with current mocks)
+                console.warn(`Listing with ID ${booking.listingId} not found for booking ${booking.id}`);
+                // You might want to create a placeholder listing or handle this case appropriately
+                booking.listing = {
+                     id: booking.listingId, title: 'Quarto Indisponível', description: 'Detalhes não disponíveis.', 
+                     images: [{id: 'placeholder-booking', url: `https://placehold.co/400x300.png?text=Quarto+N/D`, alt:'Quarto indisponível'}],
+                     pricePerNight: 0, address: 'N/D', lat:0, lng:0, guests:0, bedrooms:0, beds:0, baths:0, amenities:[],
+                     rating:0, reviews:0, host: mockAdminUser, university: universityAreas[0], isAvailable: false, type: 'N/D',
+                     cancellationPolicy: '', houseRules: '', safetyAndProperty: ''
+                };
+            }
+        }
+         if (!booking.listing.images || booking.listing.images.length === 0) {
+            booking.listing.images = [{ id: `placeholder-${booking.listing.id}`, url: `https://placehold.co/400x300.png?text=Quarto+Imagem`, alt: booking.listing.title }];
+        }
+    });
     return simulateApiCall(userBookings);
   } catch (error) {
     console.error("Error in fetchUserBookings:", error);
@@ -465,7 +504,6 @@ export const addMockListing = async (
     imageUrls: string[]; 
     selectedAmenityIds: string[]; 
     universityAcronym: string;
-    // category: string; // Category will be derived or set to a default if not explicitly part of form
     cancellationPolicy: string;
     houseRules: string;
     safetyAndProperty: string;
@@ -498,7 +536,6 @@ export const addMockListing = async (
       console.warn(`University with acronym ${newListingData.universityAcronym} not found. Defaulting.`);
     }
     
-    // Determine category (example logic, can be refined)
     let listingCategory = roomCategories.find(cat => cat.id === 'prox-campus')?.id || roomCategories[0].id; // Default
     if (newListingData.title.toLowerCase().includes('kitnet')) listingCategory = 'kitnet';
     else if (newListingData.title.toLowerCase().includes('república')) listingCategory = 'republica';
@@ -523,7 +560,7 @@ export const addMockListing = async (
       host: mockAdminUser, 
       university: universityDetails || universityAreas[0], 
       isAvailable: true,
-      type: newListingData.type || 'Quarto Individual', // Ensure type is present
+      type: (newListingData as any).type || 'Quarto Individual', 
       category: listingCategory,
       cancellationPolicy: newListingData.cancellationPolicy || defaultCancellationPolicy,
       houseRules: newListingData.houseRules || defaultHouseRules,
@@ -546,9 +583,9 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
       .reduce((sum, booking) => sum + booking.totalPrice, 0);
 
     const stats: AdminDashboardStats = {
-      totalRevenue: totalRevenueFromBookings * 0.15, // Example: 15% commission on bookings
-      newUsers: 25, // Static mock value
-      pendingApprovals: mockListings.filter(l => l && l.rating < 4.2 && l.isAvailable).length, // Example criteria
+      totalRevenue: totalRevenueFromBookings * 0.15, 
+      newUsers: 25, 
+      pendingApprovals: mockListings.filter(l => l && l.rating < 4.2 && l.isAvailable).length, 
       activeBookings: activeBookingsCount,
     };
     return simulateApiCall(stats, 700);
@@ -592,3 +629,4 @@ export const getBookingStatusData = async (): Promise<{ status: string; count: n
 
 export { mockUser, mockAdminUser };
 
+    

@@ -36,8 +36,8 @@
 
     --radius: 0.5rem; /* Base radius, can be overridden by components */
     
-    /* Airbnb specific color */
-    --airbnb-primary: 348 100% 61%; /* #FF385C */
+    /* Airbnb specific color - NOW CHANGED TO USER'S BLUE */
+    --airbnb-primary: 217 71% 53%; /* #306fdb */
     --airbnb-primary-foreground: 0 0% 100%; /* White */
 
 
@@ -89,8 +89,8 @@
     --input: 240 1% 20%;
     --ring: 223 69% 60%;
 
-    /* Airbnb specific color for dark mode - can be the same or adjusted */
-    --airbnb-primary: 348 100% 61%; /* #FF385C */
+    /* Airbnb specific color for dark mode - NOW CHANGED TO USER'S BLUE */
+    --airbnb-primary: 217 71% 53%; /* #306fdb */
     --airbnb-primary-foreground: 0 0% 100%;
 
     /* Chart colors for dark theme */
@@ -110,9 +110,7 @@
     --sidebar-border: 240 1% 20%;
     --sidebar-ring: 223 69% 60%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }

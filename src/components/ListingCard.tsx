@@ -4,10 +4,7 @@
 import type { Listing } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
-// import { Button } from '@/components/ui/button'; // Removed if not used
-// import { Heart } from 'lucide-react'; // Removed Heart
 import { Star } from 'lucide-react';
-// import { useState } from 'react'; // Removed if not used for favorite
 import { cn } from '@/lib/utils';
 
 interface ListingCardProps {
@@ -15,21 +12,14 @@ interface ListingCardProps {
 }
 
 export function ListingCard({ listing }: ListingCardProps) {
-  // const [isFavorited, setIsFavorited] = useState(false); // Removed favorite state
   const currentImage = listing.images[0]?.url || `https://placehold.co/800x600.png?text=${encodeURIComponent(listing.title)}`;
   const currentImageAlt = listing.images[0]?.alt || listing.title;
-
-  // const handleFavoriteClick = (e: React.MouseEvent) => { // Removed favorite handler
-  //   e.preventDefault(); 
-  //   setIsFavorited(!isFavorited);
-  // };
-
-  const suggestedDate = "20 - 25 de out";
+  const suggestedDate = "20 - 25 de out"; // Mock data
 
   return (
     <Link href={`/room/${listing.id}`} className="block group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-2xl">
       <div className="flex flex-col h-full overflow-hidden rounded-2xl shadow-sm bg-card transition-shadow duration-300">
-        <div className="relative w-full aspect-[1/1] md:aspect-[4/3.5] overflow-hidden rounded-2xl">
+        <div className="relative w-full aspect-[4/3.5] overflow-hidden rounded-2xl"> {/* Changed aspect ratio */}
           <Image
             src={currentImage}
             alt={currentImageAlt}
@@ -38,7 +28,6 @@ export function ListingCard({ listing }: ListingCardProps) {
             className="object-cover"
             data-ai-hint="apartment room interior"
           />
-          {/* Favorite Button Removed */}
           {listing.images && listing.images.length > 1 && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex space-x-1.5">
               {listing.images.slice(0, 5).map((_, i) => ( 
@@ -81,3 +70,5 @@ export function ListingCard({ listing }: ListingCardProps) {
     </Link>
   );
 }
+
+```

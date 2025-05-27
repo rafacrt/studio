@@ -64,7 +64,7 @@ export interface Listing {
 export interface Booking {
   id: string;
   listingId: string;
-  listing: Listing;
+  listing: Listing; // Ensure listing object is part of Booking
   userId: string;
   user: User;
   checkInDate: string;
@@ -72,6 +72,7 @@ export interface Booking {
   totalPrice: number;
   status: 'Confirmada' | 'Pendente' | 'Cancelada' | 'Concluída';
   guests: number;
+  bookedAt?: string; // Optional: date of booking
 }
 
 export interface ListingFilters {
@@ -95,3 +96,5 @@ export interface Category {
   icon: LucideIcon;
   description?: string; // Optional description for the category
 }
+
+```
