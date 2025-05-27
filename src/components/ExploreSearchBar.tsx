@@ -2,21 +2,18 @@
 "use client";
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Search, SlidersHorizontal } from 'lucide-react';
+// import { Button } from '@/components/ui/button'; // Filter button removed
+import { Search } from 'lucide-react'; // SlidersHorizontal removed
 
 interface ExploreSearchBarProps {
   onSearch?: (term: string) => void;
   initialSearchTerm?: string;
-  showFilterButton?: boolean;
-  onFilterClick?: () => void;
+  // showFilterButton and onFilterClick props removed
 }
 
 export function ExploreSearchBar({
   onSearch,
   initialSearchTerm = '',
-  showFilterButton = true,
-  onFilterClick
 }: ExploreSearchBarProps) {
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
 
@@ -30,22 +27,16 @@ export function ExploreSearchBar({
     <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm shadow-sm px-4 py-3 md:px-6">
       <div className="flex items-center w-full max-w-3xl mx-auto bg-card border border-border rounded-full shadow-md focus-within:shadow-lg transition-shadow h-14 px-3 group">
         <Search className="h-5 w-5 text-muted-foreground ml-2 mr-2.5 shrink-0 group-focus-within:text-primary" />
-        <div className="flex flex-col flex-grow mr-2">
-          <input
-            type="text"
-            placeholder="Onde deseja ir?"
-            className="text-sm font-semibold text-foreground placeholder:font-semibold placeholder-foreground focus:outline-none bg-transparent w-full pt-1"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <div className="text-xs text-muted-foreground pb-1">
-            <span>Qualquer data</span>
-            <span className="mx-1">·</span>
-            <span>Qualquer hóspede</span>
-          </div>
-        </div>
-        {showFilterButton && (
+        <input
+          type="text"
+          placeholder="Onde deseja ir?"
+          className="text-sm font-semibold text-foreground placeholder:font-semibold placeholder-foreground focus:outline-none bg-transparent w-full h-full" // Removed flex-col and inner div for subtitle
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+        {/* Filter Button Removed */}
+        {/* {showFilterButton && (
           <Button
             variant="outline"
             size="icon"
@@ -55,7 +46,7 @@ export function ExploreSearchBar({
           >
             <SlidersHorizontal className="h-4 w-4" />
           </Button>
-        )}
+        )} */}
       </div>
     </div>
   );
