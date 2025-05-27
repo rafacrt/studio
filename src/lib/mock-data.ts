@@ -1,5 +1,5 @@
 
-import type { Listing, User, Booking, Amenity, UniversityArea, ListingFilters, AdminDashboardStats, ListingImage, Category } from '@/types';
+import type { Listing, User, Booking, Amenity, UniversityArea, ListingFilters, AdminDashboardStats, ListingImage, Category, ChatConversation, ChatMessage } from '@/types';
 import { Bed, Wifi, Tv, Utensils, Snowflake, Car, Bath, Dumbbell, WashingMachine, Trees, LampDesk, CheckSquare, School, Tent, Waves, MountainSnow, Castle, Palette, Sun, Building, Home } from 'lucide-react';
 import { mockUser, mockAdminUser } from './auth-mocks';
 
@@ -68,7 +68,7 @@ let mockListings: Listing[] = [
       { id: 'img1-1', url: 'https://picsum.photos/seed/quarto1_img1/800/600', alt: 'Vista do quarto aconchegante'},
       { id: 'img1-2', url: 'https://picsum.photos/seed/quarto1_img2/800/600', alt: 'Área de estudos do quarto'},
     ],
-    pricePerNight: 1200, 
+    pricePerNight: 1200,
     address: 'Rua do Matão, 1010, Butantã, São Paulo - SP',
     lat: -23.5580,
     lng: -46.7250,
@@ -79,7 +79,7 @@ let mockListings: Listing[] = [
     amenities: [commonAmenities[0], commonAmenities[2], commonAmenities[8], commonAmenities[10]],
     rating: 4.81,
     reviews: 45,
-    host: mockAdminUser, 
+    host: mockAdminUser,
     university: getUniversityByAcronym('USP')!,
     isAvailable: true,
     type: 'Quarto Individual',
@@ -110,7 +110,7 @@ let mockListings: Listing[] = [
     reviews: 30,
     host: mockAdminUser,
     university: getUniversityByAcronym('Unicamp')!,
-    isAvailable: true, 
+    isAvailable: true,
     type: 'Kitnet',
     category: 'kitnet',
     cancellationPolicy: 'Cancelamento moderado: Reembolso total até 15 dias antes do check-in.',
@@ -128,10 +128,10 @@ let mockListings: Listing[] = [
     address: 'Rua Prof. Baeta Viana, 200, Pampulha, Belo Horizonte - MG',
     lat: -19.8690,
     lng: -43.9630,
-    guests: 1, 
-    bedrooms: 1, 
+    guests: 1,
+    bedrooms: 1,
     beds: 1,
-    baths: 2, 
+    baths: 2,
     amenities: [commonAmenities[0], commonAmenities[7], commonAmenities[9]],
     rating: 4.20,
     reviews: 22,
@@ -157,7 +157,7 @@ let mockListings: Listing[] = [
     lat: -22.9750,
     lng: -43.2300,
     guests: 1,
-    bedrooms: 0, 
+    bedrooms: 0,
     beds: 1,
     baths: 1,
     amenities: [commonAmenities[0], commonAmenities[1], commonAmenities[2], commonAmenities[3], commonAmenities[5]],
@@ -186,8 +186,8 @@ let mockListings: Listing[] = [
     guests: 1,
     bedrooms: 1,
     beds: 1,
-    baths: 1, 
-    amenities: [commonAmenities[0], commonAmenities[8], commonAmenities[9], commonAmenities[6]], 
+    baths: 1,
+    amenities: [commonAmenities[0], commonAmenities[8], commonAmenities[9], commonAmenities[6]],
     rating: 4.35,
     reviews: 18,
     host: mockAdminUser,
@@ -209,17 +209,17 @@ let mockListings: Listing[] = [
     ],
     pricePerNight: 1850,
     address: 'Av. Prof. Luciano Gualberto, 380, Butantã, São Paulo - SP',
-    lat: -23.5600, 
+    lat: -23.5600,
     lng: -46.7200,
     guests: 1,
     bedrooms: 1,
     beds: 1,
-    baths: 1, 
+    baths: 1,
     amenities: [commonAmenities[0], commonAmenities[1], commonAmenities[2], commonAmenities[3], commonAmenities[5], commonAmenities[10]],
     rating: 4.95,
     reviews: 60,
     host: mockAdminUser,
-    university: getUniversityByAcronym('USP')!, 
+    university: getUniversityByAcronym('USP')!,
     isAvailable: true,
     type: 'Quarto Alto Padrão',
     category: 'alto-padrao',
@@ -241,7 +241,7 @@ let mockListings: Listing[] = [
     guests: 1,
     bedrooms: 1,
     beds: 1,
-    baths: 1, 
+    baths: 1,
     amenities: [commonAmenities[0], commonAmenities[5], commonAmenities[7], commonAmenities[8]],
     rating: 4.66,
     reviews: 28,
@@ -269,7 +269,7 @@ let mockListings: Listing[] = [
     guests: 1,
     bedrooms: 1,
     beds: 1,
-    baths: 2, 
+    baths: 2,
     amenities: [commonAmenities[0], commonAmenities[2], commonAmenities[9], commonAmenities[10]],
     rating: 4.40,
     reviews: 25,
@@ -289,7 +289,7 @@ let mockListings: Listing[] = [
     images: [
       { id: 'img9-1', url: 'https://picsum.photos/seed/quarto9_img1/800/600', alt: 'Visão geral da kitnet' },
     ],
-    pricePerNight: 1300, 
+    pricePerNight: 1300,
     address: 'Rua Vice-Governador Rubens Berardo, 50, Gávea, Rio de Janeiro - RJ',
     lat: -22.9760,
     lng: -43.2320,
@@ -320,7 +320,7 @@ let mockBookings: Booking[] = [
     user: mockUser,
     checkInDate: '2024-08-01',
     checkOutDate: '2024-12-15',
-    totalPrice: mockListings.find(l => l.id === 'quarto2')!.pricePerNight * 4.5, 
+    totalPrice: mockListings.find(l => l.id === 'quarto2')!.pricePerNight * 4.5,
     status: 'Confirmada',
     guests: 1,
     bookedAt: '2024-07-15',
@@ -340,21 +340,20 @@ let mockBookings: Booking[] = [
   },
     {
     id: 'booking3',
-    listingId: 'quarto1', // Assuming 'quarto1' exists in mockListings
+    listingId: 'quarto1',
     listing: mockListings.find(l => l.id === 'quarto1')!,
-    userId: mockUser.id, // Belongs to the mockUser
+    userId: mockUser.id,
     user: mockUser,
-    checkInDate: '2024-09-01', // Future booking
+    checkInDate: '2024-09-01',
     checkOutDate: '2025-01-15',
-    totalPrice: mockListings.find(l => l.id === 'quarto1')!.pricePerNight * 4.5, // Example price calculation
+    totalPrice: mockListings.find(l => l.id === 'quarto1')!.pricePerNight * 4.5,
     status: 'Confirmada',
     guests: 1,
-    bookedAt: new Date().toISOString().split('T')[0], // Booked today
+    bookedAt: new Date().toISOString().split('T')[0],
   },
 ];
 
 
-// Ensure mockListings is always at least an empty array if something goes wrong with its definition.
 if (!Array.isArray(mockListings)) {
   console.error("CRITICAL: global mockListings is not an array! Re-initializing to empty array.");
   mockListings = [];
@@ -365,7 +364,7 @@ export const fetchListings = async (page: number, limit: number, filters: Listin
   try {
     if (!Array.isArray(mockListings)) {
       console.error("fetchListings: mockListings is not an array at time of call. Returning empty.");
-      return simulateApiCall([], 50); // Resolve with empty
+      return simulateApiCall([], 50);
     }
 
     let filtered = mockListings.filter(listing => {
@@ -414,7 +413,7 @@ export const fetchListings = async (page: number, limit: number, filters: Listin
 
   } catch (error) {
     console.error("Error explicitly caught during fetchListings filtering/slicing logic:", error);
-    return simulateApiCall([], 50); // Ensure it always resolves with an array
+    return simulateApiCall([], 50);
   }
 };
 
@@ -422,14 +421,13 @@ export const fetchListings = async (page: number, limit: number, filters: Listin
 export const getRoomById = async (id: string): Promise<Listing | undefined> => {
  try {
     const room = mockListings.find(listing => listing && listing.id === id);
-    // Ensure images always have a placeholder if empty for this room
     if (room && (!room.images || room.images.length === 0)) {
         room.images = [{ id: 'placeholder', url: `https://picsum.photos/seed/${id}_placeholder/800/600`, alt: 'Imagem do quarto indisponível' }];
     }
     return simulateApiCall(room);
   } catch (error) {
     console.error("Error in getRoomById:", error);
-    return simulateApiCall(undefined); 
+    return simulateApiCall(undefined);
   }
 };
 
@@ -443,44 +441,41 @@ export const bookMockRoom = async (listingId: string, userId: string, checkInDat
       throw new Error("Este quarto não está mais disponível.");
     }
 
-    listing.isAvailable = false; 
+    listing.isAvailable = false;
 
     const newBooking: Booking = {
       id: `booking${Date.now()}${Math.random().toString(16).slice(2)}`,
       listingId,
       listing,
       userId,
-      user: mockUser, 
+      user: mockUser,
       checkInDate,
       checkOutDate,
-      totalPrice: listing.pricePerNight * 30, 
+      totalPrice: listing.pricePerNight * 30,
       status: 'Confirmada',
       guests,
       bookedAt: new Date().toISOString().split('T')[0],
     };
     mockBookings.push(newBooking);
-    return simulateApiCall(newBooking, 1000); 
+    return simulateApiCall(newBooking, 1000);
   } catch (error) {
     console.error("Error in bookMockRoom:", error);
-    return Promise.reject(error); 
+    return Promise.reject(error);
   }
 };
 
 export const fetchUserBookings = async (userId: string): Promise<Booking[]> => {
   try {
     const userBookings = mockBookings.filter(booking => booking && booking.userId === userId);
-    // Ensure each booking has a valid listing object
     userBookings.forEach(booking => {
         if (!booking.listing) {
             const foundListing = mockListings.find(l => l.id === booking.listingId);
             if (foundListing) {
                 booking.listing = foundListing;
             } else {
-                // Fallback if listing somehow not found (should not happen with current mocks)
                 console.warn(`Listing with ID ${booking.listingId} not found for booking ${booking.id}`);
-                // You might want to create a placeholder listing or handle this case appropriately
                 booking.listing = {
-                     id: booking.listingId, title: 'Quarto Indisponível', description: 'Detalhes não disponíveis.', 
+                     id: booking.listingId, title: 'Quarto Indisponível', description: 'Detalhes não disponíveis.',
                      images: [{id: 'placeholder-booking', url: `https://placehold.co/400x300.png?text=Quarto+N/D`, alt:'Quarto indisponível'}],
                      pricePerNight: 0, address: 'N/D', lat:0, lng:0, guests:0, bedrooms:0, beds:0, baths:0, amenities:[],
                      rating:0, reviews:0, host: mockAdminUser, university: universityAreas[0], isAvailable: false, type: 'N/D',
@@ -500,9 +495,9 @@ export const fetchUserBookings = async (userId: string): Promise<Booking[]> => {
 };
 
 export const addMockListing = async (
-  newListingData: Omit<Listing, 'id' | 'rating' | 'reviews' | 'host' | 'amenities' | 'images' | 'university'> & { 
-    imageUrls: string[]; 
-    selectedAmenityIds: string[]; 
+  newListingData: Omit<Listing, 'id' | 'rating' | 'reviews' | 'host' | 'amenities' | 'images' | 'university'> & {
+    imageUrls: string[];
+    selectedAmenityIds: string[];
     universityAcronym: string;
     cancellationPolicy: string;
     houseRules: string;
@@ -510,21 +505,21 @@ export const addMockListing = async (
   }
 ): Promise<Listing> => {
   try {
-    await simulateApiCall(null, 300); 
+    await simulateApiCall(null, 300);
     const newId = `quarto${mockListings.length + 1}${Date.now().toString().slice(-4)}`;
-    
+
     let images: ListingImage[] = [];
     if (Array.isArray(newListingData.imageUrls)) {
-      images = newListingData.imageUrls.map((url, index) => ({ 
-        id: `img${newId}-${index}`, 
-        url: typeof url === 'string' && url.startsWith('http') ? url : `https://picsum.photos/seed/${newId}_img${index + 1}/800/600`, 
-        alt: `${newListingData.title || 'Anúncio'} - Imagem ${index + 1}` 
+      images = newListingData.imageUrls.map((url, index) => ({
+        id: `img${newId}-${index}`,
+        url: typeof url === 'string' && url.startsWith('http') ? url : `https://picsum.photos/seed/${newId}_img${index + 1}/800/600`,
+        alt: `${newListingData.title || 'Anúncio'} - Imagem ${index + 1}`
       }));
     }
-    if (images.length === 0) { // Ensure at least one placeholder image
+    if (images.length === 0) {
         images.push({ id: `img${newId}-placeholder`, url: `https://picsum.photos/seed/${newId}_placeholder/800/600`, alt: `${newListingData.title || 'Anúncio'} - Imagem Padrão` });
     }
-    
+
     let selectedAmenities: Amenity[] = [];
     if(Array.isArray(newListingData.selectedAmenityIds)) {
       selectedAmenities = commonAmenities.filter(amenity => newListingData.selectedAmenityIds.includes(amenity.id));
@@ -535,8 +530,8 @@ export const addMockListing = async (
     if (!universityDetails) {
       console.warn(`University with acronym ${newListingData.universityAcronym} not found. Defaulting.`);
     }
-    
-    let listingCategory = roomCategories.find(cat => cat.id === 'prox-campus')?.id || roomCategories[0].id; // Default
+
+    let listingCategory = roomCategories.find(cat => cat.id === 'prox-campus')?.id || roomCategories[0].id;
     if (newListingData.title.toLowerCase().includes('kitnet')) listingCategory = 'kitnet';
     else if (newListingData.title.toLowerCase().includes('república')) listingCategory = 'republica';
 
@@ -555,22 +550,22 @@ export const addMockListing = async (
       beds: newListingData.beds,
       baths: newListingData.baths,
       amenities: selectedAmenities,
-      rating: parseFloat((Math.random() * (5 - 3.5) + 3.5).toFixed(1)), 
+      rating: parseFloat((Math.random() * (5 - 3.5) + 3.5).toFixed(1)),
       reviews: Math.floor(Math.random() * 100) + 5,
-      host: mockAdminUser, 
-      university: universityDetails || universityAreas[0], 
+      host: mockAdminUser,
+      university: universityDetails || universityAreas[0],
       isAvailable: true,
-      type: (newListingData as any).type || 'Quarto Individual', 
+      type: (newListingData as any).type || 'Quarto Individual',
       category: listingCategory,
       cancellationPolicy: newListingData.cancellationPolicy || defaultCancellationPolicy,
       houseRules: newListingData.houseRules || defaultHouseRules,
       safetyAndProperty: newListingData.safetyAndProperty || defaultSafetyAndProperty,
     };
-    mockListings.unshift(newListing); 
-    return newListing; 
+    mockListings.unshift(newListing);
+    return newListing;
   } catch (error) {
      console.error("Error in addMockListing:", error);
-     throw error; 
+     throw error;
   }
 };
 
@@ -583,9 +578,9 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
       .reduce((sum, booking) => sum + booking.totalPrice, 0);
 
     const stats: AdminDashboardStats = {
-      totalRevenue: totalRevenueFromBookings * 0.15, 
-      newUsers: 25, 
-      pendingApprovals: mockListings.filter(l => l && l.rating < 4.2 && l.isAvailable).length, 
+      totalRevenue: totalRevenueFromBookings * 0.15,
+      newUsers: 25,
+      pendingApprovals: mockListings.filter(l => l && l.rating < 4.2 && l.isAvailable).length,
       activeBookings: activeBookingsCount,
     };
     return simulateApiCall(stats, 700);
@@ -619,7 +614,7 @@ export const getBookingStatusData = async (): Promise<{ status: string; count: n
       { status: "Ativas", count: mockBookings.filter(b => b && b.status === "Confirmada").length, fill: "hsl(var(--chart-1))" },
       { status: "Anteriores", count: mockBookings.filter(b => b && b.status === "Concluída").length, fill: "hsl(var(--chart-2))" },
       { status: "Canceladas", count: mockBookings.filter(b => b && b.status === "Cancelada").length, fill: "hsl(var(--chart-3))" },
-    ]; 
+    ];
     return simulateApiCall(data, 500);
   } catch (error) {
     console.error("Error in getBookingStatusData:", error);
@@ -627,6 +622,114 @@ export const getBookingStatusData = async (): Promise<{ status: string; count: n
   }
 };
 
-export { mockUser, mockAdminUser };
+// --- Mock Data for Messaging ---
+export const mockUser2: User = {
+  id: 'user456',
+  name: 'Ana Silva',
+  email: 'ana.silva@exemplo.com',
+  avatarUrl: 'https://picsum.photos/seed/user456/40/40',
+};
 
-    
+export const mockUser3: User = {
+  id: 'user789',
+  name: 'Carlos Souza',
+  email: 'carlos.souza@exemplo.com',
+  avatarUrl: 'https://picsum.photos/seed/user789/40/40',
+};
+
+let mockMessages: ChatMessage[] = [
+  { id: 'msg1', conversationId: 'conv1', senderId: mockUser2.id, text: 'Olá! Tudo bem com o quarto?', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
+  { id: 'msg2', conversationId: 'conv1', senderId: mockUser.id, text: 'Oi Ana! Tudo ótimo, e com você?', timestamp: new Date(Date.now() - 1000 * 60 * 58 * 2).toISOString() },
+  { id: 'msg3', conversationId: 'conv1', senderId: mockUser2.id, text: 'Tudo certo também! Só queria confirmar se o Wi-Fi está funcionando bem.', timestamp: new Date(Date.now() - 1000 * 60 * 55 * 2).toISOString() },
+  { id: 'msg4', conversationId: 'conv1', senderId: mockUser.id, text: 'Sim, está perfeito! Velocidade boa.', timestamp: new Date(Date.now() - 1000 * 60 * 50 * 2).toISOString() },
+  { id: 'msg5', conversationId: 'conv2', senderId: mockUser3.id, text: 'E aí, tudo pronto para a mudança?', timestamp: new Date(Date.now() - 1000 * 60 * 30 * 2).toISOString() },
+  { id: 'msg6', conversationId: 'conv2', senderId: mockUser.id, text: 'Quase! Ansioso.', timestamp: new Date(Date.now() - 1000 * 60 * 28 * 2).toISOString() },
+  { id: 'msg7', conversationId: 'conv3', senderId: mockAdminUser.id, text: 'Bem-vindo ao WeStudy! Se precisar de algo, é só chamar.', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
+  { id: 'msg8', conversationId: 'conv3', senderId: mockUser.id, text: 'Obrigado!', timestamp: new Date(Date.now() - 1000 * 60 * 50 * 24).toISOString() }
+];
+
+let mockConversations: ChatConversation[] = [
+  {
+    id: 'conv1',
+    participants: [mockUser, mockUser2],
+    lastMessage: mockMessages.filter(m => m.conversationId === 'conv1').sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0],
+    unreadCount: 1,
+  },
+  {
+    id: 'conv2',
+    participants: [mockUser, mockUser3],
+    lastMessage: mockMessages.filter(m => m.conversationId === 'conv2').sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0],
+    unreadCount: 0,
+  },
+  {
+    id: 'conv3',
+    participants: [mockUser, mockAdminUser],
+    lastMessage: mockMessages.filter(m => m.conversationId === 'conv3').sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0],
+    unreadCount: 0,
+  },
+];
+
+export const fetchUserConversations = async (userId: string): Promise<ChatConversation[]> => {
+  const userConversations = mockConversations.filter(conv => conv.participants.some(p => p.id === userId));
+  // Ensure lastMessage is up-to-date
+  userConversations.forEach(conv => {
+    const messages = mockMessages.filter(m => m.conversationId === conv.id).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    if (messages.length > 0) {
+      conv.lastMessage = messages[0];
+    }
+  });
+  return simulateApiCall(userConversations.sort((a,b) => new Date(b.lastMessage?.timestamp || 0).getTime() - new Date(a.lastMessage?.timestamp || 0).getTime()), 200);
+};
+
+export const fetchMessagesForConversation = async (conversationId: string): Promise<ChatMessage[]> => {
+  const messages = mockMessages.filter(msg => msg.conversationId === conversationId).sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  return simulateApiCall(messages, 150);
+};
+
+export const sendMockMessage = async (conversationId: string, senderId: string, text: string): Promise<ChatMessage> => {
+  const conversation = mockConversations.find(c => c.id === conversationId);
+  if (!conversation) throw new Error("Conversa não encontrada");
+
+  const newMessage: ChatMessage = {
+    id: `msg${Date.now()}${Math.random().toString(16).slice(2)}`,
+    conversationId,
+    senderId,
+    text,
+    timestamp: new Date().toISOString(),
+  };
+  mockMessages.push(newMessage);
+  conversation.lastMessage = newMessage; // Update last message in the conversation
+  
+  // Simulate localStorage persistence for messages of this conversation for slightly better UX
+  try {
+    const storedConvMessages = JSON.parse(localStorage.getItem(`messages_${conversationId}`) || '[]') as ChatMessage[];
+    storedConvMessages.push(newMessage);
+    localStorage.setItem(`messages_${conversationId}`, JSON.stringify(storedConvMessages));
+  } catch (e) {
+    console.warn("Não foi possível salvar mensagem mockada no localStorage:", e);
+  }
+
+  return simulateApiCall(newMessage, 50);
+};
+
+// Helper to load messages from localStorage for slightly better mock persistence during a session
+export const loadMockMessagesFromStorage = (conversationId: string): ChatMessage[] => {
+  try {
+    const stored = localStorage.getItem(`messages_${conversationId}`);
+    if (stored) {
+      const storedMessages = JSON.parse(stored) as ChatMessage[];
+      // Merge with initial mockMessages, ensuring no duplicates and correct order
+      const initialConvMessages = mockMessages.filter(m => m.conversationId === conversationId);
+      const messageMap = new Map<string, ChatMessage>();
+      initialConvMessages.forEach(m => messageMap.set(m.id, m));
+      storedMessages.forEach(m => messageMap.set(m.id, m)); // Overwrite with stored if ID exists
+      return Array.from(messageMap.values()).sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    }
+  } catch (e) {
+    console.warn("Não foi possível carregar mensagens mockadas do localStorage:", e);
+  }
+  return mockMessages.filter(msg => msg.conversationId === conversationId).sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+}
+
+
+export { mockUser, mockAdminUser };

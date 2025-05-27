@@ -97,4 +97,18 @@ export interface Category {
   description?: string; // Optional description for the category
 }
 
-```
+// Tipos para a funcionalidade de Mensagens
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  text: string;
+  timestamp: string; // ISO string date
+}
+
+export interface ChatConversation {
+  id: string;
+  participants: User[]; // Array of users in the conversation (usually 2)
+  lastMessage?: ChatMessage;
+  unreadCount?: number;
+}
