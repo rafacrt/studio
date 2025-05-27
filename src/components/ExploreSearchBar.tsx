@@ -2,25 +2,29 @@
 "use client";
 
 import { useState } from 'react';
-// import { Button } from '@/components/ui/button'; // Filter button removed
-import { Search } from 'lucide-react'; // SlidersHorizontal removed
+import { Search, SlidersHorizontal } from 'lucide-react'; // SlidersHorizontal for filter icon
+import { Button } from '@/components/ui/button'; // For filter button
 
 interface ExploreSearchBarProps {
   onSearch?: (term: string) => void;
-  initialSearchTerm?: string;
-  // showFilterButton and onFilterClick props removed
+  // onFilterClick prop removed as filter button functionality is now illustrative
 }
 
 export function ExploreSearchBar({
   onSearch,
-  initialSearchTerm = '',
 }: ExploreSearchBarProps) {
-  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && onSearch) {
       onSearch(searchTerm);
     }
+  };
+  
+  // Placeholder for filter click, can be removed if not needed for visual mock
+  const handleFilterIconClick = () => {
+    // In a real app, this would open a filter modal
+    console.log("Filter icon clicked - (Placeholder)");
   };
 
   return (
@@ -30,23 +34,21 @@ export function ExploreSearchBar({
         <input
           type="text"
           placeholder="Onde deseja ir?"
-          className="text-sm font-semibold text-foreground placeholder:font-semibold placeholder-foreground focus:outline-none bg-transparent w-full h-full" // Removed flex-col and inner div for subtitle
+          className="text-sm font-semibold text-foreground placeholder:font-semibold placeholder-foreground focus:outline-none bg-transparent w-full h-full"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={handleKeyDown}
         />
-        {/* Filter Button Removed */}
-        {/* {showFilterButton && (
-          <Button
-            variant="outline"
+        {/* Illustrative Filter Button - can be made functional later */}
+        <Button
+            variant="ghost" 
             size="icon"
-            className="h-9 w-9 rounded-full border flex-shrink-0 bg-background hover:bg-muted mr-1"
-            onClick={onFilterClick}
+            className="h-9 w-9 rounded-full flex-shrink-0 hover:bg-muted ml-2"
+            onClick={handleFilterIconClick} 
             aria-label="Filtros"
           >
-            <SlidersHorizontal className="h-4 w-4" />
-          </Button>
-        )} */}
+            <SlidersHorizontal className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+        </Button>
       </div>
     </div>
   );
