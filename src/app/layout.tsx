@@ -1,14 +1,14 @@
 
-"use client"; // Adicionado para permitir hooks como usePathname, useSearchParams, useEffect
+"use client"; 
 
-import type { Metadata, Viewport } from 'next'; // Metadata e Viewport podem precisar ser ajustados ou removidos se layout.tsx se tornar totalmente client-side
+import type { Metadata, Viewport } from 'next'; 
 import { Geist } from 'next/font/google';
 import './globals.css';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
 import { LoginAnimationWrapper } from '@/components/LoginAnimationWrapper';
-import { usePathname, useSearchParams } from 'next/navigation'; // Importar hooks
-import { useEffect, useRef } from 'react'; // Importar useEffect e useRef
+import { usePathname, useSearchParams } from 'next/navigation'; 
+import { useEffect, useRef, Suspense } from 'react'; // Importar Suspense
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -49,16 +49,16 @@ function PageLoadingEffect() {
     const currentPath = pathname + searchParams.toString();
     if (currentPath !== previousPathRef.current) {
       startPageLoading();
-      previousPathRef.current = currentPath; // Atualiza o caminho anterior
+      previousPathRef.current = currentPath; 
       const timer = setTimeout(() => {
         finishPageLoading();
-      }, 700); // Simula tempo de carregamento
+      }, 700); 
 
       return () => clearTimeout(timer);
     }
   }, [pathname, searchParams, startPageLoading, finishPageLoading]);
 
-  return null; // Este componente não renderiza nada visualmente
+  return null; 
 }
 
 export default function RootLayout({
@@ -69,7 +69,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
-        {/* Adicionar metadata e viewport aqui se necessário para client components */}
+        
         <title>WeStudy - Seu Próximo Quarto</title>
         <meta name="description" content="Descubra e reserve quartos universitários com o WeStudy." />
         <link rel="manifest" href="/manifest.json" />
@@ -84,9 +84,11 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} font-sans antialiased`}>
         <AuthProvider>
-          <PageLoadingEffect /> {/* Componente para gerenciar o efeito de loading */}
-          <LoginAnimationWrapper /> {/* Mantido para animação de login e agora também loading de página */}
-          {children}
+          <PageLoadingEffect /> 
+          <LoginAnimationWrapper /> 
+          <Suspense fallback={<div>Carregando...</div>}>
+            {children}
+          </Suspense>
           <Toaster />
         </AuthProvider>
       </body>
