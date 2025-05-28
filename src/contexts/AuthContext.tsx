@@ -17,9 +17,9 @@ interface AuthContextType {
   logout: () => void;
   isLoadingAuth: boolean;
   isAnimatingLogin: boolean;
-  isPageLoading: boolean; // Novo estado para loading de página
-  startPageLoading: () => void; // Nova função
-  finishPageLoading: () => void; // Nova função
+  isPageLoading: boolean; 
+  startPageLoading: () => void; 
+  finishPageLoading: () => void; 
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isAnimatingLogin, setIsAnimatingLogin] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(false); // Inicializa o novo estado
+  const [isPageLoading, setIsPageLoading] = useState(false); 
   const router = useRouter();
   const { toast } = useToast();
 
@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(() => {
     if(isAnimatingLogin) setIsAnimatingLogin(false);
-    if(isPageLoading) setIsPageLoading(false); // Garante que o loading de página também seja resetado
+    if(isPageLoading) setIsPageLoading(false); 
 
     setUser(null);
     setIsAuthenticated(false);
@@ -134,9 +134,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       logout,
       isLoadingAuth,
       isAnimatingLogin,
-      isPageLoading,      // Fornece o novo estado
-      startPageLoading,   // Fornece a nova função
-      finishPageLoading   // Fornece a nova função
+      isPageLoading,      
+      startPageLoading,   
+      finishPageLoading   
     }}>
       {children}
     </AuthContext.Provider>
@@ -150,3 +150,9 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Export PageLoadingEffectComponent here to be used in RootLayout if needed, or keep it within RootLayout
+// For now, I'll assume the PageLoadingEffectComponent in RootLayout is fine as it uses useContext(AuthContext)
+// The internal PageLoadingEffect from previous suggestions is what I've effectively moved into ClientSideEffects/PageLoadingEffectComponent
+// and made its rendering conditional.
+export { AuthContext }; // Exporting context for PageLoadingEffectComponent in layout

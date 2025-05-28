@@ -4,54 +4,34 @@
 import type { Metadata, Viewport } from 'next'; 
 import { Geist } from 'next/font/google';
 import './globals.css';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { AuthProvider } from '@/contexts/AuthContext'; // Removed useAuth import as it's not directly used here for page loading logic anymore
 import { Toaster } from '@/components/ui/toaster';
-import { LoginAnimationWrapper } from '@/components/LoginAnimationWrapper';
+import { LoginAnimationWrapper } from '@/components/LoginAnimationWrapper'; // Renamed to AppLoadingOverlay in previous steps, ensuring correct name
 import { usePathname, useSearchParams } from 'next/navigation'; 
-import { useEffect, useRef, Suspense } from 'react'; // Importar Suspense
+import { useEffect, useState, Suspense, useRef } from 'react'; // Added useState for isMounted
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
 });
 
-// Metadata e Viewport podem precisar ser exportados de forma diferente ou gerenciados via head tag se o RootLayout se tornar totalmente client-side.
-// Por ora, mantemos como está, mas pode gerar warnings ou precisar de ajustes.
-// export const metadata: Metadata = { // Comentado para evitar erro de "metadata export from client component"
-//   title: 'WeStudy - Seu Próximo Quarto',
-//   description: 'Descubra e reserve quartos universitários com o WeStudy. Inspirado no Quinto Andar, projetado para praticidade.',
-//   applicationName: 'WeStudy',
-//   appleWebApp: {
-//     capable: true,
-//     title: 'WeStudy',
-//     statusBarStyle: 'default',
-//   },
-// };
-
-// export const viewport: Viewport = { // Comentado para evitar erro de "viewport export from client component"
-//   themeColor: [
-//     { media: '(prefers-color-scheme: light)', color: '#F2F2F7' },
-//     { media: '(prefers-color-scheme: dark)', color: '#1C1C1E' },
-//   ],
-//   width: 'device-width',
-//   initialScale: 1,
-//   maximumScale: 1,
-//   userScalable: false,
-// };
-
-function PageLoadingEffect() {
+// This component now handles client-side effects for page loading
+function PageLoadingEffectComponent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { startPageLoading, finishPageLoading } = useAuth();
+  // Assuming useAuth() provides these, or they need to be managed differently if AuthContext isn't directly providing them here
+  // For simplicity, I'll assume they are managed within AuthContext. If not, this would need adjustment.
+  // This component is now rendered conditionally, so direct use of useAuth here for these functions is fine.
+  const { startPageLoading, finishPageLoading } = useContext(AuthContext); 
   const previousPathRef = useRef(pathname + searchParams.toString());
 
   useEffect(() => {
     const currentPath = pathname + searchParams.toString();
     if (currentPath !== previousPathRef.current) {
-      startPageLoading();
+      if (startPageLoading) startPageLoading();
       previousPathRef.current = currentPath; 
       const timer = setTimeout(() => {
-        finishPageLoading();
+        if (finishPageLoading) finishPageLoading();
       }, 700); 
 
       return () => clearTimeout(timer);
@@ -61,11 +41,18 @@ function PageLoadingEffect() {
   return null; 
 }
 
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
@@ -84,7 +71,7 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} font-sans antialiased`}>
         <AuthProvider>
-          <PageLoadingEffect /> 
+          {isMounted && <PageLoadingEffectComponent />} 
           <LoginAnimationWrapper /> 
           <Suspense fallback={<div>Carregando...</div>}>
             {children}
