@@ -13,10 +13,10 @@ const AppLogo: React.FC<AppLogoProps> = ({ className, ...props }) => (
     <Image
       src="/images/westudy-logo.png" // **USER ACTION REQUIRED**: Place your logo at public/images/westudy-logo.png
       alt="WeStudy Logo"
-      width={200} // Intrinsic width of the image (can be overridden by CSS if layout="responsive" or "fill")
+      width={200} // Intrinsic width of the image
       height={50} // Intrinsic height of the image
-      priority // Loads the logo faster, good for LCP
-      data-ai-hint="app logo" // AI hint for the placeholder
+      // Removed priority prop to potentially improve resilience if the image is missing
+      data-ai-hint="app logo"
       {...props} // Spread any additional props
     />
   </div>
