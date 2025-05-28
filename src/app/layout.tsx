@@ -4,11 +4,11 @@
 import type { Metadata, Viewport } from 'next'; 
 import { Geist } from 'next/font/google';
 import './globals.css';
-import { AuthProvider } from '@/contexts/AuthContext'; // Removed useAuth import as it's not directly used here for page loading logic anymore
+import { AuthProvider, AuthContext } from '@/contexts/AuthContext'; 
 import { Toaster } from '@/components/ui/toaster';
-import { LoginAnimationWrapper } from '@/components/LoginAnimationWrapper'; // Renamed to AppLoadingOverlay in previous steps, ensuring correct name
+import { LoginAnimationWrapper } from '@/components/LoginAnimationWrapper';
 import { usePathname, useSearchParams } from 'next/navigation'; 
-import { useEffect, useState, Suspense, useRef } from 'react'; // Added useState for isMounted
+import { useEffect, useState, Suspense, useRef, useContext } from 'react'; // Added useContext
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -82,3 +82,4 @@ export default function RootLayout({
     </html>
   );
 }
+
