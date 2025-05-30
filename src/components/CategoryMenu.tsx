@@ -25,7 +25,10 @@ export function CategoryMenu({
   };
 
   return (
-    <div className="sticky top-[76px] z-30 bg-background/95 backdrop-blur-sm border-b border-border px-2 md:px-0"> {/* Adjusted top value and horizontal padding */}
+    <div className={cn(
+        "sticky top-[76px] z-30 bg-background/95 backdrop-blur-sm border-b border-border px-2 md:px-0",
+        "hidden" // Adicionada classe para ocultar o menu
+    )}>
       <div
         ref={scrollContainerRef}
         className="flex space-x-6 overflow-x-auto py-3 hide-scrollbar justify-start md:justify-center max-w-5xl mx-auto px-2 md:px-4" // Added max-width and mx-auto for centering container
