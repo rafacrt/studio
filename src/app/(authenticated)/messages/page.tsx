@@ -10,9 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Send, MessageSquareText, ArrowLeft, Search, SlidersHorizontal } from 'lucide-react';
-import { format, parseISO, isToday, isYesterday, formatDistanceToNowStrict } from 'date-fns';
+import { format, parseISO, isToday, isYesterday, formatRelative } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 // Componente para um item da lista de conversas
 interface ConversationListItemProps {
@@ -38,13 +39,20 @@ function ConversationListItem({ conversation, isSelected, onSelect, currentUser 
     } else if (isYesterday(date)) {
       lastMessageTimestamp = "Ontem";
     } else {
-      lastMessageTimestamp = format(date, "dd/MM/yy", { locale: ptBR });
+      lastMessageTimestamp = formatRelative(date, new Date(), { locale: ptBR }).split(' ')[0]; // e.g., "anteontem", "há 3 dias"
+      // More concise for older dates:
+      if (!["Ontem", "Hoje"].includes(lastMessageTimestamp) && !lastMessageTimestamp.includes(":")) {
+         lastMessageTimestamp = format(date, "dd/MM", { locale: ptBR });
+      }
     }
   }
 
   const mockStatus = Math.random() > 0.5 ? "Confirmada" : "Pendente";
   const mockDateRange = "7-8 de jun.";
-  const mockIdentifier = "04003";
+  const mockIdentifier = conversation.id.slice(-5); // Mock identifier from conversation id
+
+  // For the room image, using a placeholder. In a real app, this would come from conversation.listing.imageUrl or similar
+  const roomImageUrl = `https://placehold.co/100x100.png?text=${mockIdentifier}`;
 
   return (
     <button
@@ -54,12 +62,23 @@ function ConversationListItem({ conversation, isSelected, onSelect, currentUser 
         isSelected ? "bg-muted/50" : ""
       )}
     >
-      <Avatar className="h-12 w-12 mr-4 flex-shrink-0 mt-1">
-        <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.name} data-ai-hint="person avatar conversation" />
-        <AvatarFallback className="bg-foreground text-background font-semibold">
-          {otherParticipant.name.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <div className="relative w-14 h-14 mr-3 flex-shrink-0">
+        <Image
+          src={roomImageUrl}
+          alt={`Quarto da conversa com ${otherParticipant.name}`}
+          width={56}
+          height={56}
+          className="rounded-lg object-cover w-full h-full"
+          data-ai-hint="listing room small"
+        />
+        <Avatar className="absolute -bottom-1 -right-1 h-7 w-7 border-2 border-background">
+          <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.name} data-ai-hint="person avatar small conversation" />
+          <AvatarFallback className="text-xs bg-foreground text-background font-semibold">
+            {otherParticipant.name.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      </div>
+
       <div className="flex-grow overflow-hidden">
         <div className="flex justify-between items-baseline">
           <h3 className="text-md font-semibold text-foreground truncate">{otherParticipant.name}</h3>
@@ -67,10 +86,11 @@ function ConversationListItem({ conversation, isSelected, onSelect, currentUser 
             <p className="text-xs text-muted-foreground whitespace-nowrap ml-2">{lastMessageTimestamp}</p>
           )}
         </div>
-        <p className={cn("text-sm truncate mt-0.5", conversation.unreadCount && !isSelected ? "text-foreground font-medium" : "text-muted-foreground")}>{lastMessageText}</p>
+        <p className={cn("text-sm truncate mt-0.5", conversation.unreadCount && !isSelected && conversation.lastMessage?.senderId !== currentUser?.id ? "text-foreground font-medium" : "text-muted-foreground")}>{lastMessageText}</p>
         <div className="text-xs text-muted-foreground/80 mt-1 flex items-center">
-          {mockStatus === "Confirmada" && <span className="h-2 w-2 bg-green-500 rounded-full mr-1.5"></span>}
-          {mockStatus === "Pendente" && <span className="h-2 w-2 bg-yellow-500 rounded-full mr-1.5"></span>}
+          {mockStatus === "Confirmada" && <span className="h-1.5 w-1.5 bg-green-500 rounded-full mr-1.5"></span>}
+          {/* Removed Pendente dot to match screenshot more closely if needed, or keep for clarity */}
+          {/* {mockStatus === "Pendente" && <span className="h-2 w-2 bg-yellow-500 rounded-full mr-1.5"></span>} */}
           <span>{mockStatus}</span>
           <span className="mx-1">·</span>
           <span>{mockDateRange}</span>
@@ -101,8 +121,8 @@ function ChatMessageBubble({ message, isSender, senderUser, showAvatar }: ChatMe
       <div className={`flex items-end max-w-[75%] ${isSender ? 'flex-row-reverse' : 'flex-row'}`}>
         {!isSender && senderUser && showAvatar && (
           <Avatar className="h-6 w-6 self-end mb-1 flex-shrink-0 mr-2">
-            <AvatarImage src={senderUser.avatarUrl} alt={senderUser.name} data-ai-hint="person avatar small" />
-            <AvatarFallback>{senderUser.name.charAt(0).toUpperCase()}</AvatarFallback>
+            <AvatarImage src={senderUser.avatarUrl} alt={senderUser.name} data-ai-hint="person avatar message" />
+            <AvatarFallback className="text-xs">{senderUser.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         )}
         {!isSender && !showAvatar && <div className="w-8 flex-shrink-0 mr-2"></div>} {/* Placeholder for alignment */}
@@ -139,7 +159,7 @@ export default function MessagesPage() {
     return () => {
       document.body.style.overflow = originalOverflow;
     };
-  }, []); // Empty dependency array ensures this runs only on mount and unmount
+  }, []);
 
 
   useEffect(() => {
@@ -159,7 +179,7 @@ export default function MessagesPage() {
       const loadedMessages = loadMockMessagesFromStorage(selectedConversation.id);
       setMessages(loadedMessages);
       setIsLoadingMessages(false);
-      // Only fetch if no messages were loaded from storage, to simulate initial load
+      
       if (loadedMessages.length === 0) {
         fetchMessagesForConversation(selectedConversation.id)
           .then(setMessages)
@@ -206,7 +226,7 @@ export default function MessagesPage() {
     try {
       const sentMessage = await sendMockMessage(selectedConversation.id, user.id, newMessage.trim());
       setMessages(prev => prev.map(m => m.id === tempMessageId ? sentMessage : m));
-      // Move conversation to top and update last message
+      
       setConversations(prevConvs => {
         const updatedConv = prevConvs.find(c => c.id === selectedConversation.id);
         if (!updatedConv) return prevConvs;
@@ -228,7 +248,7 @@ export default function MessagesPage() {
       {/* Sidebar de Conversas */}
       <aside className={cn(
         "border-r border-border flex flex-col",
-        selectedConversation ? "hidden md:flex md:w-[380px] lg:w-[420px]" : "w-full md:flex md:w-[380px] lg:w-[420px]"
+        selectedConversation ? "hidden md:flex md:w-[420px] lg:w-[460px]" : "w-full md:flex md:w-[420px] lg:w-[460px]"
       )}>
         <div className="p-4 border-b border-border sticky top-0 bg-background z-10">
           <div className="flex justify-between items-center mb-4">
@@ -296,7 +316,7 @@ export default function MessagesPage() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <Avatar className="h-9 w-9 mr-3">
-                <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.name} data-ai-hint="person avatar" />
+                <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.name} data-ai-hint="person avatar"/>
                 <AvatarFallback>{otherParticipant.name.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <h2 className="text-lg font-semibold text-foreground">{otherParticipant.name}</h2>
@@ -310,15 +330,16 @@ export default function MessagesPage() {
               ) : messages.length > 0 ? (
                 messages.map((msg, index) => {
                   const prevMessage = messages[index - 1];
-                  // Show avatar if it's the first message OR if the sender is different from the previous message's sender
-                  const showAvatar = !isSender(msg.senderId) && (!prevMessage || prevMessage.senderId !== msg.senderId);
+                  const isMsgSenderCurrentUser = msg.senderId === user?.id;
+                  const showAvatarForThisMessage = !isMsgSenderCurrentUser && (!prevMessage || prevMessage.senderId !== msg.senderId || isMsgSenderCurrentUser);
+                  
                   return (
                     <ChatMessageBubble
                       key={msg.id}
                       message={msg}
-                      isSender={msg.senderId === user?.id}
+                      isSender={isMsgSenderCurrentUser}
                       senderUser={selectedConversation.participants.find(p => p.id === msg.senderId)}
-                      showAvatar={showAvatar}
+                      showAvatar={showAvatarForThisMessage}
                     />
                   );
                 })
@@ -356,7 +377,3 @@ export default function MessagesPage() {
     </div>
   );
 }
-function isSender(senderId: string): any {
-    throw new Error('Function not implemented.');
-}
-
