@@ -4,7 +4,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Settings, HelpCircle, LogOut, ChevronRight, ShieldCheck, Briefcase, Award, CalendarClock } from 'lucide-react';
+import { User, Settings, HelpCircle, LogOut, ChevronRight, ShieldCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
@@ -58,25 +58,27 @@ export default function ProfilePage() {
         </header>
 
         <Card className="shadow-lg rounded-2xl mb-8 overflow-hidden">
-          <CardContent className="p-5 flex items-center space-x-4">
-            <div className="relative">
-              <Avatar className="h-20 w-20 border-2 border-background">
-                <AvatarImage src={user?.avatarUrl} alt={user?.name || "Usuário"} data-ai-hint="user avatar large" />
-                <AvatarFallback className="text-2xl bg-muted">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : <User size={32} />}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-1 -right-1 bg-pink-600 text-white rounded-full p-1 border-2 border-card">
-                <ShieldCheck size={14} strokeWidth={3}/>
+          <CardContent className="p-5 flex items-center justify-between space-x-4">
+            <div className="flex flex-col items-center space-y-2 flex-1"> {/* Changed: Wrapper for avatar and text */}
+              <div className="relative">
+                <Avatar className="h-20 w-20 border-2 border-background">
+                  <AvatarImage src={user?.avatarUrl} alt={user?.name || "Usuário"} data-ai-hint="user avatar large" />
+                  <AvatarFallback className="text-2xl bg-muted">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : <User size={32} />}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-1 -right-1 bg-pink-600 text-white rounded-full p-1 border-2 border-card">
+                  <ShieldCheck size={14} strokeWidth={3}/>
+                </div>
+              </div>
+              
+              <div className="text-center"> {/* Changed: Text centering */}
+                <h2 className="text-xl font-bold text-foreground">{user?.name || "Nome do Usuário"}</h2>
+                <p className="text-sm text-muted-foreground">{userLocation}</p>
               </div>
             </div>
-            
-            <div className="flex-grow">
-              <h2 className="text-xl font-bold text-foreground">{user?.name || "Nome do Usuário"}</h2>
-              <p className="text-sm text-muted-foreground">{userLocation}</p>
-            </div>
 
-            <Separator orientation="vertical" className="h-16 self-center mx-2" />
+            <Separator orientation="vertical" className="h-24 self-center mx-2" /> {/* Adjusted height for better visual balance */}
 
             <div className="space-y-2 text-sm text-right flex-shrink-0 w-28">
               <div>
@@ -152,3 +154,4 @@ const ProfileLinkItem: React.FC<ProfileLinkItemProps> = ({ icon: Icon, label, on
     </button>
   );
 };
+
