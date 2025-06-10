@@ -33,25 +33,32 @@ function ConversationListItem({ conversation, isSelected, onSelect, currentUser 
 
   let lastMessageTimestamp = "";
   if (conversation.lastMessage?.timestamp) {
-    const date = parseISO(conversation.lastMessage.timestamp);
-    if (isToday(date)) {
-      lastMessageTimestamp = format(date, "HH:mm", { locale: ptBR });
-    } else if (isYesterday(date)) {
-      lastMessageTimestamp = "Ontem";
-    } else {
-      lastMessageTimestamp = formatRelative(date, new Date(), { locale: ptBR }).split(' ')[0]; // e.g., "anteontem", "há 3 dias"
-      // More concise for older dates:
-      if (!["Ontem", "Hoje"].includes(lastMessageTimestamp) && !lastMessageTimestamp.includes(":")) {
-         lastMessageTimestamp = format(date, "dd/MM", { locale: ptBR });
+    try {
+      const date = parseISO(conversation.lastMessage.timestamp);
+      if (date instanceof Date && !isNaN(date.valueOf())) {
+        if (isToday(date)) {
+          lastMessageTimestamp = format(date, "HH:mm", { locale: ptBR });
+        } else if (isYesterday(date)) {
+          lastMessageTimestamp = "Ontem";
+        } else {
+          lastMessageTimestamp = formatRelative(date, new Date(), { locale: ptBR }).split(' ')[0]; 
+          if (!["Ontem", "Hoje"].includes(lastMessageTimestamp) && !lastMessageTimestamp.includes(":")) {
+             lastMessageTimestamp = format(date, "dd/MM", { locale: ptBR });
+          }
+        }
+      } else {
+        lastMessageTimestamp = "Data Inv.";
       }
+    } catch (e) {
+      console.error("Error formatting conversation timestamp:", e);
+      lastMessageTimestamp = "Erro Data";
     }
   }
 
   const mockStatus = Math.random() > 0.5 ? "Confirmada" : "Pendente";
   const mockDateRange = "7-8 de jun.";
-  const mockIdentifier = conversation.id.slice(-5); // Mock identifier from conversation id
+  const mockIdentifier = conversation.id.slice(-5); 
 
-  // For the room image, using a placeholder. In a real app, this would come from conversation.listing.imageUrl or similar
   const roomImageUrl = `https://placehold.co/100x100.png?text=${mockIdentifier}`;
 
   return (
@@ -74,7 +81,7 @@ function ConversationListItem({ conversation, isSelected, onSelect, currentUser 
         <Avatar className="absolute -bottom-1 -right-1 h-7 w-7 border-2 border-background">
           <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.name} data-ai-hint="person avatar small conversation" />
           <AvatarFallback className="text-xs bg-foreground text-background font-semibold">
-            {otherParticipant.name.charAt(0).toUpperCase()}
+            {otherParticipant.name ? otherParticipant.name.charAt(0).toUpperCase() : 'U'}
           </AvatarFallback>
         </Avatar>
       </div>
@@ -89,8 +96,6 @@ function ConversationListItem({ conversation, isSelected, onSelect, currentUser 
         <p className={cn("text-sm truncate mt-0.5", conversation.unreadCount && !isSelected && conversation.lastMessage?.senderId !== currentUser?.id ? "text-foreground font-medium" : "text-muted-foreground")}>{lastMessageText}</p>
         <div className="text-xs text-muted-foreground/80 mt-1 flex items-center">
           {mockStatus === "Confirmada" && <span className="h-1.5 w-1.5 bg-green-500 rounded-full mr-1.5"></span>}
-          {/* Removed Pendente dot to match screenshot more closely if needed, or keep for clarity */}
-          {/* {mockStatus === "Pendente" && <span className="h-2 w-2 bg-yellow-500 rounded-full mr-1.5"></span>} */}
           <span>{mockStatus}</span>
           <span className="mx-1">·</span>
           <span>{mockDateRange}</span>
@@ -114,7 +119,20 @@ function ChatMessageBubble({ message, isSender, senderUser, showAvatar }: ChatMe
     ? "bg-primary text-primary-foreground rounded-br-none self-end"
     : "bg-muted text-foreground rounded-bl-none self-start";
 
-  const timestamp = message.timestamp ? format(parseISO(message.timestamp), "HH:mm", { locale: ptBR }) : "";
+  let formattedTimestamp = "";
+  if (message.timestamp) {
+    try {
+      const dateObj = parseISO(message.timestamp);
+      if (dateObj instanceof Date && !isNaN(dateObj.valueOf())) { // Check if date is valid
+        formattedTimestamp = format(dateObj, "HH:mm", { locale: ptBR });
+      } else {
+        formattedTimestamp = "Hora Inv."; // Fallback for invalid date
+      }
+    } catch (e) {
+      console.error("Error formatting message timestamp:", e);
+      formattedTimestamp = "Erro"; // Fallback for error
+    }
+  }
 
   return (
     <div className={`flex w-full my-1 ${isSender ? 'justify-end' : 'justify-start'}`}>
@@ -122,13 +140,15 @@ function ChatMessageBubble({ message, isSender, senderUser, showAvatar }: ChatMe
         {!isSender && senderUser && showAvatar && (
           <Avatar className="h-6 w-6 self-end mb-1 flex-shrink-0 mr-2">
             <AvatarImage src={senderUser.avatarUrl} alt={senderUser.name} data-ai-hint="person avatar message" />
-            <AvatarFallback className="text-xs">{senderUser.name.charAt(0).toUpperCase()}</AvatarFallback>
+            <AvatarFallback className="text-xs">{senderUser.name ? senderUser.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
           </Avatar>
         )}
-        {!isSender && !showAvatar && <div className="w-8 flex-shrink-0 mr-2"></div>} {/* Placeholder for alignment */}
+        {!isSender && !showAvatar && <div className="w-8 flex-shrink-0 mr-2"></div>} 
         <div className={`px-3 py-2 rounded-xl ${bubbleClass} shadow-sm`}>
           <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-          <p className={`text-[10px] mt-1 ${isSender ? 'text-primary-foreground/70 text-right' : 'text-muted-foreground/70 text-left'}`}>{timestamp}</p>
+          {formattedTimestamp && (
+            <p className={`text-[10px] mt-1 ${isSender ? 'text-primary-foreground/70 text-right' : 'text-muted-foreground/70 text-left'}`}>{formattedTimestamp}</p>
+          )}
         </div>
       </div>
     </div>
@@ -151,11 +171,8 @@ export default function MessagesPage() {
   const [activeFilter, setActiveFilter] = useState("Todas");
 
   useEffect(() => {
-    // On component mount
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-
-    // On component unmount
     return () => {
       document.body.style.overflow = originalOverflow;
     };
@@ -237,7 +254,6 @@ export default function MessagesPage() {
     } catch (error) {
       console.error("Falha ao enviar mensagem mockada:", error);
       setMessages(prev => prev.filter(m => m.id !== tempMessageId));
-      // Potentially show a toast for send failure
     }
   };
 
@@ -245,7 +261,6 @@ export default function MessagesPage() {
 
   return (
     <div className="flex h-[calc(100vh-var(--bottom-nav-height,4rem))] bg-background">
-      {/* Sidebar de Conversas */}
       <aside className={cn(
         "border-r border-border flex flex-col",
         selectedConversation ? "hidden md:flex md:w-[420px] lg:w-[460px]" : "w-full md:flex md:w-[420px] lg:w-[460px]"
@@ -304,7 +319,6 @@ export default function MessagesPage() {
         </ScrollArea>
       </aside>
 
-      {/* Área de Chat Principal */}
       <main className={cn(
         "flex flex-col bg-muted/20 flex-1",
         selectedConversation ? "flex" : "hidden md:flex"
@@ -317,7 +331,7 @@ export default function MessagesPage() {
               </Button>
               <Avatar className="h-9 w-9 mr-3">
                 <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.name} data-ai-hint="person avatar"/>
-                <AvatarFallback>{otherParticipant.name.charAt(0).toUpperCase()}</AvatarFallback>
+                <AvatarFallback>{otherParticipant.name ? otherParticipant.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
               </Avatar>
               <h2 className="text-lg font-semibold text-foreground">{otherParticipant.name}</h2>
             </header>
@@ -377,3 +391,4 @@ export default function MessagesPage() {
     </div>
   );
 }
+
