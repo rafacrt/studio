@@ -7,7 +7,6 @@ import { Search } from 'lucide-react';
 interface ExploreSearchBarProps {
   onSearch?: (term: string) => void;
   initialSearchTerm?: string; 
-  showFilterButton?: boolean; 
 }
 
 export function ExploreSearchBar({
@@ -23,8 +22,10 @@ export function ExploreSearchBar({
   };
   
   return (
+    // Contêiner sticky: sem sombra aqui.
     <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm px-4 py-3 md:px-6">
-      <div className="flex items-center w-full sm:max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg xl:max-w-screen-xl 2xl:max-w-screen-2xl mx-auto bg-card border border-border rounded-full h-14 px-3 group shadow-[0_0px_10px_0_#000000] focus-within:shadow-lg transition-shadow">
+      {/* Contêiner visual da barra de busca: sombra personalizada aplicada aqui. */}
+      <div className="flex items-center w-full sm:max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg xl:max-w-screen-xl 2xl:max-w-screen-2xl mx-auto bg-card border border-border rounded-full h-14 px-3 group focus-within:shadow-lg transition-shadow shadow-[0_0px_10px_0_#000000]">
         <Search className="h-5 w-5 text-muted-foreground ml-2 mr-2.5 shrink-0 group-focus-within:text-primary" />
         <input
           type="text"
