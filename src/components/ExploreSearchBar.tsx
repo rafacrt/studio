@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Search } from 'lucide-react'; // Removed SlidersHorizontal
+import { Search } from 'lucide-react'; 
 
 interface ExploreSearchBarProps {
   onSearch?: (term: string) => void;
@@ -24,7 +24,7 @@ export function ExploreSearchBar({
   
   return (
     <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm shadow-sm px-4 py-3 md:px-6">
-      <div className="flex items-center w-full max-w-lg mx-auto bg-card border border-border rounded-full shadow-md focus-within:shadow-lg transition-shadow h-14 px-3 group">
+      <div className="flex items-center w-full sm:max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg xl:max-w-screen-xl 2xl:max-w-screen-2xl mx-auto bg-card border border-border rounded-full shadow-md focus-within:shadow-lg transition-shadow h-14 px-3 group">
         <Search className="h-5 w-5 text-muted-foreground ml-2 mr-2.5 shrink-0 group-focus-within:text-primary" />
         <input
           type="text"
@@ -34,9 +34,7 @@ export function ExploreSearchBar({
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={handleKeyDown}
         />
-        {/* Filter button removed */}
       </div>
     </div>
   );
 }
-
