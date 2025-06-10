@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Send, MessageSquareText, ArrowLeft, Search, SlidersHorizontal } from 'lucide-react';
-import { format, parseISO, isToday, isYesterday } from 'date-fns';
+import { format, parseISO, isToday, isYesterday, formatDistanceToNowStrict } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -26,17 +26,22 @@ function ConversationListItem({ conversation, isSelected, onSelect, currentUser 
   const otherParticipant = conversation.participants.find(p => p.id !== currentUser?.id);
   if (!otherParticipant) return null;
 
-  const lastMessageText = conversation.lastMessage?.text ? 
-    (conversation.lastMessage.senderId === currentUser?.id ? "Você: " : "") + conversation.lastMessage.text 
+  const lastMessageText = conversation.lastMessage?.text ?
+    (conversation.lastMessage.senderId === currentUser?.id ? "Você: " : "") + conversation.lastMessage.text
     : "Nenhuma mensagem ainda.";
-  
+
   let lastMessageTimestamp = "";
   if (conversation.lastMessage?.timestamp) {
     const date = parseISO(conversation.lastMessage.timestamp);
-    lastMessageTimestamp = format(date, "HH:mm", { locale: ptBR });
+    if (isToday(date)) {
+      lastMessageTimestamp = format(date, "HH:mm", { locale: ptBR });
+    } else if (isYesterday(date)) {
+      lastMessageTimestamp = "Ontem";
+    } else {
+      lastMessageTimestamp = format(date, "dd/MM/yy", { locale: ptBR });
+    }
   }
 
-  // Mock status line - In a real app, this data would come from the conversation object
   const mockStatus = Math.random() > 0.5 ? "Confirmada" : "Pendente";
   const mockDateRange = "7-8 de jun.";
   const mockIdentifier = "04003";
@@ -51,8 +56,8 @@ function ConversationListItem({ conversation, isSelected, onSelect, currentUser 
     >
       <Avatar className="h-12 w-12 mr-4 flex-shrink-0 mt-1">
         <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.name} data-ai-hint="person avatar conversation" />
-        <AvatarFallback className="bg-muted-foreground text-background font-semibold">
-            {otherParticipant.name.charAt(0).toUpperCase()}
+        <AvatarFallback className="bg-foreground text-background font-semibold">
+          {otherParticipant.name.charAt(0).toUpperCase()}
         </AvatarFallback>
       </Avatar>
       <div className="flex-grow overflow-hidden">
@@ -62,22 +67,21 @@ function ConversationListItem({ conversation, isSelected, onSelect, currentUser 
             <p className="text-xs text-muted-foreground whitespace-nowrap ml-2">{lastMessageTimestamp}</p>
           )}
         </div>
-        <p className="text-sm text-muted-foreground truncate mt-0.5">{lastMessageText}</p>
+        <p className={cn("text-sm truncate mt-0.5", conversation.unreadCount && !isSelected ? "text-foreground font-medium" : "text-muted-foreground")}>{lastMessageText}</p>
         <div className="text-xs text-muted-foreground/80 mt-1 flex items-center">
-            {mockStatus === "Confirmada" && <span className="h-2 w-2 bg-green-500 rounded-full mr-1.5"></span>}
-            {mockStatus === "Pendente" && <span className="h-2 w-2 bg-yellow-500 rounded-full mr-1.5"></span>}
-            <span>{mockStatus}</span>
-            <span className="mx-1">·</span>
-            <span>{mockDateRange}</span>
-            <span className="mx-1">·</span>
-            <span>{mockIdentifier}</span>
+          {mockStatus === "Confirmada" && <span className="h-2 w-2 bg-green-500 rounded-full mr-1.5"></span>}
+          {mockStatus === "Pendente" && <span className="h-2 w-2 bg-yellow-500 rounded-full mr-1.5"></span>}
+          <span>{mockStatus}</span>
+          <span className="mx-1">·</span>
+          <span>{mockDateRange}</span>
+          <span className="mx-1">·</span>
+          <span>{mockIdentifier}</span>
         </div>
       </div>
     </button>
   );
 }
 
-// Componente para uma bolha de mensagem (mantido como antes, pode ser ajustado se necessário)
 interface ChatMessageBubbleProps {
   message: ChatMessage;
   isSender: boolean;
@@ -87,26 +91,26 @@ interface ChatMessageBubbleProps {
 
 function ChatMessageBubble({ message, isSender, senderUser, showAvatar }: ChatMessageBubbleProps) {
   const bubbleClass = isSender
-    ? "bg-primary text-primary-foreground rounded-br-none"
-    : "bg-muted text-foreground rounded-bl-none";
-  
+    ? "bg-primary text-primary-foreground rounded-br-none self-end"
+    : "bg-muted text-foreground rounded-bl-none self-start";
+
   const timestamp = message.timestamp ? format(parseISO(message.timestamp), "HH:mm", { locale: ptBR }) : "";
 
   return (
     <div className={`flex w-full my-1 ${isSender ? 'justify-end' : 'justify-start'}`}>
-        <div className={`flex items-end max-w-[75%] ${isSender ? 'flex-row-reverse' : 'flex-row'}`}>
-            {!isSender && senderUser && showAvatar && (
-                <Avatar className="h-6 w-6 self-end mb-1 flex-shrink-0 mr-2">
-                    <AvatarImage src={senderUser.avatarUrl} alt={senderUser.name} data-ai-hint="person avatar small" />
-                    <AvatarFallback>{senderUser.name.charAt(0).toUpperCase()}</AvatarFallback>
-                </Avatar>
-            )}
-             {!isSender && !showAvatar && <div className="w-8 flex-shrink-0 mr-2"></div>}
-            <div className={`px-3 py-2 rounded-xl ${bubbleClass} shadow-sm`}>
-                <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                 <p className={`text-[10px] mt-1 ${isSender ? 'text-primary-foreground/70 text-right' : 'text-muted-foreground/70 text-left'}`}>{timestamp}</p>
-            </div>
+      <div className={`flex items-end max-w-[75%] ${isSender ? 'flex-row-reverse' : 'flex-row'}`}>
+        {!isSender && senderUser && showAvatar && (
+          <Avatar className="h-6 w-6 self-end mb-1 flex-shrink-0 mr-2">
+            <AvatarImage src={senderUser.avatarUrl} alt={senderUser.name} data-ai-hint="person avatar small" />
+            <AvatarFallback>{senderUser.name.charAt(0).toUpperCase()}</AvatarFallback>
+          </Avatar>
+        )}
+        {!isSender && !showAvatar && <div className="w-8 flex-shrink-0 mr-2"></div>} {/* Placeholder for alignment */}
+        <div className={`px-3 py-2 rounded-xl ${bubbleClass} shadow-sm`}>
+          <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+          <p className={`text-[10px] mt-1 ${isSender ? 'text-primary-foreground/70 text-right' : 'text-muted-foreground/70 text-left'}`}>{timestamp}</p>
         </div>
+      </div>
     </div>
   );
 }
@@ -126,6 +130,17 @@ export default function MessagesPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [activeFilter, setActiveFilter] = useState("Todas");
 
+  useEffect(() => {
+    // On component mount
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    // On component unmount
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []); // Empty dependency array ensures this runs only on mount and unmount
+
 
   useEffect(() => {
     if (user?.id) {
@@ -139,11 +154,12 @@ export default function MessagesPage() {
   useEffect(() => {
     if (selectedConversation?.id) {
       setIsLoadingMessages(true);
-      setConversations(prev => prev.map(c => c.id === selectedConversation.id ? {...c, unreadCount: 0} : c));
+      setConversations(prev => prev.map(c => c.id === selectedConversation.id ? { ...c, unreadCount: 0 } : c));
 
       const loadedMessages = loadMockMessagesFromStorage(selectedConversation.id);
       setMessages(loadedMessages);
       setIsLoadingMessages(false);
+      // Only fetch if no messages were loaded from storage, to simulate initial load
       if (loadedMessages.length === 0) {
         fetchMessagesForConversation(selectedConversation.id)
           .then(setMessages)
@@ -153,12 +169,12 @@ export default function MessagesPage() {
       setMessages([]);
     }
   }, [selectedConversation]);
-  
+
   useEffect(() => {
-    if(messages.length > 0) {
-        setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-        }, 0);
+    if (messages.length > 0) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      }, 0);
     }
   }, [messages, selectedConversation]);
 
@@ -190,19 +206,21 @@ export default function MessagesPage() {
     try {
       const sentMessage = await sendMockMessage(selectedConversation.id, user.id, newMessage.trim());
       setMessages(prev => prev.map(m => m.id === tempMessageId ? sentMessage : m));
+      // Move conversation to top and update last message
       setConversations(prevConvs => {
         const updatedConv = prevConvs.find(c => c.id === selectedConversation.id);
         if (!updatedConv) return prevConvs;
         const otherConvs = prevConvs.filter(c => c.id !== selectedConversation.id);
-        return [{...updatedConv, lastMessage: sentMessage, unreadCount: 0}, ...otherConvs];
+        return [{ ...updatedConv, lastMessage: sentMessage, unreadCount: 0 }, ...otherConvs];
       });
 
     } catch (error) {
       console.error("Falha ao enviar mensagem mockada:", error);
-      setMessages(prev => prev.filter(m => m.id !== tempMessageId)); 
+      setMessages(prev => prev.filter(m => m.id !== tempMessageId));
+      // Potentially show a toast for send failure
     }
   };
-  
+
   const otherParticipant = selectedConversation?.participants.find(p => p.id !== user?.id);
 
   return (
@@ -216,30 +234,30 @@ export default function MessagesPage() {
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-3xl font-bold text-foreground">Mensagens</h1>
             <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                    <Search className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                    <SlidersHorizontal className="h-5 w-5" />
-                </Button>
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                <Search className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                <SlidersHorizontal className="h-5 w-5" />
+              </Button>
             </div>
           </div>
           <ScrollArea className="pb-1 -mx-4 px-4">
-             <div className="flex space-x-2">
-                {messageFilters.map(filter => (
+            <div className="flex space-x-2">
+              {messageFilters.map(filter => (
                 <Button
-                    key={filter}
-                    variant={activeFilter === filter ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setActiveFilter(filter)}
-                    className={cn(
-                        "rounded-full px-4 py-1.5 text-sm h-auto",
-                        activeFilter === filter ? "bg-foreground text-background hover:bg-foreground/90" : "bg-muted/60 border-border hover:bg-muted text-foreground"
-                    )}
+                  key={filter}
+                  variant={activeFilter === filter ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveFilter(filter)}
+                  className={cn(
+                    "rounded-full px-4 py-1.5 text-sm h-auto",
+                    activeFilter === filter ? "bg-foreground text-background hover:bg-foreground/90" : "bg-muted/60 border-border hover:bg-muted text-foreground"
+                  )}
                 >
-                    {filter}
+                  {filter}
                 </Button>
-                ))}
+              ))}
             </div>
           </ScrollArea>
         </div>
@@ -278,31 +296,32 @@ export default function MessagesPage() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <Avatar className="h-9 w-9 mr-3">
-                 <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.name} data-ai-hint="person avatar"/>
-                 <AvatarFallback>{otherParticipant.name.charAt(0).toUpperCase()}</AvatarFallback>
+                <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.name} data-ai-hint="person avatar" />
+                <AvatarFallback>{otherParticipant.name.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <h2 className="text-lg font-semibold text-foreground">{otherParticipant.name}</h2>
             </header>
-            
+
             <ScrollArea ref={scrollAreaRef} className="flex-grow p-4 space-y-1">
               {isLoadingMessages ? (
                 <div className="flex justify-center items-center h-full">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : messages.length > 0 ? (
-                 messages.map((msg, index) => {
-                    const prevMessage = messages[index-1];
-                    const showAvatar = !msg.senderId || msg.senderId !== prevMessage?.senderId || !prevMessage;
-                    return (
-                        <ChatMessageBubble 
-                            key={msg.id} 
-                            message={msg} 
-                            isSender={msg.senderId === user?.id} 
-                            senderUser={selectedConversation.participants.find(p => p.id === msg.senderId)}
-                            showAvatar={showAvatar}
-                        />
-                    );
-                 })
+                messages.map((msg, index) => {
+                  const prevMessage = messages[index - 1];
+                  // Show avatar if it's the first message OR if the sender is different from the previous message's sender
+                  const showAvatar = !isSender(msg.senderId) && (!prevMessage || prevMessage.senderId !== msg.senderId);
+                  return (
+                    <ChatMessageBubble
+                      key={msg.id}
+                      message={msg}
+                      isSender={msg.senderId === user?.id}
+                      senderUser={selectedConversation.participants.find(p => p.id === msg.senderId)}
+                      showAvatar={showAvatar}
+                    />
+                  );
+                })
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">Envie uma mensagem para começar a conversa.</p>
               )}
@@ -316,7 +335,7 @@ export default function MessagesPage() {
                   placeholder="Digite sua mensagem..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage();}}}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
                   className="flex-grow bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 h-11 placeholder:text-muted-foreground"
                 />
                 <Button onClick={handleSendMessage} disabled={!newMessage.trim()} size="icon" variant="ghost" className="text-primary hover:bg-primary/10 rounded-full h-9 w-9">
@@ -334,19 +353,10 @@ export default function MessagesPage() {
           </div>
         )}
       </main>
-      <style jsx global>{`
-        :root {
-          --bottom-nav-height: 4rem; /* Adjust if your bottom nav height changes */
-        }
-        @media (min-width: 768px) { /* md breakpoint */
-          :root {
-            --bottom-nav-height: 0rem; /* No bottom nav on larger screens */
-          }
-        }
-        body {
-          overflow: hidden; /* Prevent body scroll when chat is active */
-        }
-      `}</style>
     </div>
   );
 }
+function isSender(senderId: string): any {
+    throw new Error('Function not implemented.');
+}
+
