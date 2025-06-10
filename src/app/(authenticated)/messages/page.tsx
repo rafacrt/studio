@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ChatConversation, ChatMessage, User } from '@/types';
 import { fetchUserConversations, fetchMessagesForConversation, sendMockMessage, loadMockMessagesFromStorage } from '@/lib/mock-data';
@@ -9,8 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Send, MessageSquareText, ArrowLeft } from 'lucide-react';
-import { format, formatDistanceToNow, parseISO, isToday, isYesterday } from 'date-fns';
+import { Loader2, Send, MessageSquareText, ArrowLeft, Search, SlidersHorizontal } from 'lucide-react';
+import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -26,52 +26,58 @@ function ConversationListItem({ conversation, isSelected, onSelect, currentUser 
   const otherParticipant = conversation.participants.find(p => p.id !== currentUser?.id);
   if (!otherParticipant) return null;
 
-  const lastMessageText = conversation.lastMessage?.text || "Nenhuma mensagem ainda.";
+  const lastMessageText = conversation.lastMessage?.text ? 
+    (conversation.lastMessage.senderId === currentUser?.id ? "Você: " : "") + conversation.lastMessage.text 
+    : "Nenhuma mensagem ainda.";
   
   let lastMessageTimestamp = "";
   if (conversation.lastMessage?.timestamp) {
     const date = parseISO(conversation.lastMessage.timestamp);
-    if (isToday(date)) {
-      lastMessageTimestamp = format(date, "HH:mm", { locale: ptBR });
-    } else if (isYesterday(date)) {
-      lastMessageTimestamp = "Ontem";
-    } else {
-      lastMessageTimestamp = format(date, "dd/MM/yy", { locale: ptBR });
-    }
+    lastMessageTimestamp = format(date, "HH:mm", { locale: ptBR });
   }
 
+  // Mock status line - In a real app, this data would come from the conversation object
+  const mockStatus = Math.random() > 0.5 ? "Confirmada" : "Pendente";
+  const mockDateRange = "7-8 de jun.";
+  const mockIdentifier = "04003";
 
   return (
     <button
       onClick={() => onSelect(conversation.id)}
       className={cn(
-        "flex items-center w-full p-3 text-left hover:bg-muted/50 transition-colors duration-150 rounded-lg",
-        isSelected ? "bg-muted" : ""
+        "flex items-start w-full p-4 text-left hover:bg-muted/30 transition-colors duration-150",
+        isSelected ? "bg-muted/50" : ""
       )}
     >
-      <Avatar className="h-10 w-10 mr-3">
-        <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.name} data-ai-hint="person avatar" />
-        <AvatarFallback>{otherParticipant.name.charAt(0).toUpperCase()}</AvatarFallback>
+      <Avatar className="h-12 w-12 mr-4 flex-shrink-0 mt-1">
+        <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.name} data-ai-hint="person avatar conversation" />
+        <AvatarFallback className="bg-muted-foreground text-background font-semibold">
+            {otherParticipant.name.charAt(0).toUpperCase()}
+        </AvatarFallback>
       </Avatar>
       <div className="flex-grow overflow-hidden">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-semibold text-foreground truncate">{otherParticipant.name}</h3>
+        <div className="flex justify-between items-baseline">
+          <h3 className="text-md font-semibold text-foreground truncate">{otherParticipant.name}</h3>
           {conversation.lastMessage && (
             <p className="text-xs text-muted-foreground whitespace-nowrap ml-2">{lastMessageTimestamp}</p>
           )}
         </div>
-        <p className="text-xs text-muted-foreground truncate">{lastMessageText}</p>
+        <p className="text-sm text-muted-foreground truncate mt-0.5">{lastMessageText}</p>
+        <div className="text-xs text-muted-foreground/80 mt-1 flex items-center">
+            {mockStatus === "Confirmada" && <span className="h-2 w-2 bg-green-500 rounded-full mr-1.5"></span>}
+            {mockStatus === "Pendente" && <span className="h-2 w-2 bg-yellow-500 rounded-full mr-1.5"></span>}
+            <span>{mockStatus}</span>
+            <span className="mx-1">·</span>
+            <span>{mockDateRange}</span>
+            <span className="mx-1">·</span>
+            <span>{mockIdentifier}</span>
+        </div>
       </div>
-      {conversation.unreadCount && conversation.unreadCount > 0 && !isSelected && (
-        <span className="ml-2 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-          {conversation.unreadCount}
-        </span>
-      )}
     </button>
   );
 }
 
-// Componente para uma bolha de mensagem
+// Componente para uma bolha de mensagem (mantido como antes, pode ser ajustado se necessário)
 interface ChatMessageBubbleProps {
   message: ChatMessage;
   isSender: boolean;
@@ -80,7 +86,6 @@ interface ChatMessageBubbleProps {
 }
 
 function ChatMessageBubble({ message, isSender, senderUser, showAvatar }: ChatMessageBubbleProps) {
-  const alignmentClass = isSender ? "items-end" : "items-start";
   const bubbleClass = isSender
     ? "bg-primary text-primary-foreground rounded-br-none"
     : "bg-muted text-foreground rounded-bl-none";
@@ -106,6 +111,8 @@ function ChatMessageBubble({ message, isSender, senderUser, showAvatar }: ChatMe
   );
 }
 
+const messageFilters = ["Todas", "Sou anfitrião", "Sou hóspede", "Coanfitriã"];
+
 
 export default function MessagesPage() {
   const { user } = useAuth();
@@ -117,6 +124,7 @@ export default function MessagesPage() {
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [activeFilter, setActiveFilter] = useState("Todas");
 
 
   useEffect(() => {
@@ -131,14 +139,12 @@ export default function MessagesPage() {
   useEffect(() => {
     if (selectedConversation?.id) {
       setIsLoadingMessages(true);
-      // Mark conversation as read locally immediately
       setConversations(prev => prev.map(c => c.id === selectedConversation.id ? {...c, unreadCount: 0} : c));
 
       const loadedMessages = loadMockMessagesFromStorage(selectedConversation.id);
       setMessages(loadedMessages);
       setIsLoadingMessages(false);
       if (loadedMessages.length === 0) {
-        // Simulate API fetch if localStorage is empty for this conversation
         fetchMessagesForConversation(selectedConversation.id)
           .then(setMessages)
           .finally(() => setIsLoadingMessages(false));
@@ -150,9 +156,8 @@ export default function MessagesPage() {
   
   useEffect(() => {
     if(messages.length > 0) {
-        // Using setTimeout to ensure scroll happens after DOM update
         setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: "auto" }); // "auto" can be smoother for initial load
+            messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
         }, 0);
     }
   }, [messages, selectedConversation]);
@@ -161,7 +166,6 @@ export default function MessagesPage() {
   const handleSelectConversation = (conversationId: string) => {
     const conversation = conversations.find(c => c.id === conversationId);
     setSelectedConversation(conversation || null);
-    // Unread count update is handled in the useEffect for selectedConversation
   };
 
   const handleSendMessage = async () => {
@@ -178,8 +182,6 @@ export default function MessagesPage() {
 
     setMessages(prev => [...prev, optimisticMessage]);
     setNewMessage("");
-
-    // Ensure new message scrolls into view smoothly
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
@@ -188,7 +190,6 @@ export default function MessagesPage() {
     try {
       const sentMessage = await sendMockMessage(selectedConversation.id, user.id, newMessage.trim());
       setMessages(prev => prev.map(m => m.id === tempMessageId ? sentMessage : m));
-      // Update conversation list: move this conversation to top and update last message
       setConversations(prevConvs => {
         const updatedConv = prevConvs.find(c => c.id === selectedConversation.id);
         if (!updatedConv) return prevConvs;
@@ -199,7 +200,6 @@ export default function MessagesPage() {
     } catch (error) {
       console.error("Falha ao enviar mensagem mockada:", error);
       setMessages(prev => prev.filter(m => m.id !== tempMessageId)); 
-      // TODO: Add toast for send error
     }
   };
   
@@ -210,35 +210,65 @@ export default function MessagesPage() {
       {/* Sidebar de Conversas */}
       <aside className={cn(
         "border-r border-border flex flex-col",
-        selectedConversation ? "hidden md:flex md:w-[320px] lg:w-[360px]" : "w-full md:flex md:w-[320px] lg:w-[360px]"
+        selectedConversation ? "hidden md:flex md:w-[380px] lg:w-[420px]" : "w-full md:flex md:w-[380px] lg:w-[420px]"
       )}>
-        <div className="p-4 border-b border-border">
-          <h2 className="text-xl font-semibold text-foreground">Mensagens</h2>
+        <div className="p-4 border-b border-border sticky top-0 bg-background z-10">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold text-foreground">Mensagens</h1>
+            <div className="flex items-center space-x-2">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                    <Search className="h-5 w-5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                    <SlidersHorizontal className="h-5 w-5" />
+                </Button>
+            </div>
+          </div>
+          <ScrollArea className="pb-1 -mx-4 px-4">
+             <div className="flex space-x-2">
+                {messageFilters.map(filter => (
+                <Button
+                    key={filter}
+                    variant={activeFilter === filter ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setActiveFilter(filter)}
+                    className={cn(
+                        "rounded-full px-4 py-1.5 text-sm h-auto",
+                        activeFilter === filter ? "bg-foreground text-background hover:bg-foreground/90" : "bg-muted/60 border-border hover:bg-muted text-foreground"
+                    )}
+                >
+                    {filter}
+                </Button>
+                ))}
+            </div>
+          </ScrollArea>
         </div>
-        <ScrollArea className="flex-grow p-2">
+        <ScrollArea className="flex-grow">
           {isLoadingConversations ? (
-            <div className="flex justify-center items-center h-full">
+            <div className="flex justify-center items-center h-full py-10">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : conversations.length > 0 ? (
-            conversations.map(conv => (
-              <ConversationListItem
-                key={conv.id}
-                conversation={conv}
-                isSelected={selectedConversation?.id === conv.id}
-                onSelect={handleSelectConversation}
-                currentUser={user}
-              />
-            ))
+            <div className="divide-y divide-border">
+              {conversations.map(conv => (
+                <ConversationListItem
+                  key={conv.id}
+                  conversation={conv}
+                  isSelected={selectedConversation?.id === conv.id}
+                  onSelect={handleSelectConversation}
+                  currentUser={user}
+                />
+              ))}
+            </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">Nenhuma conversa encontrada.</p>
+            <p className="text-sm text-muted-foreground text-center py-10">Nenhuma conversa encontrada.</p>
           )}
         </ScrollArea>
       </aside>
 
       {/* Área de Chat Principal */}
       <main className={cn(
-        "flex flex-col bg-muted/20 flex-1", // Use flex-1 to take remaining space
+        "flex flex-col bg-muted/20 flex-1",
         selectedConversation ? "flex" : "hidden md:flex"
       )}>
         {selectedConversation && otherParticipant ? (
@@ -320,4 +350,3 @@ export default function MessagesPage() {
     </div>
   );
 }
-
