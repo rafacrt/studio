@@ -151,5 +151,9 @@ html {
 
 /* Custom class for sticky search shadow */
 .custom-sticky-search-shadow {
-  box-shadow: 0px 0px 15px 0px #bebebe;
+  box-shadow: 0px 0px 10px 0px #d2d2d2;
+  background-image: linear-gradient(#e0dfdd,#ffffff);
+}
+.custom-explore-search-bar-width-control{
+  background-color: #fff;
 }

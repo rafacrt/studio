@@ -27,7 +27,7 @@ export function ExploreSearchBar({
       {/* Div intermediário para aplicar o comportamento de 'container' */}
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         {/* Contêiner visual da barra de busca: w-[94%] e mx-auto para centralizar. Adicionado border-0 */}
-        <div className="custom-explore-search-bar-width-control border-0 flex justify-center items-center w-[94%] mx-auto bg-muted rounded-full h-14 px-3 group focus-within:shadow-lg transition-shadow">
+        <div className="custom-explore-search-bar-width-control border-0 flex justify-center items-center w-[94%] mx-auto rounded-full h-14 px-3 group focus-within:shadow-lg transition-shadow">
           <Search className="h-4 w-4 text-black shrink-0 mr-2" />
           <input
             type="text"
