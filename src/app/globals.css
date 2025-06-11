@@ -148,3 +148,8 @@ html {
   scrollbar-width: thin; /* "auto" or "thin" */
   scrollbar-color: hsl(var(--muted-foreground) / 0.5) hsl(var(--background) / 0.5); /* thumb and track color */
 }
+
+/* Custom class for sticky search shadow */
+.custom-sticky-search-shadow {
+  box-shadow: 0px 0px 15px 0px #bebebe;
+}
