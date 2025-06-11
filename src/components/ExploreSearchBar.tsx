@@ -27,12 +27,12 @@ export function ExploreSearchBar({
       {/* Novo div intermediário para aplicar o comportamento de 'container' */}
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         {/* Contêiner visual da barra de busca: ocupa a largura do seu pai (o div.container) */}
-        <div className="flex items-center w-full bg-card border border-border rounded-full h-14 px-3 group focus-within:shadow-lg transition-shadow">
-          <Search className="h-5 w-5 text-muted-foreground ml-2 mr-2.5 shrink-0 group-focus-within:text-primary" />
+        <div className="custom-explore-search-bar-width-control flex items-center w-full bg-card border border-border rounded-full h-14 px-3 group focus-within:shadow-lg transition-shadow">
+          <Search className="h-4 w-4 text-black ml-2 mr-2.5 shrink-0" />
           <input
             type="text"
             placeholder="Onde você quer morar hoje?"
-            className="text-sm font-semibold text-foreground placeholder:font-semibold placeholder-muted-foreground focus:outline-none bg-transparent w-full h-full"
+            className="text-xs font-semibold text-foreground placeholder:text-xs placeholder:font-normal placeholder:text-black text-center focus:outline-none bg-transparent w-full h-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleKeyDown}
