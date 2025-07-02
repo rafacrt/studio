@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import type { ListingFilters } from '@/types';
