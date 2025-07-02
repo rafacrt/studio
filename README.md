@@ -1,40 +1,70 @@
-# Alugo Project
+# Alugo - Backend e Painel de Admin
 
-This project consists of a Next.js (React/TypeScript) web application for administrators to manage listings, users, and view analytics, and a user-facing application.
+Este projeto contém o backend completo e o painel administrativo para o aplicativo Alugo. Ele é construído com Next.js, TypeScript e Supabase.
 
-## Next.js Admin Panel & User Application
+## Visão Geral
 
-The administrative panel and user-facing application are part of a Next.js web application.
+- **Backend (API):** Um conjunto de endpoints RESTful para gerenciar usuários, autenticação, listagens de quartos, reservas e mensagens. Projetado para ser consumido por qualquer cliente (iOS, Android, Web).
+- **Painel de Administrador:** Uma interface web para administradores gerenciarem usuários, aprovar quartos e visualizar estatísticas da plataforma.
+- **Aplicação Web (Protótipo):** Uma aplicação web funcional que serve como um protótipo completo do aplicativo do usuário final e pode ser usada como uma versão web do Alugo.
 
-### Getting Started with Next.js Application
+## Como Iniciar o Projeto
 
-1.  **Navigate to the Next.js project directory** (this is likely the root of the current project).
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-3.  **Set up environment variables:**
-    Create a `.env.local` file in the root of the Next.js project. Add any necessary environment variables.
-    Example:
-    ```
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY_IF_NEEDED
-    # Other Genkit/Firebase related keys if applicable
-    ```
-4.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
-    This will typically start the application on `http://localhost:9002`.
+### 1. Pré-requisitos
 
-5.  **(Optional) Genkit Development Server:**
-    If you are working with Genkit flows:
-    ```bash
-    npm run genkit:dev
-    # or
-    npm run genkit:watch
-    ```
+- Node.js (versão 18 ou superior)
+- npm ou yarn
+- Uma conta no [Supabase](https://supabase.com/)
 
-### Accessing the Application
+### 2. Instalação
 
-- **User Application:** Once the Next.js development server is running, you can access the user application by navigating to the root path or specific user routes (e.g., `http://localhost:9002/explore`).
-- **Admin Panel:** You can usually access the admin panel by navigating to `/admin/dashboard` (e.g., `http://localhost:9002/admin/dashboard`). Login with admin credentials.
+Clone o repositório e instale as dependências:
+
+```bash
+git clone <url_do_repositorio>
+cd alugo-project
+npm install
+```
+
+### 3. Configuração do Ambiente (Supabase)
+
+Este projeto requer chaves do Supabase para se conectar ao banco de dados e ao sistema de autenticação.
+
+1.  Crie um novo projeto no Supabase.
+2.  Execute todos os scripts SQL fornecidos durante o desenvolvimento no **SQL Editor** do seu projeto Supabase para criar as tabelas e políticas necessárias.
+3.  Vá para **Project Settings > API**.
+4.  Crie um arquivo chamado `.env.local` na raiz do seu projeto Next.js.
+5.  Copie e cole as seguintes variáveis de ambiente no arquivo, substituindo pelos valores do seu projeto Supabase:
+
+```env
+# Cole aqui as chaves do seu projeto Supabase
+NEXT_PUBLIC_SUPABASE_URL="https://SUA_URL_DO_PROJETO.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="SUA_CHAVE_ANON"
+
+# (Opcional) Chave de serviço para operações de admin, se necessário no futuro
+# SUPABASE_SERVICE_ROLE_KEY="SUA_CHAVE_SERVICE_ROLE"
+```
+
+### 4. Rodando a Aplicação
+
+Para iniciar o servidor de desenvolvimento do Next.js (que serve a API, o painel de admin e o app web), execute:
+
+```bash
+npm run dev
+```
+
+A aplicação estará disponível em `http://localhost:9002`.
+
+- **App do Usuário:** [http://localhost:9002/explore](http://localhost:9002/explore)
+- **Login:** [http://localhost:9002/login](http://localhost:9002/login)
+- **Painel de Admin:** [http://localhost:9002/admin](http://localhost:9002/admin)
+
+### 5. (Opcional) Rodando o Genkit
+
+Se você estiver desenvolvendo ou depurando os `flows` de IA/backend, pode iniciar o inspetor do Genkit:
+
+```bash
+npm run genkit:dev
+```
+
+Isso iniciará a UI de desenvolvimento do Genkit, geralmente em `http://localhost:4000`, onde você pode testar os flows isoladamente.
