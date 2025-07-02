@@ -57,13 +57,13 @@ export default function RootLayout({
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
         
-        <title>WeStudy - Seu Próximo Quarto</title>
-        <meta name="description" content="Descubra e reserve quartos universitários com o WeStudy." />
+        <title>Alugo - Seu Próximo Quarto</title>
+        <meta name="description" content="Descubra e reserve quartos universitários com o Alugo." />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png"></link>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="WeStudy" />
+        <meta name="apple-mobile-web-app-title" content="Alugo" />
         <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1C1C1E" media="(prefers-color-scheme: dark)" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
@@ -82,4 +82,3 @@ export default function RootLayout({
     </html>
   );
 }
-

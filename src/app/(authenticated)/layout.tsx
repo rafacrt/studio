@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Search, CalendarCheck, MessageSquare, CircleUser } from 'lucide-react'; // Changed Briefcase to CalendarCheck
+import { Loader2, Search, Briefcase, MessageSquare, CircleUser } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function AuthenticatedLayout({
@@ -33,7 +33,7 @@ export default function AuthenticatedLayout({
   
   const navItems = [
     { href: '/explore', label: 'Explorar', icon: Search },
-    { href: '/reservations', label: 'Reservas', icon: CalendarCheck }, // Changed from Viagens/Briefcase to Reservas/CalendarCheck
+    { href: '/reservations', label: 'Viagens', icon: Briefcase },
     { href: '/messages', label: 'Mensagens', icon: MessageSquare },
     { href: '/profile', label: 'Perfil', icon: CircleUser },
   ];
@@ -49,9 +49,7 @@ export default function AuthenticatedLayout({
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background md:hidden">
         <div className="flex h-16 items-center justify-around px-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || 
-                             (item.href === "/explore" && pathname.startsWith("/room/")) ||
-                             (item.href === "/reservations" && pathname.startsWith("/reservations")); // Added check for reservation detail if any
+            const isActive = pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}

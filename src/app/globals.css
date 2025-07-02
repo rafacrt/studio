@@ -24,20 +24,20 @@
     --muted: 240 5% 96%; /* Very light gray for muted backgrounds/text */
     --muted-foreground: 240 1% 45%; /* Softer gray for muted text */
 
-    --accent: 240 5% 92%; /* Slightly darker light gray for accents or hover states */
-    --accent-foreground: 240 1% 15%; /* Darker text for accents */
+    --accent: 142 76% 36%; /* #229a49 - Green for booking confirmation */
+    --accent-foreground: 0 0% 100%; /* White text on accent */
 
     --destructive: 0 70% 55%; /* Standard red for destructive actions */
     --destructive-foreground: 0 0% 100%; /* White text on destructive actions */
 
     --border: 240 5% 88%; /* Light gray for borders (e.g., input, card borders) */
-    --input: 0 0% 100%; /* White input background */
+    --input: 240 5% 92%; /* Light gray input background */
     --ring: 223 69% 54%; /* User's blue for focus rings */
 
     --radius: 0.5rem; /* Base radius, can be overridden by components */
     
-    /* Airbnb specific color - NOW CHANGED TO USER'S BLUE */
-    --airbnb-primary: 217 71% 53%; /* #306fdb */
+    /* Airbnb/Alugo specific brand color */
+    --airbnb-primary: 217 71% 53%; /* #306fdb - A strong, trustworthy blue */
     --airbnb-primary-foreground: 0 0% 100%; /* White */
 
 
@@ -79,7 +79,7 @@
     --muted: 240 1% 25%;
     --muted-foreground: 0 0% 60%; /* Lighter muted text */
 
-    --accent: 223 69% 50%; /* Adjusted accent */
+    --accent: 142 66% 46%; /* Brighter green for dark mode */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 60% 50%; /* Adjusted destructive */
@@ -89,7 +89,7 @@
     --input: 240 1% 20%;
     --ring: 223 69% 60%;
 
-    /* Airbnb specific color for dark mode - NOW CHANGED TO USER'S BLUE */
+    /* Airbnb/Alugo specific brand color for dark mode */
     --airbnb-primary: 217 71% 53%; /* #306fdb */
     --airbnb-primary-foreground: 0 0% 100%;
 
@@ -121,39 +121,4 @@
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 0.3s;
   }
-}
-
-/* Custom scrollbar for webkit browsers (Chrome, Safari, Edge new) */
-::-webkit-scrollbar {
-  width: 8px; /* width of the entire scrollbar */
-  height: 8px; /* height of the horizontal scrollbar */
-}
-
-::-webkit-scrollbar-track {
-  background: hsl(var(--background) / 0.5); /* track color */
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.5); /* draggable scrolling handle */
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.7); /* slightly darker on hover */
-}
-
-/* For Firefox */
-html {
-  scrollbar-width: thin; /* "auto" or "thin" */
-  scrollbar-color: hsl(var(--muted-foreground) / 0.5) hsl(var(--background) / 0.5); /* thumb and track color */
-}
-
-/* Custom class for sticky search shadow */
-.custom-sticky-search-shadow {
-  box-shadow: 0px 0px 10px 0px #d2d2d2;
-  background-image: linear-gradient(#e0dfdd,#ffffff);
-}
-.custom-explore-search-bar-width-control{
-  background-color: #fff;
 }

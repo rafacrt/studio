@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      toast({ title: "Erro de Login", description: error.message, variant: "destructive" });
+      toast({ title: "Erro de Login", description: "Email ou senha inválidos.", variant: "destructive" });
       setIsAnimatingLogin(false);
       return false;
     }

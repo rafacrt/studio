@@ -4,18 +4,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ListingCard } from '@/components/ListingCard';
 import { fetchListings, roomCategories } from '@/lib/mock-data';
-import type { Listing, ListingFilters } from '@/types'; // Removed Category type as it's imported in CategoryMenu
-import { Loader2, MapPin, LogOut } from 'lucide-react'; // Removed Search, SlidersHorizontal
+import type { Listing, Category, ListingFilters } from '@/types';
+import { Loader2, Search, SlidersHorizontal, MapPin, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button'; // Added Button
-import { useAuth } from '@/contexts/AuthContext'; // Added useAuth
-import { useRouter } from 'next/navigation'; // Added useRouter
-import { ExploreSearchBar } from '@/components/ExploreSearchBar'; // Import new component
-import { CategoryMenu } from '@/components/CategoryMenu'; // Import new component
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
-
-const ITEMS_PER_PAGE = 9;
+const ITEMS_PER_PAGE = 8;
 
 export default function ExplorePage() {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -24,7 +21,6 @@ export default function ExplorePage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [currentFilters, setCurrentFilters] = useState<ListingFilters>({});
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   const { logout } = useAuth(); // For logout button
   const router = useRouter(); // For logout button
@@ -41,7 +37,7 @@ export default function ExplorePage() {
       });
       if (node) observer.current.observe(node);
     },
-    [isLoading, isLoadingMore, hasMore] 
+    [isLoading, isLoadingMore, hasMore] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const { toast } = useToast();
@@ -84,38 +80,46 @@ export default function ExplorePage() {
   useEffect(() => {
     loadInitialListings(currentFilters);
   }, [currentFilters, loadInitialListings]);
-
-  const handleSearch = (searchTerm: string) => {
-    setCurrentFilters(prev => ({ ...prev, searchTerm: searchTerm.trim() ? searchTerm.trim() : undefined, category: selectedCategory || undefined }));
-  };
-
-  const handleCategorySelect = (categoryId: string | null) => {
-    setSelectedCategory(categoryId);
-    setCurrentFilters(prev => ({ ...prev, category: categoryId || undefined, searchTerm: prev.searchTerm }));
-  };
   
   const handleLogout = () => {
     logout();
     router.push('/login?message=Logout realizado com sucesso');
   };
 
-  // Placeholder for filter modal logic
-  const handleFilterClick = () => {
-    toast({ title: "Filtros", description: "Funcionalidade de filtros avançados em desenvolvimento." });
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      <ExploreSearchBar onSearch={handleSearch} onFilterClick={handleFilterClick} />
-      <CategoryMenu categories={roomCategories} selectedCategory={selectedCategory} onSelectCategory={handleCategorySelect} />
+      {/* Search and filter bar placeholder */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm p-3 border-b">
+        <div className="flex items-center w-full max-w-lg mx-auto bg-card p-2 rounded-full shadow-md border">
+          <Search className="h-5 w-5 text-muted-foreground ml-2" />
+          <input
+            type="text"
+            placeholder="Buscar por cidade ou universidade"
+            className="flex-grow bg-transparent px-3 text-sm focus:outline-none placeholder:text-muted-foreground"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                setCurrentFilters({ searchTerm: e.currentTarget.value });
+              }
+            }}
+          />
+          <button className="p-2">
+             <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
+          </button>
+        </div>
+      </div>
+      
+      {/* Category menu placeholder */}
+      <div className="border-b px-4 py-2">
+        <p className="text-center text-sm text-muted-foreground">Menu de Categorias</p>
+      </div>
       
       <div className="container mx-auto px-4 py-6 md:px-6 lg:px-8">
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-8">
             {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-              <div key={index} className="overflow-hidden rounded-xl bg-card">
-                <Skeleton className="aspect-[1/1] md:aspect-[4/3.5] w-full rounded-t-xl" />
-                <div className="p-3 space-y-2">
+              <div key={index} className="overflow-hidden rounded-xl bg-card p-3">
+                <Skeleton className="aspect-[4/3.5] w-full rounded-xl" />
+                <div className="pt-3 space-y-2">
                   <Skeleton className="h-4 w-3/4" />
                   <Skeleton className="h-3 w-1/2" />
                   <Skeleton className="h-3 w-1/4" />
@@ -126,7 +130,7 @@ export default function ExplorePage() {
           </div>
         ) : listings.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-8">
               {listings.map((listing, index) => {
                 const isLastElement = listings.length === index + 1;
                 if (isLastElement && hasMore && !isLoadingMore) {
