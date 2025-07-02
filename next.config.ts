@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
         hostname: 'placehold.co', // Added for placeholder images
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cjimphtzmokxarflwfaf.supabase.co', // Added for Supabase Storage
+        port: '',
+        pathname: '/**',
       }
     ],
   },
