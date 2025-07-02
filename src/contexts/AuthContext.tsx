@@ -4,9 +4,12 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockUser, mockAdminUser } from '@/lib/mock-data';
 import type { User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { createClient } from '@/lib/supabase/client';
+import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
+
+const supabase = createClient();
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -24,105 +27,112 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const mapSupabaseUserToAppUser = (supabaseUser: SupabaseUser | null): User | null => {
+  if (!supabaseUser) return null;
+  
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email || '',
+    name: supabaseUser.user_metadata?.name || 'Usuário',
+    avatarUrl: supabaseUser.user_metadata?.avatar_url || undefined,
+    isAdmin: supabaseUser.user_metadata?.is_admin || false,
+    role: supabaseUser.user_metadata?.is_admin ? "Admin" : "Usuário",
+    dateJoined: supabaseUser.created_at,
+  };
+}
+
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isAnimatingLogin, setIsAnimatingLogin] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(false); 
+  const [isPageLoading, setIsPageLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    const checkAuthState = async () => {
-      setIsLoadingAuth(true);
-      try {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        const storedUser = localStorage.getItem('user');
-        const storedIsAdmin = localStorage.getItem('isAdmin') === 'true';
-
-        if (storedUser) {
-          const parsedUser: User = JSON.parse(storedUser);
-          setUser(parsedUser);
-          setIsAuthenticated(true);
-          setIsAdmin(storedIsAdmin);
-        } else {
-          setUser(null);
-          setIsAuthenticated(false);
-          setIsAdmin(false);
-        }
-      } catch (error) {
-        console.error("Falha ao verificar estado de autenticação:", error);
-        setUser(null);
-        setIsAuthenticated(false);
-        setIsAdmin(false);
-      } finally {
-        setIsLoadingAuth(false);
-      }
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const appUser = mapSupabaseUserToAppUser(session?.user ?? null);
+      setUser(appUser);
+      setIsLoadingAuth(false);
     };
-    checkAuthState();
-  }, []);
 
-  const performLoginInternal = useCallback(async (isLoginAsAdmin: boolean, _email?: string, _password?: string): Promise<boolean> => {
+    getSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, session: Session | null) => {
+        const appUser = mapSupabaseUserToAppUser(session?.user ?? null);
+        setUser(appUser);
+        
+        if (event === 'SIGNED_OUT') {
+           if(isAnimatingLogin) setIsAnimatingLogin(false);
+           if(isPageLoading) setIsPageLoading(false);
+           router.push('/login?message=Logout realizado com sucesso');
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [router, isAnimatingLogin, isPageLoading]);
+
+  const performLoginInternal = async (email: string, password: string, forAdmin: boolean): Promise<boolean> => {
     setIsAnimatingLogin(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
 
-    try {
-      const userToLogin = isLoginAsAdmin ? mockAdminUser : mockUser;
-      setUser(userToLogin);
-      setIsAuthenticated(true);
-      setIsAdmin(isLoginAsAdmin);
-      localStorage.setItem('user', JSON.stringify(userToLogin));
-      localStorage.setItem('isAdmin', String(isLoginAsAdmin));
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setIsAnimatingLogin(false);
-      return true;
-    } catch (e) {
-      console.error("Falha no login:", e);
-      toast({ title: "Erro de Login", description: "Falha ao tentar fazer login.", variant: "destructive" });
+    if (error) {
+      toast({ title: "Erro de Login", description: error.message, variant: "destructive" });
       setIsAnimatingLogin(false);
       return false;
     }
-  }, [toast]);
+    
+    if (data.user) {
+        const appUser = mapSupabaseUserToAppUser(data.user);
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
-    const success = await performLoginInternal(false, email, password);
-    if (success) {
-      router.push('/explore');
+        if (forAdmin && !appUser?.isAdmin) {
+             await supabase.auth.signOut();
+             toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar a área administrativa.", variant: "destructive" });
+             setIsAnimatingLogin(false);
+             return false;
+        }
+
+        setUser(appUser);
+
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        setIsAnimatingLogin(false);
+
+        if (appUser?.isAdmin) {
+            router.push('/admin');
+        } else {
+            router.push('/explore');
+        }
+        return true;
     }
-    return success;
-  }, [performLoginInternal, router]);
 
-  const adminLogin = useCallback(async (email: string, password: string): Promise<boolean> => {
-    const success = await performLoginInternal(true, email, password);
-    if (success) {
-      router.push('/admin');
-    }
-    return success;
-  }, [performLoginInternal, router]);
+    setIsAnimatingLogin(false);
+    return false;
+  };
 
-  const logout = useCallback(() => {
-    if(isAnimatingLogin) setIsAnimatingLogin(false);
-    if(isPageLoading) setIsPageLoading(false); 
+  const login = async (email: string, password: string): Promise<boolean> => {
+      return performLoginInternal(email, password, false);
+  };
 
-    setUser(null);
-    setIsAuthenticated(false);
-    setIsAdmin(false);
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAdmin');
-    if(isLoadingAuth) setIsLoadingAuth(false);
-    router.push('/login?message=Logout realizado com sucesso');
-  }, [router, isAnimatingLogin, isLoadingAuth, isPageLoading]);
+  const adminLogin = async (email: string, password: string): Promise<boolean> => {
+      return performLoginInternal(email, password, true);
+  };
 
-  const startPageLoading = useCallback(() => {
-    setIsPageLoading(true);
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
   }, []);
 
-  const finishPageLoading = useCallback(() => {
-    setIsPageLoading(false);
-  }, []);
+  const startPageLoading = useCallback(() => setIsPageLoading(true), []);
+  const finishPageLoading = useCallback(() => setIsPageLoading(false), []);
+
+  const isAuthenticated = !!user;
+  const isAdmin = user?.isAdmin || false;
 
   return (
     <AuthContext.Provider value={{
@@ -151,8 +161,4 @@ export const useAuth = () => {
   return context;
 };
 
-// Export PageLoadingEffectComponent here to be used in RootLayout if needed, or keep it within RootLayout
-// For now, I'll assume the PageLoadingEffectComponent in RootLayout is fine as it uses useContext(AuthContext)
-// The internal PageLoadingEffect from previous suggestions is what I've effectively moved into ClientSideEffects/PageLoadingEffectComponent
-// and made its rendering conditional.
-export { AuthContext }; // Exporting context for PageLoadingEffectComponent in layout
+export { AuthContext };
