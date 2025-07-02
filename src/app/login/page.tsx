@@ -108,7 +108,7 @@ function LoginForm() {
           <CardDescription className="text-muted-foreground">Acesse sua conta para encontrar seu próximo quarto.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -121,7 +121,12 @@ function LoginForm() {
               {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="password">Senha</Label>
+                <Link href="/forgot-password" className="text-xs font-medium text-primary hover:underline" tabIndex={-1}>
+                  Esqueceu a senha?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
