@@ -1,12 +1,12 @@
-# Alugo - Backend e Painel de Admin
+# WeStudy - Backend e Painel de Admin
 
-Este projeto contém o backend completo e o painel administrativo para o aplicativo Alugo. Ele é construído com Next.js, TypeScript e Supabase.
+Este projeto contém o backend completo e o painel administrativo para o aplicativo WeStudy. Ele é construído com Next.js, TypeScript e Supabase.
 
 ## Visão Geral
 
 - **Backend (API):** Um conjunto de endpoints RESTful para gerenciar usuários, autenticação, listagens de quartos, reservas e mensagens. Projetado para ser consumido por qualquer cliente (iOS, Android, Web).
 - **Painel de Administrador:** Uma interface web para administradores gerenciarem usuários, aprovar quartos e visualizar estatísticas da plataforma.
-- **Aplicação Web (Protótipo):** Uma aplicação web funcional que serve como um protótipo completo do aplicativo do usuário final e pode ser usada como uma versão web do Alugo.
+- **Aplicação Web (Protótipo):** Uma aplicação web funcional que serve como um protótipo completo do aplicativo do usuário final e pode ser usada como uma versão web do WeStudy.
 
 ## Como Iniciar o Projeto
 
@@ -22,7 +22,7 @@ Clone o repositório e instale as dependências:
 
 ```bash
 git clone <url_do_repositorio>
-cd alugo-project
+cd westudy-project
 npm install
 ```
 

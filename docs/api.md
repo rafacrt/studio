@@ -1,6 +1,6 @@
-# Documentação da API Alugo
+# Documentação da API WeStudy
 
-Esta documentação descreve os endpoints da API RESTful para o projeto Alugo.
+Esta documentação descreve os endpoints da API RESTful para o projeto WeStudy.
 
 **URL Base:** `http://localhost:9002/api` (em desenvolvimento)
 
