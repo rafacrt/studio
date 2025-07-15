@@ -1,8 +1,9 @@
+
 'use server';
 /**
- * @fileOverview User login flow.
+ * @fileOverview User login flow (passwordless).
  *
- * - loginUser - A function that handles user authentication.
+ * - loginUser - A function that handles user authentication by email.
  * - UserLoginInput - The input type for the loginUser function.
  * - UserLoginOutput - The return type for the loginUser function.
  */
@@ -13,15 +14,15 @@ import { createClient } from '@supabase/supabase-js';
 // Define the input schema for user login
 export const UserLoginInputSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(1, { message: "Password is required." }),
+  // Password is no longer needed
 });
 export type UserLoginInput = z.infer<typeof UserLoginInputSchema>;
 
 // Define the output schema for a successful login.
-// We return the user and session objects from Supabase, which contain tokens needed by the mobile client.
+// We return the user object, session is no longer needed for the mock flow.
 export const UserLoginOutputSchema = z.object({
     user: z.any().describe("The full user object from Supabase."),
-    session: z.any().describe("The session object, containing access and refresh tokens.")
+    // session: z.any().describe("The session object, containing access and refresh tokens.")
 });
 export type UserLoginOutput = z.infer<typeof UserLoginOutputSchema>;
 
@@ -44,28 +45,22 @@ const userLoginFlow = ai.defineFlow(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
+    
+    // Instead of signing in, we just fetch the user profile by email
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', input.email)
+      .single();
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: input.email,
-      password: input.password,
-    });
 
-    if (error) {
-      // Use a more specific error for invalid credentials
-      if (error.message === 'Invalid login credentials') {
-          throw new Error('Email ou senha inválidos.');
-      }
-      throw new Error(error.message);
+    if (error || !profile) {
+      throw new Error('Usuário não encontrado.');
     }
 
-    if (!data.user || !data.session) {
-        throw new Error('Falha no login: dados de usuário ou sessão não retornados.');
-    }
-
-    // For an API client (like a mobile app), we must return the session data.
+    // Return the user profile data.
     return {
-      user: data.user,
-      session: data.session,
+      user: profile,
     };
   }
 );

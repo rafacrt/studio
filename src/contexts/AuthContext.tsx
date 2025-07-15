@@ -15,8 +15,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  adminLogin: (email: string, password: string) => Promise<boolean>;
+  login: (email: string) => Promise<boolean>;
+  adminLogin: (email: string) => Promise<boolean>;
   logout: () => void;
   isLoadingAuth: boolean;
   isAnimatingLogin: boolean;
@@ -41,6 +41,19 @@ const mapSupabaseUserToAppUser = (supabaseUser: SupabaseUser | null): User | nul
   };
 }
 
+// Helper para mapear um perfil do banco para o tipo User
+const mapProfileToAppUser = (profile: any): User | null => {
+  if (!profile) return null;
+  return {
+    id: profile.id,
+    email: profile.email,
+    name: profile.name,
+    avatarUrl: profile.avatar_url,
+    isAdmin: profile.is_admin,
+    role: profile.is_admin ? "Admin" : "Usuário",
+    dateJoined: profile.created_at,
+  };
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -51,10 +64,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Manter a verificação de sessão do Supabase, mas o login será mockado
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      const appUser = mapSupabaseUserToAppUser(session?.user ?? null);
-      setUser(appUser);
+      // Se houver uma sessão Supabase real, use-a (permite que o logout funcione)
+      if (session) {
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        setUser(mapProfileToAppUser(profile));
+      } else {
+         // Tenta carregar o usuário "mockado" do localStorage
+        const localUser = localStorage.getItem('mockUser');
+        if (localUser) {
+          setUser(JSON.parse(localUser));
+        }
+      }
       setIsLoadingAuth(false);
     };
 
@@ -62,13 +85,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
-        const appUser = mapSupabaseUserToAppUser(session?.user ?? null);
-        setUser(appUser);
-        
         if (event === 'SIGNED_OUT') {
+           localStorage.removeItem('mockUser');
+           setUser(null);
            if(isAnimatingLogin) setIsAnimatingLogin(false);
            if(isPageLoading) setIsPageLoading(false);
            router.push('/login?message=Logout realizado com sucesso');
+        } else if (session) {
+           const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+           setUser(mapProfileToAppUser(profile));
         }
       }
     );
@@ -78,55 +103,59 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [router, isAnimatingLogin, isPageLoading]);
 
-  const performLoginInternal = async (email: string, password: string, forAdmin: boolean): Promise<boolean> => {
+  const performLoginInternal = async (email: string, forAdmin: boolean): Promise<boolean> => {
     setIsAnimatingLogin(true);
+    
+    // Em vez de 'signInWithPassword', buscamos o usuário pelo email
+    const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', email)
+        .single();
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      toast({ title: "Erro de Login", description: "Email ou senha inválidos.", variant: "destructive" });
+    if (error || !profile) {
+      toast({ title: "Erro de Login", description: "Usuário não encontrado.", variant: "destructive" });
       setIsAnimatingLogin(false);
       return false;
     }
     
-    if (data.user) {
-        const appUser = mapSupabaseUserToAppUser(data.user);
+    const appUser = mapProfileToAppUser(profile);
 
-        if (forAdmin && !appUser?.isAdmin) {
-             await supabase.auth.signOut();
-             toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar a área administrativa.", variant: "destructive" });
-             setIsAnimatingLogin(false);
-             return false;
-        }
-
-        setUser(appUser);
-
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsAnimatingLogin(false);
-
-        if (appUser?.isAdmin) {
-            router.push('/admin');
-        } else {
-            router.push('/explore');
-        }
-        return true;
+    if (forAdmin && !appUser?.isAdmin) {
+         toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar a área administrativa.", variant: "destructive" });
+         setIsAnimatingLogin(false);
+         return false;
     }
 
+    setUser(appUser);
+    localStorage.setItem('mockUser', JSON.stringify(appUser)); // Salva o usuário mockado
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
     setIsAnimatingLogin(false);
-    return false;
+
+    if (appUser?.isAdmin) {
+        router.push('/admin');
+    } else {
+        router.push('/explore');
+    }
+    return true;
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-      return performLoginInternal(email, password, false);
+  const login = async (email: string): Promise<boolean> => {
+      return performLoginInternal(email, false);
   };
 
-  const adminLogin = async (email: string, password: string): Promise<boolean> => {
-      return performLoginInternal(email, password, true);
+  const adminLogin = async (email: string): Promise<boolean> => {
+      return performLoginInternal(email, true);
   };
 
   const logout = useCallback(async () => {
+    // Limpa o usuário mockado e desloga do Supabase, se houver sessão
+    localStorage.removeItem('mockUser');
     await supabase.auth.signOut();
-  }, []);
+    setUser(null);
+    router.push('/login?message=Logout realizado com sucesso');
+  }, [router]);
 
   const startPageLoading = useCallback(() => setIsPageLoading(true), []);
   const finishPageLoading = useCallback(() => setIsPageLoading(false), []);
