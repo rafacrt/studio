@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from 'react';
@@ -5,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/packages/auth/AuthContext';
 import { Loader2, Search, Briefcase, MessageSquare, CircleUser } from 'lucide-react';
-import { cn } from '@/packages/lib/utils';
+import { cn } from '@/lib/utils';
 
 export default function AuthenticatedLayout({
   children,

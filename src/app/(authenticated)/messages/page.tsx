@@ -12,7 +12,7 @@ import { ScrollArea } from '@/web/components/ui/scroll-area';
 import { Loader2, Send, MessageSquareText, ArrowLeft, Search, SlidersHorizontal } from 'lucide-react';
 import { format, parseISO, isToday, isYesterday, formatRelative } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/packages/lib/utils';
+import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 // Componente para um item da lista de conversas

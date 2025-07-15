@@ -3,7 +3,7 @@
 
 import { useRef } from 'react';
 import type { Category } from '@/packages/types';
-import { cn } from '@/packages/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface CategoryMenuProps {
   categories: Category[];

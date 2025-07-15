@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/web/components/ui/button';
 import { ArrowLeft, KeyRound, LockKeyhole, UnlockKeyhole, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/web/components/ui/card';
-import { cn } from '@/packages/lib/utils';
+import { cn } from '@/lib/utils';
 import { useToast } from '@/web/hooks/use-toast';
 import { getRoomById } from '@/packages/lib/mock-data'; // Para buscar o título do quarto
 import type { Booking } from '@/packages/types';

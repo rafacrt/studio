@@ -14,7 +14,7 @@ import { getRoomById, bookMockRoom, roomCategories } from '@/packages/lib/mock-d
 import type { Listing, Amenity as AmenityType, UniversityArea, ListingImage } from '@/packages/types';
 import { useAuth } from '@/packages/auth/AuthContext';
 import { Skeleton } from '@/web/components/ui/skeleton';
-import { cn } from '@/packages/lib/utils';
+import { cn } from '@/lib/utils';
 import { ExploreSearchBar } from '@/web/components/ExploreSearchBar'; 
 import { CategoryMenu } from '@/web/components/CategoryMenu'; 
 

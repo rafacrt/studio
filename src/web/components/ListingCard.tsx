@@ -5,7 +5,7 @@ import type { Listing } from '@/packages/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Star } from 'lucide-react';
-import { cn } from '@/packages/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface ListingCardProps {
   listing: Listing;
