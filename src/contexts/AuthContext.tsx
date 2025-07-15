@@ -6,10 +6,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { useRouter } from 'next/navigation';
 import type { User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { createClient } from '@/lib/supabase/client';
-import type { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
-
-const supabase = createClient();
+import { mockUser, mockAdminUser } from '@/lib/auth-mocks'; // Usaremos os mocks
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -27,20 +24,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper para mapear um perfil do banco para o tipo User
-const mapProfileToAppUser = (profile: any): User | null => {
-  if (!profile) return null;
-  return {
-    id: profile.id,
-    email: profile.email,
-    name: profile.name,
-    avatarUrl: profile.avatar_url,
-    isAdmin: profile.is_admin,
-    role: profile.is_admin ? "Admin" : "Usuário",
-    dateJoined: profile.created_at,
-  };
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
@@ -50,81 +33,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Manter a verificação de sessão do Supabase, mas o login será mockado
-    const getSession = async () => {
-      // Tenta carregar o usuário "mockado" do localStorage primeiro
-      const localUser = localStorage.getItem('mockUser');
-      if (localUser) {
-        setUser(JSON.parse(localUser));
-      }
-      setIsLoadingAuth(false);
-    };
-
-    getSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
-        if (event === 'SIGNED_OUT') {
-           localStorage.removeItem('mockUser');
-           setUser(null);
-           if(isAnimatingLogin) setIsAnimatingLogin(false);
-           if(isPageLoading) setIsPageLoading(false);
-           // O redirecionamento é tratado na função logout para garantir a mensagem correta
-        }
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [router, isAnimatingLogin, isPageLoading]);
+    // Tenta carregar o usuário "mockado" do localStorage
+    const localUser = localStorage.getItem('mockUser');
+    if (localUser) {
+      setUser(JSON.parse(localUser));
+    }
+    setIsLoadingAuth(false);
+  }, []);
 
   const performLoginInternal = async (email: string, forAdmin: boolean): Promise<boolean> => {
     setIsAnimatingLogin(true);
-    
-    try {
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email }),
-        });
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simula a chamada de rede
 
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.error || 'Falha ao fazer login');
-        }
+    let foundUser: User | null = null;
 
-        const data = await res.json();
-        const appUser = mapProfileToAppUser(data.user);
-
-        if (!appUser) {
-             throw new Error('Perfil de usuário inválido recebido.');
-        }
-
-        if (forAdmin && !appUser.isAdmin) {
-             toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar a área administrativa.", variant: "destructive" });
-             setIsAnimatingLogin(false);
-             return false;
-        }
-
-        setUser(appUser);
-        localStorage.setItem('mockUser', JSON.stringify(appUser));
-
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        if (appUser.isAdmin) {
-            router.push('/admin');
-        } else {
-            router.push('/explore');
-        }
-        return true;
-
-    } catch (error: any) {
-        toast({ title: "Erro de Login", description: error.message, variant: "destructive" });
-        return false;
-    } finally {
-        setIsAnimatingLogin(false);
+    if (email.toLowerCase() === mockAdminUser.email.toLowerCase()) {
+        foundUser = mockAdminUser;
+    } else if (email.toLowerCase() === mockUser.email.toLowerCase()) {
+        foundUser = mockUser;
     }
+
+    if (!foundUser) {
+        toast({ title: "Erro de Login", description: "Usuário não encontrado.", variant: "destructive" });
+        setIsAnimatingLogin(false);
+        return false;
+    }
+
+    if (forAdmin && !foundUser.isAdmin) {
+        toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar a área administrativa.", variant: "destructive" });
+        setIsAnimatingLogin(false);
+        return false;
+    }
+
+    setUser(foundUser);
+    localStorage.setItem('mockUser', JSON.stringify(foundUser));
+
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Animação de boas-vindas
+    
+    if (foundUser.isAdmin) {
+        router.push('/admin');
+    } else {
+        router.push('/explore');
+    }
+
+    setIsAnimatingLogin(false);
+    return true;
   };
 
   const login = async (email: string): Promise<boolean> => {
@@ -137,7 +90,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(async () => {
     localStorage.removeItem('mockUser');
-    await supabase.auth.signOut(); // Ainda é bom chamar para limpar qualquer sessão real
     setUser(null);
     router.push('/login?message=Logout realizado com sucesso');
   }, [router]);

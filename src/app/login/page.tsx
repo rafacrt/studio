@@ -23,8 +23,8 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 function LoginForm() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, adminLogin, isAuthenticated, isAdmin, isLoadingAuth } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, adminLogin, isAuthenticated, isAdmin, isLoadingAuth, isAnimatingLogin } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -49,31 +49,26 @@ function LoginForm() {
 
   useEffect(() => {
     if (!isLoadingAuth && isAuthenticated) {
-      if (isAdmin) {
-        router.replace('/admin');
-      } else {
-        router.replace('/explore');
-      }
+      const targetRoute = isAdmin ? '/admin' : '/explore';
+      router.replace(targetRoute);
     }
   }, [isAuthenticated, isAdmin, isLoadingAuth, router]);
 
   const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
-    setIsLoading(true);
-    const success = await login(data.email);
-    if (!success) {
-      setIsLoading(false);
-    }
+    setIsSubmitting(true);
+    await login(data.email);
+    setIsSubmitting(false);
   };
 
   const handleAdminSubmit: SubmitHandler<LoginFormData> = async (data) => {
-    setIsLoading(true);
-    const success = await adminLogin(data.email);
-    if (!success) {
-      setIsLoading(false);
-    }
+    setIsSubmitting(true);
+    await adminLogin(data.email);
+    setIsSubmitting(false);
   };
   
-  if (isLoadingAuth && !isAuthenticated) {
+  const isLoading = isSubmitting || isAnimatingLogin;
+
+  if (isLoadingAuth || (isAuthenticated && !isAnimatingLogin)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -81,14 +76,6 @@ function LoginForm() {
     );
   }
 
-  if (isAuthenticated) {
-     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <p className="ml-3 text-foreground">Redirecionando...</p>
-      </div>
-    );
-  }
 
   return (
       <Card className="w-full max-w-md shadow-2xl rounded-xl">
@@ -114,7 +101,7 @@ function LoginForm() {
             </div>
             
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6" disabled={isLoading}>
-              {isLoading && !isAdmin ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
+              {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
               Entrar
             </Button>
           </form>
@@ -127,7 +114,7 @@ function LoginForm() {
                 className="w-full text-primary border-primary hover:bg-primary/10 hover:text-primary py-3"
                 disabled={isLoading}
             >
-                {isLoading && isAdmin ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
+                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
                 Entrar como Administrador
             </Button>
           <p className="text-sm text-muted-foreground">

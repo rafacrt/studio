@@ -9,7 +9,7 @@
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { createClient } from '@supabase/supabase-js';
+// import { createClient } from '@supabase/supabase-js'; // Supabase temporarily disabled
 
 // Define the input schema for user login
 export const UserLoginInputSchema = z.object({
@@ -38,28 +38,33 @@ const userLoginFlow = ai.defineFlow(
   },
   async (input) => {
     // This client is safe for server-side operations
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      // Use the service role key for direct table access if needed, but anon key is fine for public tables with RLS
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    // const supabase = createClient(
+    //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    //   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    // );
     
     // Instead of signing in, we just fetch the user profile by email from the 'profiles' table
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', input.email)
-      .single();
+    // const { data: profile, error } = await supabase
+    //   .from('profiles')
+    //   .select('*')
+    //   .eq('email', input.email)
+    //   .single();
 
 
-    if (error || !profile) {
-      // This is the error that will be sent back to the client
-      throw new Error('Usuário não encontrado.');
-    }
+    // if (error || !profile) {
+    //   // This is the error that will be sent back to the client
+    //   throw new Error('Usuário não encontrado.');
+    // }
+
+    // NOTE: This flow is temporarily disabled and will not be called
+    // The logic is now handled directly in AuthContext with mock data.
+    // This is a placeholder to avoid breaking the build.
+    throw new Error('Supabase integration is temporarily disabled.');
+
 
     // Return the user profile data.
-    return {
-      user: profile,
-    };
+    // return {
+    //   user: profile,
+    // };
   }
 );
