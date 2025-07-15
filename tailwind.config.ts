@@ -3,9 +3,9 @@ import type { Config } from "tailwindcss";
 export default {
     darkMode: ["class"],
     content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+      './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+      './src/web/**/*.{js,ts,jsx,tsx,mdx}', // Corrected to watch all web files
+      './src/packages/**/*.{js,ts,jsx,tsx,mdx}', // Watch packages as well
   ],
   theme: {
   	extend: {

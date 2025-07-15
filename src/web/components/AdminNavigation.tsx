@@ -19,7 +19,7 @@ import { useAuth } from '@/packages/auth/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/web/components/ui/avatar';
 
 const adminNavItems = [
-  { href: '/admin', label: 'Painel de Controle', icon: LayoutDashboard }, // Updated href
+  { href: '/admin/dashboard', label: 'Painel de Controle', icon: LayoutDashboard },
   { href: '/admin/room-approvals', label: 'Aprovações de Quartos', icon: BedDouble },
   { href: '/admin/user-management', label: 'Gerenciamento de Usuários', icon: Users },
   { href: '/admin/add-room', label: 'Adicionar Quarto', icon: HousePlus },
@@ -56,7 +56,7 @@ export function AdminNavigation() {
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.href || (item.href === '/admin' && pathname === '/admin/dashboard')} // Handle exact match for /admin
+                isActive={pathname === item.href}
                 tooltip={item.label}
               >
                 <Link href={item.href}>

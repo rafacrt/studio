@@ -26,15 +26,15 @@ const chartConfig = {
   count: {
     label: "Número de Reservas",
   },
-  active: { // Added for better tooltip display if needed
+  ativas: {
     label: "Ativas",
     color: "hsl(var(--chart-1))",
   },
-  past: {
+  anteriores: {
     label: "Anteriores",
     color: "hsl(var(--chart-2))",
   },
-  cancelled: {
+  canceladas: {
     label: "Canceladas",
     color: "hsl(var(--chart-3))",
   },
@@ -58,7 +58,6 @@ export function BookingStatusChart({ data, isLoading = false }: BookingStatusCha
   
   const chartData = data.map(item => ({
     ...item,
-    // Dynamically assign color from chartConfig or use item.fill
     fill: chartConfig[item.status.toLowerCase() as keyof typeof chartConfig]?.color || item.fill,
   }));
 
