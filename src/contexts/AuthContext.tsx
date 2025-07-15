@@ -82,49 +82,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const performLoginInternal = async (email: string, forAdmin: boolean): Promise<boolean> => {
     setIsAnimatingLogin(true);
     
-    // Buscamos o usuário pelo email na tabela 'profiles'
-    const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', email)
-        .single();
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
 
-    if (error || !profile) {
-      toast({ title: "Erro de Login", description: "Usuário não encontrado.", variant: "destructive" });
-      setIsAnimatingLogin(false);
-      return false;
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || 'Falha ao fazer login');
+        }
+
+        const data = await res.json();
+        const appUser = mapProfileToAppUser(data.user);
+
+        if (!appUser) {
+             throw new Error('Perfil de usuário inválido recebido.');
+        }
+
+        if (forAdmin && !appUser.isAdmin) {
+             toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar a área administrativa.", variant: "destructive" });
+             setIsAnimatingLogin(false);
+             return false;
+        }
+
+        setUser(appUser);
+        localStorage.setItem('mockUser', JSON.stringify(appUser));
+
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        if (appUser.isAdmin) {
+            router.push('/admin');
+        } else {
+            router.push('/explore');
+        }
+        return true;
+
+    } catch (error: any) {
+        toast({ title: "Erro de Login", description: error.message, variant: "destructive" });
+        return false;
+    } finally {
+        setIsAnimatingLogin(false);
     }
-    
-    const appUser = mapProfileToAppUser(profile);
-
-    // Se o login for para admin, verificamos se o usuário tem a permissão
-    if (forAdmin && !appUser?.isAdmin) {
-         toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar a área administrativa.", variant: "destructive" });
-         setIsAnimatingLogin(false);
-         return false;
-    }
-
-    setUser(appUser);
-    localStorage.setItem('mockUser', JSON.stringify(appUser)); 
-
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsAnimatingLogin(false);
-
-    if (appUser?.isAdmin) {
-        router.push('/admin');
-    } else {
-        router.push('/explore');
-    }
-    return true;
   };
 
   const login = async (email: string): Promise<boolean> => {
-      // O login normal pode ser usado tanto para admin quanto para usuário comum
       return performLoginInternal(email, false);
   };
 
   const adminLogin = async (email: string): Promise<boolean> => {
-      // O login de admin exige que o usuário seja um admin
       return performLoginInternal(email, true);
   };
 

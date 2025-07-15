@@ -14,15 +14,12 @@ import { createClient } from '@supabase/supabase-js';
 // Define the input schema for user login
 export const UserLoginInputSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
-  // Password is no longer needed
 });
 export type UserLoginInput = z.infer<typeof UserLoginInputSchema>;
 
 // Define the output schema for a successful login.
-// We return the user object, session is no longer needed for the mock flow.
 export const UserLoginOutputSchema = z.object({
-    user: z.any().describe("The full user object from Supabase."),
-    // session: z.any().describe("The session object, containing access and refresh tokens.")
+    user: z.any().describe("The full user profile object from the database."),
 });
 export type UserLoginOutput = z.infer<typeof UserLoginOutputSchema>;
 
@@ -43,10 +40,11 @@ const userLoginFlow = ai.defineFlow(
     // This client is safe for server-side operations
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      // Use the service role key for direct table access if needed, but anon key is fine for public tables with RLS
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
     
-    // Instead of signing in, we just fetch the user profile by email
+    // Instead of signing in, we just fetch the user profile by email from the 'profiles' table
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
@@ -55,6 +53,7 @@ const userLoginFlow = ai.defineFlow(
 
 
     if (error || !profile) {
+      // This is the error that will be sent back to the client
       throw new Error('Usuário não encontrado.');
     }
 
