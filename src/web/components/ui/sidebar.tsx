@@ -5,7 +5,7 @@ import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
 import { useMobile } from "@/web/hooks/use-mobile"
-import { cn } from "@/packages/lib/utils"
+import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/web/components/ui/button"
 import { Input } from "@/web/components/ui/input"
 import { Separator } from "@/web/components/ui/separator"
@@ -273,7 +273,7 @@ const SidebarTrigger = React.forwardRef<
   );
 
   return (
-    <Button // This is the Button from "@/components/ui/button"
+    <Button // This is the Button from "@/web/components/ui/button"
       ref={ref}
       data-sidebar="trigger"
       variant={props.variant || "ghost"} // Default to ghost if not specified in props, or use user's

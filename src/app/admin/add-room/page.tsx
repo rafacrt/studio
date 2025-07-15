@@ -1,21 +1,20 @@
-
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/web/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/web/components/ui/card";
+import { Input } from "@/web/components/ui/input";
+import { Label } from "@/web/components/ui/label";
+import { Textarea } from "@/web/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/web/components/ui/select";
+import { Checkbox } from "@/web/components/ui/checkbox";
+import { useToast } from "@/web/hooks/use-toast";
 import { useForm, type SubmitHandler, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2, PackagePlus } from "lucide-react";
 import { commonAmenities, universityAreas, addMockListing } from "@/packages/lib/mock-data"; 
 import type { Amenity, UniversityArea, Listing } from "@/packages/types";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@/web/components/ui/separator";
 
 const listingSchema = z.object({
   title: z.string().min(5, { message: "O título deve ter pelo menos 5 caracteres." }),
@@ -59,8 +58,8 @@ export default function AddRoomPage() {
       baths: 1,
       selectedAmenityIds: [],
       cancellationPolicy: "Cancelamento flexível: Reembolso total até 5 dias antes do check-in.",
-      houseRules: "Não são permitidas festas ou eventos.\nHorário de silêncio após as 22:00.\nNão fumar dentro do quarto ou áreas comuns.",
-      safetyAndProperty: "Detector de fumaça instalado.\nExtintor de incêndio disponível.",
+      houseRules: "Não são permitidas festas ou eventos.\\nHorário de silêncio após as 22:00.\\nNão fumar dentro do quarto ou áreas comuns.",
+      safetyAndProperty: "Detector de fumaça instalado.\\nExtintor de incêndio disponível.",
     },
   });
 
