@@ -27,20 +27,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const mapSupabaseUserToAppUser = (supabaseUser: SupabaseUser | null): User | null => {
-  if (!supabaseUser) return null;
-  
-  return {
-    id: supabaseUser.id,
-    email: supabaseUser.email || '',
-    name: supabaseUser.user_metadata?.name || 'Usuário',
-    avatarUrl: supabaseUser.user_metadata?.avatar_url || undefined,
-    isAdmin: supabaseUser.user_metadata?.is_admin || false,
-    role: supabaseUser.user_metadata?.is_admin ? "Admin" : "Usuário",
-    dateJoined: supabaseUser.created_at,
-  };
-}
-
 // Helper para mapear um perfil do banco para o tipo User
 const mapProfileToAppUser = (profile: any): User | null => {
   if (!profile) return null;
@@ -66,17 +52,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Manter a verificação de sessão do Supabase, mas o login será mockado
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      // Se houver uma sessão Supabase real, use-a (permite que o logout funcione)
-      if (session) {
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-        setUser(mapProfileToAppUser(profile));
-      } else {
-         // Tenta carregar o usuário "mockado" do localStorage
-        const localUser = localStorage.getItem('mockUser');
-        if (localUser) {
-          setUser(JSON.parse(localUser));
-        }
+      // Tenta carregar o usuário "mockado" do localStorage primeiro
+      const localUser = localStorage.getItem('mockUser');
+      if (localUser) {
+        setUser(JSON.parse(localUser));
       }
       setIsLoadingAuth(false);
     };
@@ -90,10 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
            setUser(null);
            if(isAnimatingLogin) setIsAnimatingLogin(false);
            if(isPageLoading) setIsPageLoading(false);
-           router.push('/login?message=Logout realizado com sucesso');
-        } else if (session) {
-           const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-           setUser(mapProfileToAppUser(profile));
+           // O redirecionamento é tratado na função logout para garantir a mensagem correta
         }
       }
     );
@@ -106,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const performLoginInternal = async (email: string, forAdmin: boolean): Promise<boolean> => {
     setIsAnimatingLogin(true);
     
-    // Em vez de 'signInWithPassword', buscamos o usuário pelo email
+    // Buscamos o usuário pelo email na tabela 'profiles'
     const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -121,6 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     const appUser = mapProfileToAppUser(profile);
 
+    // Se o login for para admin, verificamos se o usuário tem a permissão
     if (forAdmin && !appUser?.isAdmin) {
          toast({ title: "Acesso Negado", description: "Você não tem permissão para acessar a área administrativa.", variant: "destructive" });
          setIsAnimatingLogin(false);
@@ -128,7 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     setUser(appUser);
-    localStorage.setItem('mockUser', JSON.stringify(appUser)); // Salva o usuário mockado
+    localStorage.setItem('mockUser', JSON.stringify(appUser)); 
 
     await new Promise(resolve => setTimeout(resolve, 1500));
     setIsAnimatingLogin(false);
@@ -142,17 +119,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string): Promise<boolean> => {
+      // O login normal pode ser usado tanto para admin quanto para usuário comum
       return performLoginInternal(email, false);
   };
 
   const adminLogin = async (email: string): Promise<boolean> => {
+      // O login de admin exige que o usuário seja um admin
       return performLoginInternal(email, true);
   };
 
   const logout = useCallback(async () => {
-    // Limpa o usuário mockado e desloga do Supabase, se houver sessão
     localStorage.removeItem('mockUser');
-    await supabase.auth.signOut();
+    await supabase.auth.signOut(); // Ainda é bom chamar para limpar qualquer sessão real
     setUser(null);
     router.push('/login?message=Logout realizado com sucesso');
   }, [router]);
