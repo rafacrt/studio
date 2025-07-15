@@ -1,3 +1,4 @@
+
 {
   "$schema": "https://ui.shadcn.com/schema.json",
   "style": "default",
@@ -11,11 +12,11 @@
     "prefix": ""
   },
   "aliases": {
-    "components": "@/components",
-    "utils": "@/lib/utils",
-    "ui": "@/components/ui",
-    "lib": "@/lib",
-    "hooks": "@/hooks"
+    "components": "@/web/components",
+    "utils": "@/packages/lib/utils",
+    "ui": "@/web/components/ui",
+    "lib": "@/packages/lib",
+    "hooks": "@/web/hooks"
   },
   "iconLibrary": "lucide"
 }

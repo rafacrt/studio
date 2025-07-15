@@ -24,7 +24,8 @@
       "@/packages/*": ["./src/packages/*"],
       "@/components/*": ["./src/web/components/*"],
       "@/hooks/*": ["./src/web/hooks/*"],
-      "@/styles/*": ["./src/web/styles/*"]
+      "@/styles/*": ["./src/web/styles/*"],
+      "@/lib/*": ["./src/packages/lib/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
