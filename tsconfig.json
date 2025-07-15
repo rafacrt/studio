@@ -19,9 +19,15 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/web/*": ["./src/web/*"],
+      "@/packages/*": ["./src/packages/*"],
+      "@/lib/*": ["./src/packages/lib/*"],
+      "@/types": ["./src/packages/types"],
+      "@/hooks/*": ["./src/web/hooks/*"],
+      "@/components/*": ["./src/web/components/*"],
+      "@/styles/*": ["./src/web/styles/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/web/app/api/auth/forgot-password/route.ts"],
   "exclude": ["node_modules"]
 }
