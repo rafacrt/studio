@@ -4,7 +4,7 @@ export default {
     darkMode: ["class"],
     content: [
       './src/app/**/*.{js,ts,jsx,tsx,mdx}',
-      './src/components/**/*.{js,ts,jsx,tsx,mdx}', // Corrected to watch all web files
+      './src/components/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
   	extend: {
