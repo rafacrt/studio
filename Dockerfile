@@ -1,4 +1,3 @@
-
 # Stage 1: Install dependencies
 FROM node:20-alpine AS deps
 WORKDIR /app
@@ -11,11 +10,17 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set NEXT_TELEMETRY_DISABLED to 1 to disable telemetry during build
+# Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
-# Ensure scripts are executable if needed (though typically not for npm run build)
-# RUN chmod +x /app/node_modules/.bin/next
+# Add any required build-time environment variables
+# ARG NEXT_PUBLIC_SUPABASE_URL
+# ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+# ARG NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+# ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+# ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+# ENV NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
 # Build the Next.js application
 RUN npm run build
@@ -25,7 +30,6 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-# Disable telemetry in production as well
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs
@@ -40,9 +44,7 @@ USER nextjs
 
 EXPOSE 3000
 
-# Corrected ENV format
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# server.js is created by next build in standalone mode
 CMD ["node", "server.js"]
