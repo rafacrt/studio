@@ -1,23 +1,2 @@
-#Dockerfile
-.dockerignore
-node_modules
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-#README.md
-.next
-.git
-.gitignore
-*.env.local
-.env
-.vscode
-
-# Excluir arquivos do Genkit para evitar problemas de build
-src/ai/dev.ts
-src/ai/flows/
-src/ai/genkit.ts
-
-# Excluir arquivos relacionados ao desenvolvimento
-*.log
-.DS_Store
-*.tsbuildinfo
+# Excluir rotas de API problemáticas
+src/app/api/auth/
