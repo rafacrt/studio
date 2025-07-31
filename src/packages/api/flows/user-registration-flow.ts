@@ -3,6 +3,7 @@
  * @fileOverview User registration flow - TEMPORARIAMENTE DESABILITADO
  */
 import { z } from 'zod';
+import { randomUUID } from 'crypto';
 
 // Define the input schema for user registration
 export const UserRegistrationInputSchema = z.object({
@@ -23,7 +24,7 @@ export type UserRegistrationOutput = z.infer<typeof UserRegistrationOutputSchema
 export async function registerUser(input: UserRegistrationInput): Promise<UserRegistrationOutput> {
   // Simula uma resposta sem usar o Genkit
   return Promise.resolve({
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     email: input.email,
   });
 }

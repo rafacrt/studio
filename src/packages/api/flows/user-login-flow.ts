@@ -3,6 +3,7 @@
  * @fileOverview User login flow - TEMPORARIAMENTE DESABILITADO
  */
 import { z } from 'zod';
+import { randomUUID } from 'crypto';
 
 // Define the input schema for user login
 export const UserLoginInputSchema = z.object({
@@ -21,7 +22,7 @@ export async function loginUser(input: UserLoginInput): Promise<UserLoginOutput>
   // Simula uma resposta sem usar o Genkit
   return Promise.resolve({
     user: {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       email: input.email,
       name: "Usuario Teste"
     }
