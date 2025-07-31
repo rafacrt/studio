@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { loginUser, UserLoginInputSchema } from '@/ai/flows/user-login-flow';
+import { loginUser, UserLoginInputSchema } from '@/packages/api/flows/user-login-flow';
 
 export async function POST(request: Request) {
   try {

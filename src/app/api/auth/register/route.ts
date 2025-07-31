@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { registerUser, UserRegistrationInputSchema } from '@/ai/flows/user-registration-flow';
+import { registerUser, UserRegistrationInputSchema } from '@/packages/api/flows/user-registration-flow';
 
 export async function POST(request: Request) {
   try {
