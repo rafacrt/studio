@@ -1,15 +1,8 @@
-
 'use server';
 /**
- * @fileOverview User registration flow.
- *
- * - registerUser - A function that handles new user registration.
- * - UserRegistrationInput - The input type for the registerUser function.
- * - UserRegistrationOutput - The return type for the registerUser function.
+ * @fileOverview User registration flow - TEMPORARIAMENTE DESABILITADO
  */
-import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-// import { createClient } from '@supabase/supabase-js'; // Supabase temporarily disabled
 
 // Define the input schema for user registration
 export const UserRegistrationInputSchema = z.object({
@@ -28,49 +21,9 @@ export type UserRegistrationOutput = z.infer<typeof UserRegistrationOutputSchema
 
 // Exported wrapper function to be called from API routes or server actions
 export async function registerUser(input: UserRegistrationInput): Promise<UserRegistrationOutput> {
-  return userRegistrationFlow(input);
+  // Simula uma resposta sem usar o Genkit
+  return Promise.resolve({
+    id: crypto.randomUUID(),
+    email: input.email,
+  });
 }
-
-// Define the Genkit flow for user registration
-const userRegistrationFlow = ai.defineFlow(
-  {
-    name: 'userRegistrationFlow',
-    inputSchema: UserRegistrationInputSchema,
-    outputSchema: UserRegistrationOutputSchema,
-  },
-  async (input) => {
-    // This client is safe for server-side operations
-    // const supabase = createClient(
-    //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    //   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    // );
-
-    // const { data, error } = await supabase.auth.signUp({
-    //   email: input.email,
-    //   password: input.password,
-    //   options: {
-    //     // Pass additional data that the 'handle_new_user' trigger can use
-    //     data: {
-    //       name: input.name,
-    //     },
-    //   },
-    // });
-
-    // if (error) {
-    //   // Throw an error that can be caught by the calling API route
-    //   throw new Error(error.message);
-    // }
-
-    // if (!data.user) {
-    //     throw new Error('Registration failed: no user data returned.');
-    // }
-
-    // return {
-    //   id: data.user.id,
-    //   email: data.user.email,
-    // };
-    
-    // NOTE: This flow is temporarily disabled.
-    throw new Error('Supabase integration is temporarily disabled.');
-  }
-);
