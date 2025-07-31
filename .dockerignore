@@ -1,4 +1,3 @@
-
 #Dockerfile
 .dockerignore
 node_modules
@@ -10,3 +9,7 @@ npm-debug.log
 *.env.local
 .env
 .vscode
+
+# Excluir arquivos do Genkit para evitar problemas de build
+src/ai/dev.ts
+src/ai/flows/
