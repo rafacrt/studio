@@ -8,6 +8,7 @@ import type { User } from '@/lib/types';
 import { useToast } from '@/components/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
+import { mockUser, mockAdminUser } from '@/lib/auth-mocks';
 
 interface AuthContextType {
   supabase: SupabaseClient;
@@ -17,9 +18,9 @@ interface AuthContextType {
   logout: () => void;
   isLoadingAuth: boolean;
   isAnimatingLogin: boolean;
-  isPageLoading: boolean; 
-  startPageLoading: () => void; 
-  finishPageLoading: () => void; 
+  isPageLoading: boolean;
+  startPageLoading: () => void;
+  finishPageLoading: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,13 +44,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     if (error) {
       console.error('Erro ao buscar perfil:', error);
+      // Se não encontrar o perfil, deslogar para evitar estado inconsistente
+      await supabase.auth.signOut();
       return null;
     }
     return profile;
   }, [supabase]);
 
-
   useEffect(() => {
+    // Modo de desenvolvimento para pular o login
+    if (process.env.NEXT_PUBLIC_DEV_SKIP_AUTH === 'true') {
+      console.warn("AUTENTICAÇÃO IGNORADA: Usando mock user em modo de desenvolvimento.");
+      // Use mockAdminUser para testar o painel de admin, ou mockUser para o usuário comum
+      setUser(mockAdminUser); 
+      setIsLoadingAuth(false);
+      return;
+    }
+
+    // Lógica normal de autenticação com Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setIsLoadingAuth(true);
       if (session?.user) {
@@ -62,10 +74,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             avatarUrl: profile.avatar_url,
             isAdmin: profile.is_admin,
           });
+        } else {
+            // Perfil não encontrado ou erro, força o logout
+            setUser(null);
         }
       } else {
         setUser(null);
-        // Redirecionar para o login se não estiver em uma página pública
         const publicPaths = ['/login', '/signup'];
         if (!publicPaths.includes(pathname)) {
           router.push('/login?message=Sessão expirada. Faça login novamente.');
@@ -74,7 +88,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoadingAuth(false);
     });
 
-    // Verificação inicial de estado
     const checkInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -93,7 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     checkInitialSession();
 
-
     return () => {
       subscription?.unsubscribe();
     };
@@ -101,9 +113,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(async () => {
     setIsPageLoading(true);
-    await supabase.auth.signOut();
-    setUser(null);
-    router.push('/login?message=Logout realizado com sucesso');
+    if (process.env.NEXT_PUBLIC_DEV_SKIP_AUTH === 'true') {
+        setUser(null);
+        router.push('/login?message=Logout (DEV) realizado com sucesso');
+    } else {
+        await supabase.auth.signOut();
+        setUser(null);
+        router.push('/login?message=Logout realizado com sucesso');
+    }
     setIsPageLoading(false);
   }, [supabase.auth, router]);
 
@@ -120,9 +137,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user,
     logout,
     isLoadingAuth,
-    isAnimatingLogin, // Manter por compatibilidade de UI
-    isPageLoading,      
-    startPageLoading,   
+    isAnimatingLogin,
+    isPageLoading,
+    startPageLoading,
     finishPageLoading
   };
 
